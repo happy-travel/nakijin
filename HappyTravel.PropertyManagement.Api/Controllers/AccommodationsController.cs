@@ -8,7 +8,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
     [ApiVersion("1.0")]
     [Route("api/{v:apiVersion}/[controller]")]
     [Produces("application/json")]
-    public class ExampleController : ControllerBase
+    public class AccommodationsController : ControllerBase
     {
         [HttpGet]
         [ProducesResponseType((int)HttpStatusCode.OK)]
