@@ -4,7 +4,9 @@ using System.IO;
 using System.Reflection;
 using HappyTravel.PropertyManagement.Api.Infrastructure;
 using HappyTravel.ErrorHandling.Extensions;
+using HappyTravel.PropertyManagement.Api.Infrastructure.Environments;
 using HappyTravel.StdOutLogger.Extensions;
+using HappyTravel.VaultClient;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -36,7 +38,15 @@ namespace HappyTravel.PropertyManagement.Api
             };
             JsonConvert.DefaultSettings = () => serializationSettings;
 
-            services.ConfigureServiceOptions(Configuration)
+            using var vaultClient = new VaultClient.VaultClient(new VaultOptions
+            {
+                BaseUrl = new Uri(EnvironmentVariableHelper.Get("Vault:Endpoint", Configuration)),
+                Engine = Configuration["Vault:Engine"],
+                Role = Configuration["Vault:Role"]
+            });
+            vaultClient.Login(EnvironmentVariableHelper.Get("Vault:Token", Configuration)).GetAwaiter().GetResult();
+
+            services.ConfigureServiceOptions(Configuration, vaultClient)
                 .AddHttpClients()
                 .AddServices();
 
@@ -59,9 +69,8 @@ namespace HappyTravel.PropertyManagement.Api
 
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1.0", new OpenApiInfo { Title = "HappyTravel.com ServiceName API", Version = "v1.0" });
+                options.SwaggerDoc("v1.0", new OpenApiInfo { Title = "HappyTravel.com Property Management System API", Version = "v1.0" });
 
-                // WARN: XML documentation generation must be enabled in Project Settings
                 var apiXmlCommentsFilePath = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
                 options.IncludeXmlComments(apiXmlCommentsFilePath);
 

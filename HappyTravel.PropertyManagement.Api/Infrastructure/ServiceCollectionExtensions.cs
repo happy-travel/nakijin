@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Net.Http;
 using HappyTravel.PropertyManagement.Api.Infrastructure.Environments;
+using HappyTravel.PropertyManagement.Data;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Resources;
@@ -45,7 +47,7 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
                 agentPort = int.Parse(EnvironmentVariableHelper.Get("Jaeger:AgentPort", configuration));
             }
 
-            var serviceName = $"{environment.ApplicationName}-{environment.EnvironmentName}";
+            var serviceName = $"{nameof(PropertyManagement)}-{environment.EnvironmentName}";
             services.AddOpenTelemetrySdk(builder =>
             {
                 builder.AddRequestInstrumentation()
@@ -64,8 +66,27 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
         }
 
 
-        public static IServiceCollection ConfigureServiceOptions(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection ConfigureServiceOptions(this IServiceCollection services, IConfiguration configuration, VaultClient.VaultClient vaultClient)
         {
+            var databaseOptions = vaultClient.Get(configuration["Nakijin:Database:Options"]).GetAwaiter().GetResult();
+            services.AddEntityFrameworkNpgsql().AddDbContextPool<NakijinContext>(options =>
+            {
+                var host = databaseOptions["host"];
+                var port = databaseOptions["port"];
+                var password = databaseOptions["password"];
+                var userId = databaseOptions["userId"];
+
+                var connectionString = configuration.GetConnectionString("Nakijin");
+                options.UseNpgsql(string.Format(connectionString, host, port, userId, password), builder =>
+                {
+                    builder.UseNetTopologySuite();
+                    builder.EnableRetryOnFailure();
+                });
+                options.EnableSensitiveDataLogging(false);
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            }, 16);
+
+
             return services;
         }
 
