@@ -1,13 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
+using HappyTravel.PropertyManagement.Api.Infrastructure.Constants;
 using HappyTravel.PropertyManagement.Api.Infrastructure.Environments;
+using HappyTravel.PropertyManagement.Api.Services.Mappers;
 using HappyTravel.PropertyManagement.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Resources;
-using OpenTelemetry.Trace.Configuration;
+using OpenTelemetry.Trace;
 using OpenTelemetry.Trace.Samplers;
 using Polly;
 using Polly.Extensions.Http;
@@ -18,9 +21,9 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
     {
         public static IServiceCollection AddHttpClients(this IServiceCollection services)
         {
-            /*services.AddHttpClient("")
-                .SetHandlerLifetime(TimeSpan.FromMinutes(0))
-                .AddPolicyHandler(GetDefaultRetryPolicy());*/
+            services.AddHttpClient(HttpClientNames.Etg, client => client.BaseAddress = new Uri(""))
+                .SetHandlerLifetime(TimeSpan.FromMinutes(5))
+                .AddPolicyHandler(GetDefaultRetryPolicy());
 
             return services;
         }
@@ -28,6 +31,8 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
 
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
+            services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
+
             return services;
         }
 
@@ -48,18 +53,18 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
             }
 
             var serviceName = $"{nameof(PropertyManagement)}-{environment.EnvironmentName}";
-            services.AddOpenTelemetrySdk(builder =>
+            services.AddOpenTelemetry(builder =>
             {
-                builder.AddRequestInstrumentation()
-                    .AddDependencyInstrumentation()
-                    .UseJaegerActivityExporter(options =>
+                builder.UseJaegerExporter(options =>
                     {
                         options.ServiceName = serviceName;
                         options.AgentHost = agentHost;
                         options.AgentPort = agentPort;
                     })
+                    .AddRequestInstrumentation()
+                    .AddDependencyInstrumentation()
                     .SetResource(Resources.CreateServiceResource(serviceName))
-                    .SetSampler(new AlwaysOnActivitySampler());
+                    .SetSampler(new AlwaysOnSampler());
             });
 
             return services;
@@ -86,6 +91,14 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             }, 16);
 
+            services.Configure<AccommodationsPreloaderOptions>(o =>
+            {
+                o.Suppliers = new List<string>
+                {
+                    HttpClientNames.Etg
+                };
+                o.BatchSize = 1000;
+            });
 
             return services;
         }

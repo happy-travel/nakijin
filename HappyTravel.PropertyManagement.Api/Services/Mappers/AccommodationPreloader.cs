@@ -30,7 +30,6 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         public async Task Preload(DateTime? modificationDate = null, CancellationToken cancellationToken = default)
         {
             modificationDate ??= DateTime.MinValue;
-            var date = modificationDate.Value;
 
             foreach (var supplier in _options.Suppliers)
             {
@@ -39,13 +38,13 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 var skip = 0;
                 do
                 {
-                    var batch = await GetAccommodations(client, date, skip, _options.BatchSize);
+                    var batch = await GetAccommodations(client, modificationDate.Value, skip, _options.BatchSize);
                     if (!batch.Any())
                         break;
 
                     var ids = batch.Select(a => a.Id);
                     var existedIds = await _context.RawAccommodations
-                        .Where(a => a.Supplier == supplier && ids.Contains(a.Supplier))
+                        .Where(a => a.Supplier == supplier && ids.Contains(a.SupplierId))
                         .Select(a => new {a.Id, a.Supplier, a.SupplierId})
                         .ToDictionaryAsync(a => (a.SupplierId, a.Supplier), a => a.Id, cancellationToken);
 
