@@ -5,6 +5,8 @@ using HappyTravel.PropertyManagement.Api.Infrastructure.Constants;
 using HappyTravel.PropertyManagement.Api.Infrastructure.Environments;
 using HappyTravel.PropertyManagement.Api.Services.Mappers;
 using HappyTravel.PropertyManagement.Data;
+using HappyTravel.SecurityTokenManager;
+using IdentityModel;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -98,6 +100,19 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
                     HttpClientNames.Etg
                 };
                 o.BatchSize = 1000;
+            });
+
+            var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
+            services.Configure<TokenRequestOptions>(options =>
+            {
+                //TODO
+                var authorityUrl = "";
+                var uri = new Uri(new Uri(authorityUrl), "/connect/token");
+                options.Address = uri.ToString();
+                options.ClientId = clientOptions["clientId"];
+                options.ClientSecret = clientOptions["clientSecret"];
+                options.Scope = clientOptions["scope"];
+                options.GrantType = OidcConstants.GrantTypes.ClientCredentials;
             });
 
             return services;

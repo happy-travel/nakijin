@@ -127,7 +127,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         }
 
 
-        private const string AccommodationUrl = "";
+        private const string AccommodationUrl = "accommodations";
 
         private readonly IHttpClientFactory _clientFactory;
         private readonly NakijinContext _context;

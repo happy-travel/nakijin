@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyTravel.PropertyManagement.Api", "HappyTravel.PropertyManagement.Api\HappyTravel.PropertyManagement.Api.csproj", "{DC818EE5-855F-4273-A051-725CB7BFD260}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyTravel.PropertyManagement.Data", "HappyTravel.PropertyManagement.Data\HappyTravel.PropertyManagement.Data.csproj", "{C9924B38-E36F-4D71-A186-04C3872249A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyTravel.PropertyManagement.Data", "HappyTravel.PropertyManagement.Data\HappyTravel.PropertyManagement.Data.csproj", "{C9924B38-E36F-4D71-A186-04C3872249A4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyTravel.SecurityClient", "HappyTravel.SecurityClient\HappyTravel.SecurityClient.csproj", "{87B97B8B-BC55-4C09-8CC9-BBE16657082A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{C9924B38-E36F-4D71-A186-04C3872249A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C9924B38-E36F-4D71-A186-04C3872249A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C9924B38-E36F-4D71-A186-04C3872249A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87B97B8B-BC55-4C09-8CC9-BBE16657082A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87B97B8B-BC55-4C09-8CC9-BBE16657082A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87B97B8B-BC55-4C09-8CC9-BBE16657082A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87B97B8B-BC55-4C09-8CC9-BBE16657082A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
