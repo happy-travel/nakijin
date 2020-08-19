@@ -1,4 +1,4 @@
-﻿namespace HappyTravel.SecurityTokenManager
+﻿namespace HappyTravel.SecurityClient
 {
     public static class LocalizationHelper
     {

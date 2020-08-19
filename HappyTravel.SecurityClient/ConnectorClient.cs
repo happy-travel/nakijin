@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Polly;
 
-namespace HappyTravel.SecurityTokenManager
+namespace HappyTravel.SecurityClient
 {
     public class ConnectorClient : IConnectorClient
     {

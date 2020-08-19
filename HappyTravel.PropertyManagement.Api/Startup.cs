@@ -46,8 +46,8 @@ namespace HappyTravel.PropertyManagement.Api
             });
             vaultClient.Login(EnvironmentVariableHelper.Get("Vault:Token", Configuration)).GetAwaiter().GetResult();
 
+            services.AddHttpClient();
             services.ConfigureServiceOptions(Configuration, vaultClient)
-                .AddHttpClients()
                 .AddServices();
 
             services.AddHealthChecks()

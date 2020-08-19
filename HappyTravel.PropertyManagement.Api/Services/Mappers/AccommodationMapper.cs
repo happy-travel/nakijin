@@ -201,7 +201,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             return dbAccommodation.Id;
         }
 
-        private async Task<int> Update(int htId, string supplierAccommodationId, Suppliers supplier /*in float score*/)
+        private async Task<int> Update(int htId, string supplierAccommodationId, Suppliers supplier)
         {
             var dbAccommodation = await _context.Accommodations.SingleAsync(ac => ac.Id == htId);
             dbAccommodation.SupplierAccommodationCodes.Add(supplier, supplierAccommodationId);
@@ -245,7 +245,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 AccommodationDetails = JsonDocument.Parse(JsonSerializer.Serialize(accommodationDetails))
             };
 
-
+        // TODO: move to redis
         private Dictionary<string, STRtree<Accommodation>> _accommodationTreesByCountry;
         private readonly NakijinContext _context;
     }

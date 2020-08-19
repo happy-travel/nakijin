@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
 
 namespace HappyTravel.PropertyManagement.Api.Infrastructure
 {
@@ -6,7 +7,7 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
     public class AccommodationsPreloaderOptions
     {
         public int BatchSize { get; set; }
-        public List<string> Suppliers { get; set; }
+        public List<Suppliers> Suppliers { get; set; }
     }
     #nullable restore
 }

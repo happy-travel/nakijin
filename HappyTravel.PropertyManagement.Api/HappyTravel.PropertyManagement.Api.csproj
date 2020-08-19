@@ -38,11 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Conventions\" />
-    <Folder Include="Filters\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\HappyTravel.PropertyManagement.Data\HappyTravel.PropertyManagement.Data.csproj" />
     <ProjectReference Include="..\HappyTravel.SecurityClient\HappyTravel.SecurityClient.csproj" />
   </ItemGroup>

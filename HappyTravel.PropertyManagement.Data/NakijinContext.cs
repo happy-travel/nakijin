@@ -27,7 +27,7 @@ namespace HappyTravel.PropertyManagement.Data
                     .IsRequired();
                 a.Property(a => a.Supplier)
                     .IsRequired();
-                a.Property(a => a.SupplierId)
+                a.Property(a => a.SupplierAccommodationId)
                     .IsRequired();
             });
 

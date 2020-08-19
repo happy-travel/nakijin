@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
-using HappyTravel.PropertyManagement.Api.Infrastructure.Constants;
 using HappyTravel.PropertyManagement.Api.Infrastructure.Environments;
+using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
 using HappyTravel.PropertyManagement.Api.Services.Mappers;
 using HappyTravel.PropertyManagement.Data;
-using HappyTravel.SecurityTokenManager;
+using HappyTravel.SecurityClient;
 using IdentityModel;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -21,25 +22,18 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddHttpClients(this IServiceCollection services)
-        {
-            services.AddHttpClient(HttpClientNames.Etg, client => client.BaseAddress = new Uri(""))
-                .SetHandlerLifetime(TimeSpan.FromMinutes(5))
-                .AddPolicyHandler(GetDefaultRetryPolicy());
-
-            return services;
-        }
-
-
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
+            services.AddTransient<IConnectorClient, ConnectorClient>();
+            services.AddSingleton<ISecurityTokenManager, SecurityTokenManager>();
 
             return services;
         }
 
 
-        public static IServiceCollection AddTracing(this IServiceCollection services, IWebHostEnvironment environment, IConfiguration configuration)
+        public static IServiceCollection AddTracing(this IServiceCollection services, IWebHostEnvironment environment,
+            IConfiguration configuration)
         {
             string agentHost;
             int agentPort;
@@ -73,15 +67,16 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
         }
 
 
-        public static IServiceCollection ConfigureServiceOptions(this IServiceCollection services, IConfiguration configuration, VaultClient.VaultClient vaultClient)
+        public static IServiceCollection ConfigureServiceOptions(this IServiceCollection services,
+            IConfiguration configuration, VaultClient.VaultClient vaultClient)
         {
-            var databaseOptions = vaultClient.Get(configuration["Nakijin:Database:Options"]).GetAwaiter().GetResult();
+               var databaseOptions = vaultClient.Get(configuration["Nakijin:Database:Options"]).GetAwaiter().GetResult();
             services.AddEntityFrameworkNpgsql().AddDbContextPool<NakijinContext>(options =>
             {
-                var host = databaseOptions["host"];
+                var host =databaseOptions["host"];
                 var port = databaseOptions["port"];
-                var password = databaseOptions["password"];
-                var userId = databaseOptions["userId"];
+                var password =  databaseOptions["password"];
+                var userId =databaseOptions["userId"];
 
                 var connectionString = configuration.GetConnectionString("Nakijin");
                 options.UseNpgsql(string.Format(connectionString, host, port, userId, password), builder =>
@@ -95,17 +90,28 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
 
             services.Configure<AccommodationsPreloaderOptions>(o =>
             {
-                o.Suppliers = new List<string>
-                {
-                    HttpClientNames.Etg
-                };
-                o.BatchSize = 1000;
+                var suppliers = EnvironmentVariableHelper.Get("Nakijin:Preloader:Suppliers", configuration);
+                var batchSize = EnvironmentVariableHelper.Get("Nakijin:Preloader:BatchSize", configuration);
+                o.Suppliers = string.IsNullOrEmpty(suppliers)
+                    ? Enum.GetValues(typeof(Suppliers)).Cast<Suppliers>().ToList()
+                    : suppliers.Split(";").Cast<Suppliers>().ToList();
+                o.BatchSize = string.IsNullOrEmpty(batchSize) ? 1000 : int.Parse(batchSize);
             });
 
-            var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
+            var suppliersOptions = vaultClient.Get(configuration["Nakijin:Suppliers:Options"]).GetAwaiter().GetResult();
+            services.Configure<SuppliersOptions>(options =>
+            {
+                options.SuppliersUrls = !suppliersOptions.Any()
+                    ? new Dictionary<Suppliers, string>()
+                    : suppliersOptions.Select(s
+                            => new KeyValuePair<Suppliers, string>(Enum.Parse<Suppliers>(s.Key, true), s.Value))
+                        .ToDictionary(s => s.Key, s => s.Value);
+            });
+
+              var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
             services.Configure<TokenRequestOptions>(options =>
             {
-                //TODO
+                 //TODO
                 var authorityUrl = "";
                 var uri = new Uri(new Uri(authorityUrl), "/connect/token");
                 options.Address = uri.ToString();
@@ -126,7 +132,8 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
             return HttpPolicyExtensions
                 .HandleTransientHttpError()
                 .WaitAndRetryAsync(3, attempt
-                    => TimeSpan.FromMilliseconds(Math.Pow(500, attempt)) + TimeSpan.FromMilliseconds(jitter.Next(0, 100)));
+                    => TimeSpan.FromMilliseconds(Math.Pow(500, attempt)) +
+                    TimeSpan.FromMilliseconds(jitter.Next(0, 100)));
         }
     }
 }
