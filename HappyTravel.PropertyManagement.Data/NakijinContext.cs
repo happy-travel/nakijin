@@ -4,7 +4,8 @@ using HappyTravel.PropertyManagement.Data.Models;
 using HappyTravel.PropertyManagement.Data.Models.Accommodations;
 using HappyTravel.PropertyManagement.Data.Models.Mappers;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
+using Newtonsoft.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace HappyTravel.PropertyManagement.Data
 {
@@ -22,12 +23,14 @@ namespace HappyTravel.PropertyManagement.Data
 
             builder.Entity<RawAccommodation>(a =>
             {
-                a.HasKey(a => a.Id);
-                a.Property(a => a.Accommodation)
+                a.HasKey(p => p.Id);
+                a.Property(p => p.CountryCode)
                     .IsRequired();
-                a.Property(a => a.Supplier)
+                a.Property(p => p.Accommodation)
                     .IsRequired();
-                a.Property(a => a.SupplierAccommodationId)
+                a.Property(p => p.Supplier)
+                    .IsRequired();
+                a.Property(p => p.SupplierAccommodationId)
                     .IsRequired();
             });
 
@@ -43,10 +46,11 @@ namespace HappyTravel.PropertyManagement.Data
                     .HasConversion(c => JsonSerializer.Serialize(c, default),
                         c => JsonSerializer.Deserialize<ContactInfo>(c, default))
                     .IsRequired();
-                a.Property(a => a.AccommodationDetails).IsRequired();
-                a.Property(a => a.SupplierAccommodationCodes)
-                    .HasConversion(c => JsonSerializer.Serialize(c, default),
-                        c => JsonSerializer.Deserialize<Dictionary<Suppliers, string>>(c, default))
+                a.Property(p => p.AccommodationDetails).IsRequired();
+                a.Property(p => p.SupplierAccommodationCodes)
+                    .HasColumnType("jsonb")
+                    .HasConversion(c => JsonConvert.SerializeObject(c),
+                        c => JsonConvert.DeserializeObject<Dictionary<Suppliers, string>>(c))
                     .IsRequired();
             });
 

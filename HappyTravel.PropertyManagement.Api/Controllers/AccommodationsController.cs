@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
 using HappyTravel.PropertyManagement.Api.Services.Mappers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,9 +14,10 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
     [Produces("application/json")]
     public class AccommodationsController : ControllerBase
     {
-        public AccommodationsController(IAccommodationPreloader preloader)
+        public AccommodationsController(IAccommodationPreloader preloader, IAccommodationMapper mapper)
         {
             _preloader = preloader;
+            _mapper = mapper;
         }
 
 
@@ -36,8 +38,15 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
             
             return Accepted();
         }
-    
-        
+
+        [HttpPost("map/suppliers/{supplier}")]
+        public async Task<IActionResult> MapSupplierAccommodations(Suppliers supplier)
+        {
+            await _mapper.MapSupplierAccommodations(supplier);
+            return Accepted();
+        }
+
+        private readonly IAccommodationMapper _mapper;
         private readonly IAccommodationPreloader _preloader;
     }
 }

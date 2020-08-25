@@ -25,6 +25,7 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
+            services.AddTransient<IAccommodationMapper, AccommodationMapper>();
             services.AddTransient<IConnectorClient, ConnectorClient>();
             services.AddSingleton<ISecurityTokenManager, SecurityTokenManager>();
 
@@ -70,13 +71,13 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
         public static IServiceCollection ConfigureServiceOptions(this IServiceCollection services,
             IConfiguration configuration, VaultClient.VaultClient vaultClient)
         {
-               var databaseOptions = vaultClient.Get(configuration["Nakijin:Database:Options"]).GetAwaiter().GetResult();
+            var databaseOptions = vaultClient.Get(configuration["Nakijin:Database:Options"]).GetAwaiter().GetResult();
             services.AddEntityFrameworkNpgsql().AddDbContextPool<NakijinContext>(options =>
             {
-                var host =databaseOptions["host"];
+                var host = databaseOptions["host"];
                 var port = databaseOptions["port"];
-                var password =  databaseOptions["password"];
-                var userId =databaseOptions["userId"];
+                var password = databaseOptions["password"];
+                var userId = databaseOptions["userId"];
 
                 var connectionString = configuration.GetConnectionString("Nakijin");
                 options.UseNpgsql(string.Format(connectionString, host, port, userId, password), builder =>
@@ -111,7 +112,7 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
               var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
             services.Configure<TokenRequestOptions>(options =>
             {
-                 //TODO
+                //TODO
                 var authorityUrl = "";
                 var uri = new Uri(new Uri(authorityUrl), "/connect/token");
                 options.Address = uri.ToString();

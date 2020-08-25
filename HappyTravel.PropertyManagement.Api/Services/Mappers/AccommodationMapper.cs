@@ -14,6 +14,7 @@ using LocationNameNormalizer.Extensions;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Index.Strtree;
+using Newtonsoft.Json;
 using AccommodationDetails = HappyTravel.EdoContracts.Accommodations.AccommodationDetails;
 using ContactInfo = HappyTravel.PropertyManagement.Data.Models.Accommodations.ContactInfo;
 
@@ -26,17 +27,15 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         3. Find nearest neighbors for each new accommodation in 0.01DD radius
         4. Add score for a resulting list:
             * Full match of a normalized name — 2 points
-            * Partial match of a normalized name — 1 point
-            * Full match of a normalized address — 2 points
-            * Partial match of a normalized address — 1 point
+            * Full match of a normalized address — 0.5 points (address formats may be different, that is why small point)
             * Rating match — 0.5 points
             * Contact details match — 0.5 points
-           If an accommodation scores less than 2 points we consider it not-matching.
-           If  an accommodation scores greater than 4.5 points we consider it matching.
+           If an accommodation scores less than 1.5 points we consider it not-matching.
+           If  an accommodation scores greater or equal to 3 points we consider it matching.
            Intermediate scores should be calibrated to achieve better matching
         5. If the score is sufficient, merge the new and the existing accommodation. Unmatched field became synonyms
     */
-    public class AccommodationMapper
+    public class AccommodationMapper : IAccommodationMapper
     {
         public AccommodationMapper(NakijinContext context)
         {
@@ -44,8 +43,33 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             _accommodationTreesByCountry = new Dictionary<string, STRtree<Accommodation>>();
         }
 
+        public async Task MapSupplierAccommodations(Suppliers supplier)
+        {
+            await ConstructCountryAccommodationsTrees();
 
-        public async Task<int> Map(AccommodationDetails accommodation, Suppliers supplier)
+            foreach (var countryCode in await GetCountries())
+            {
+                var accommodationDetails = await GetAccommodationsForMap(countryCode, supplier);
+                await MapCountry(accommodationDetails, supplier);
+            }
+        }
+
+        // TODO: Change and use return value
+        private async Task<Dictionary<string, int>> MapCountry(List<AccommodationDetails> accommodations,
+            Suppliers supplier)
+        {
+            var results = new Dictionary<string, int>();
+
+            foreach (var accommodation in accommodations)
+            {
+                var htId = await Map(accommodation, supplier);
+                results.Add(accommodation.Id, htId);
+            }
+
+            return results;
+        }
+
+        private async Task<int> Map(AccommodationDetails accommodation, Suppliers supplier)
         {
             var normalized = Normalize(accommodation);
 
@@ -65,27 +89,23 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         }
 
 
-        public async Task<Dictionary<string, int>> MapCountry(List<AccommodationDetails> accommodations,
-            Suppliers supplier)
+        private async Task<List<AccommodationDetails>> GetAccommodationsForMap(string countryCode, Suppliers supplier)
         {
-            var results = new Dictionary<string, int>();
+            var accommodations = await (from ac in _context.RawAccommodations
+                where ac.Supplier == supplier
+                    && ac.CountryCode == countryCode
+                select ac).ToListAsync();
 
-            await ConstructCountryAccommodationsTrees();
-
-            foreach (var accommodation in accommodations)
-            {
-                var htId = await Map(accommodation, supplier);
-                results.Add(accommodation.Id, htId);
-            }
-
-            return results;
+            return accommodations.Select(ac
+                    => JsonConvert.DeserializeObject<AccommodationDetails>(ac.Accommodation.RootElement.ToString()))
+                .ToList();
         }
 
 
         private List<Accommodation> GetNearest(in AccommodationDetails accommodation)
         {
             if (!_accommodationTreesByCountry.TryGetValue(accommodation.Location.CountryCode, out var tree))
-                return new List<Accommodation>();
+                return new List<Accommodation>(0);
 
             var envelope = new Envelope(accommodation.Location.Coordinates.Longitude - 0.01,
                 accommodation.Location.Coordinates.Longitude + 0.01,
@@ -100,22 +120,20 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             var results = new List<(int HtId, float Score)>(nearestAccommodations.Count);
             foreach (var nearestAccommodation in nearestAccommodations)
             {
-                // skip if accommodation already marked as non-matching
+                var score = Score(nearestAccommodation, accommodation);
 
-                var s = Score(nearestAccommodation, accommodation);
-
-                results.Add((nearestAccommodation.Id, s));
+                results.Add((nearestAccommodation.Id, score));
             }
 
-            var (htId, score) = results.Aggregate((r1, r2) => r2.Score < r1.Score ? r2 : r1);
+            var (htId, maxScore) = results.Aggregate((r1, r2) => r2.Score > r1.Score ? r2 : r1);
 
-            if (4.5 <= score)
-                return (MatchingResults.Match, score, htId);
+            if (3 <= maxScore)
+                return (MatchingResults.Match, maxScore, htId);
 
-            if (2 <= score && score < 4.5)
-                return (MatchingResults.Uncertain, score, htId);
+            if (1.5 <= maxScore && maxScore < 3)
+                return (MatchingResults.Uncertain, maxScore, htId);
 
-            return (MatchingResults.NotMatch, score, 0);
+            return (MatchingResults.NotMatch, maxScore, 0);
         }
 
 
@@ -150,29 +168,56 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             );
 
 
-        private float Score(in Accommodation nearestAccommodation, in AccommodationDetails accommodation)
+        private float Score(in Accommodation nearestAccommodation,
+            in AccommodationDetails accommodation)
         {
             float score = 0;
 
-            score += 2 * StringComparisionAlgorithms.GetEqualityIndex(nearestAccommodation.Name, accommodation.Name);
+            score += 2 * StringComparisionAlgorithms.GetEqualityCoefficient(nearestAccommodation.Name,
+                accommodation.Name,
+                new[] {"hotel", "apartments"});
 
-            score += StringComparisionAlgorithms.GetEqualityIndex(nearestAccommodation.Address,
-                accommodation.Location.Address);
+            score += 0.5f * StringComparisionAlgorithms.GetEqualityCoefficient(nearestAccommodation.Address,
+                accommodation.Location.Address,
+                new[]
+                {
+                    "street", "area", "road",
+                    accommodation.Location.Country.ToLower(CultureInfo.InvariantCulture),
+                    accommodation.Location.Locality.ToLower(CultureInfo.InvariantCulture),
+                    accommodation.Location.LocalityZone.ToLower(CultureInfo.InvariantCulture)
+                });
 
             if (nearestAccommodation.Rating == accommodation.Rating)
                 score += 0.5f;
 
-            if (nearestAccommodation.ContactInfo.Email.Trim().ToLower(CultureInfo.InvariantCulture)
-                == accommodation.Contacts.Email.Trim().ToLower(CultureInfo.InvariantCulture)
-                && nearestAccommodation.ContactInfo.WebSite.Trim().ToLower(CultureInfo.InvariantCulture) ==
-                accommodation.Contacts.WebSite.Trim().ToLower(CultureInfo.InvariantCulture)
-                && nearestAccommodation.ContactInfo.Fax.Trim().ToLower(CultureInfo.InvariantCulture) ==
-                accommodation.Contacts.Fax.Trim().ToLower(CultureInfo.InvariantCulture)
-                && nearestAccommodation.ContactInfo.Phone.Trim().ToLower(CultureInfo.InvariantCulture) ==
-                nearestAccommodation.ContactInfo.Fax.Trim().ToLower(CultureInfo.InvariantCulture))
+            var contactInfoComparisionResults = new List<(bool isAnyEmpty, bool areEqual)>(4);
+
+            contactInfoComparisionResults.Add(GetComparisionResult(nearestAccommodation.ContactInfo.Email,
+                accommodation.Contacts.Email));
+            contactInfoComparisionResults.Add(GetComparisionResult(nearestAccommodation.ContactInfo.WebSite,
+                accommodation.Contacts.WebSite));
+            contactInfoComparisionResults.Add(GetComparisionResult(nearestAccommodation.ContactInfo.Fax,
+                accommodation.Contacts.Fax));
+            contactInfoComparisionResults.Add(GetComparisionResult(
+                nearestAccommodation.ContactInfo.Phone.ToNormalizedPhoneNumber(),
+                accommodation.Contacts.Phone.ToNormalizedPhoneNumber()));
+
+            if (contactInfoComparisionResults.Any(c => !c.isAnyEmpty && c.areEqual) &&
+                !contactInfoComparisionResults.Any(c => !c.isAnyEmpty && !c.areEqual))
                 score += 0.5f;
 
             return score;
+
+
+            static (bool isAnyEmpty, bool areEqual) GetComparisionResult(string first, string second)
+            {
+                if (string.IsNullOrEmpty(first) || string.IsNullOrEmpty(second))
+                    return (true, false);
+
+                var areEqual = first.Trim().ToLower(CultureInfo.InvariantCulture) ==
+                    second.Trim().ToLower(CultureInfo.InvariantCulture);
+                return (false, areEqual);
+            }
         }
 
         private async Task ConstructCountryAccommodationsTrees()
@@ -204,9 +249,13 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         private async Task<int> Update(int htId, string supplierAccommodationId, Suppliers supplier)
         {
             var dbAccommodation = await _context.Accommodations.SingleAsync(ac => ac.Id == htId);
-            dbAccommodation.SupplierAccommodationCodes.Add(supplier, supplierAccommodationId);
-            _context.Update(dbAccommodation);
-            await _context.SaveChangesAsync();
+            if (dbAccommodation.SupplierAccommodationCodes.All(s => s.Key != supplier))
+            {
+                dbAccommodation.SupplierAccommodationCodes.Add(supplier, supplierAccommodationId);
+                _context.Update(dbAccommodation);
+                await _context.SaveChangesAsync();
+            }
+
             return htId;
         }
 
@@ -221,6 +270,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 NewHtId = newHtId,
                 IsActive = true
             });
+
             await _context.SaveChangesAsync();
 
             return newHtId;
@@ -231,8 +281,8 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             {
                 Name = accommodationDetails.Name,
                 Address = accommodationDetails.Location.Address,
-                Coordinates = new Point(accommodationDetails.Location.Coordinates.Latitude,
-                    accommodationDetails.Location.Coordinates.Longitude),
+                Coordinates = new Point(accommodationDetails.Location.Coordinates.Longitude,
+                    accommodationDetails.Location.Coordinates.Latitude),
                 Rating = accommodationDetails.Rating,
                 CountryCode = accommodationDetails.Location.CountryCode,
                 ContactInfo = new ContactInfo
@@ -242,8 +292,23 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                     Phone = accommodationDetails.Contacts.Phone,
                     WebSite = accommodationDetails.Contacts.WebSite
                 },
-                AccommodationDetails = JsonDocument.Parse(JsonSerializer.Serialize(accommodationDetails))
+                AccommodationDetails = JsonDocument.Parse(JsonConvert.SerializeObject(accommodationDetails))
             };
+
+        private async Task<List<string>> GetCountries()
+        {
+            if (_countries.Any())
+                return _countries;
+
+            _countries = await _context.RawAccommodations
+                .Select(ac => ac.CountryCode)
+                .Distinct()
+                .ToListAsync();
+
+            return _countries;
+        }
+
+        private static List<string> _countries = new List<string>(0);
 
         // TODO: move to redis
         private Dictionary<string, STRtree<Accommodation>> _accommodationTreesByCountry;

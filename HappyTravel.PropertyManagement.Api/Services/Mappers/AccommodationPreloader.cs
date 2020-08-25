@@ -65,6 +65,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                             var entity = new RawAccommodation
                             {
                                 Id = 0,
+                                CountryCode = accommodation.Location.CountryCode,
                                 Accommodation = json,
                                 Supplier = supplier,
                                 SupplierAccommodationId = accommodation.Id
