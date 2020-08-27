@@ -24,6 +24,7 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
     {
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
+            services.AddSingleton<IAccommodationsTreesCache, AccommodationsTreesCache>();
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
             services.AddTransient<IAccommodationMapper, AccommodationMapper>();
             services.AddTransient<IConnectorClient, ConnectorClient>();

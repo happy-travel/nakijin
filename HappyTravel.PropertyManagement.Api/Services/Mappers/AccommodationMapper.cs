@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using FloxDc.CacheFlow;
 using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.PropertyManagement.Api.Infrastructure;
 using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
@@ -37,10 +38,10 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
     */
     public class AccommodationMapper : IAccommodationMapper
     {
-        public AccommodationMapper(NakijinContext context)
+        public AccommodationMapper(NakijinContext context, IAccommodationsTreesCache treesCache)
         {
             _context = context;
-            _accommodationTreesByCountry = new Dictionary<string, STRtree<Accommodation>>();
+            _treesCache = treesCache;
         }
 
         public async Task MapSupplierAccommodations(Suppliers supplier)
@@ -73,7 +74,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         {
             var normalized = Normalize(accommodation);
 
-            var nearestAccommodations = GetNearest(normalized);
+            var nearestAccommodations = await GetNearest(normalized);
             if (!nearestAccommodations.Any())
                 return await Add(normalized, supplier);
 
@@ -102,10 +103,12 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         }
 
 
-        private List<Accommodation> GetNearest(in AccommodationDetails accommodation)
+        private async Task<List<Accommodation>> GetNearest(AccommodationDetails accommodation)
         {
-            if (!_accommodationTreesByCountry.TryGetValue(accommodation.Location.CountryCode, out var tree))
-                return new List<Accommodation>(0);
+            var tree = await _treesCache.Get(accommodation.Location.CountryCode);
+
+            if (tree == default)
+                return new List<Accommodation>();
 
             var envelope = new Envelope(accommodation.Location.Coordinates.Longitude - 0.01,
                 accommodation.Location.Coordinates.Longitude + 0.01,
@@ -150,7 +153,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                     accommodation.Location.CountryCode,
                     accommodation.Location.Country,
                     accommodation.Location.LocalityCode,
-                    accommodation.Location.LocalityCode,
+                    accommodation.Location.Locality,
                     accommodation.Location.LocalityZoneCode,
                     accommodation.Location.LocalityZone,
                     accommodation.Location.Coordinates,
@@ -222,18 +225,21 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
 
         private async Task ConstructCountryAccommodationsTrees()
         {
-            var accommodations = await _context.Accommodations.ToListAsync();
-            var groupedAccommodations = accommodations.GroupBy(ac => ac.CountryCode);
-            foreach (var group in groupedAccommodations)
+            foreach (var countryCode in await GetCountries())
             {
-                STRtree<Accommodation> tree = new STRtree<Accommodation>(group.Count());
-                foreach (var ac in group)
+                var accommodations =
+                    await _context.Accommodations.Where(ac => ac.CountryCode == countryCode).ToListAsync();
+                if (!accommodations.Any())
+                    continue;
+
+                STRtree<Accommodation> tree = new STRtree<Accommodation>(accommodations.Count);
+                foreach (var ac in accommodations)
                 {
                     tree.Insert(ac.Coordinates.EnvelopeInternal, ac);
                 }
 
                 tree.Build();
-                _accommodationTreesByCountry.Add(group.Key, tree);
+                await _treesCache.Set(countryCode, tree);
             }
         }
 
@@ -308,10 +314,9 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             return _countries;
         }
 
-        private static List<string> _countries = new List<string>(0);
 
-        // TODO: move to redis
-        private Dictionary<string, STRtree<Accommodation>> _accommodationTreesByCountry;
+        private readonly IAccommodationsTreesCache _treesCache;
+        private static List<string> _countries = new List<string>(0);
         private readonly NakijinContext _context;
     }
 }

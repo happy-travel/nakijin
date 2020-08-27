@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
 using HappyTravel.PropertyManagement.Api.Services.Mappers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HappyTravel.PropertyManagement.Api.Controllers
 {
@@ -14,15 +15,14 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
     [Produces("application/json")]
     public class AccommodationsController : ControllerBase
     {
-        public AccommodationsController(IAccommodationPreloader preloader, IAccommodationMapper mapper)
+        public AccommodationsController(IServiceProvider serviceProvider)
         {
-            _preloader = preloader;
-            _mapper = mapper;
+            _serviceProvider = serviceProvider;
         }
 
 
         [HttpGet]
-        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
         public async Task<IActionResult> Get()
         {
             return await Task.FromResult(Ok());
@@ -31,22 +31,36 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
 
         [HttpPost("preload")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
-        public async Task<IActionResult> Preload([FromQuery(Name = "modification-date")] DateTime? modificationDate, CancellationToken cancellationToken = default)
+        public IActionResult Preload([FromQuery(Name = "modification-date")]
+            DateTime? modificationDate, CancellationToken cancellationToken = default)
         {
             var source = new CancellationTokenSource(TimeSpan.FromDays(1));
-            await _preloader.Preload(modificationDate, source.Token);
-            
+
+            Task.Run(async () =>
+            {
+                using var scope = _serviceProvider.CreateScope();
+
+                var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
+                await preloader.Preload(modificationDate, source.Token);
+            }, cancellationToken);
             return Accepted();
         }
 
         [HttpPost("map/suppliers/{supplier}")]
-        public async Task<IActionResult> MapSupplierAccommodations(Suppliers supplier)
+        public IActionResult MapSupplierAccommodations(Suppliers supplier)
         {
-            await _mapper.MapSupplierAccommodations(supplier);
+            // TODO: add cancellation token support
+            Task.Run(async () =>
+            {
+                using var scope = _serviceProvider.CreateScope();
+
+                var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                await mapper.MapSupplierAccommodations(supplier);
+            });
+
             return Accepted();
         }
 
-        private readonly IAccommodationMapper _mapper;
-        private readonly IAccommodationPreloader _preloader;
+        private readonly IServiceProvider _serviceProvider;
     }
 }
