@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
-using FloxDc.CacheFlow;
 using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.PropertyManagement.Api.Infrastructure;
 using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
@@ -13,6 +13,7 @@ using HappyTravel.PropertyManagement.Data.Models;
 using HappyTravel.PropertyManagement.Data.Models.Accommodations;
 using LocationNameNormalizer.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Index.Strtree;
 using Newtonsoft.Json;
@@ -38,64 +39,84 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
     */
     public class AccommodationMapper : IAccommodationMapper
     {
-        public AccommodationMapper(NakijinContext context, IAccommodationsTreesCache treesCache)
+        public AccommodationMapper(NakijinContext context, IAccommodationsTreesCache treesCache,
+            ILoggerFactory loggerFactory)
         {
             _context = context;
             _treesCache = treesCache;
+            _logger = loggerFactory.CreateLogger<AccommodationMapper>();
         }
 
-        public async Task MapSupplierAccommodations(Suppliers supplier)
+        public async Task MapSupplierAccommodations(Suppliers supplier, CancellationToken cancellationToken)
         {
-            await ConstructCountryAccommodationsTrees();
-
-            foreach (var countryCode in await GetCountries())
+            try
             {
-                var accommodationDetails = await GetAccommodationsForMap(countryCode, supplier);
-                await MapCountry(accommodationDetails, supplier);
+                await ConstructCountryAccommodationsTrees();
+
+                foreach (var countryCode in await GetCountries())
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var accommodationDetails = await GetAccommodationsForMap(countryCode, supplier, cancellationToken);
+                    await MapCountry(accommodationDetails, supplier, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // TODO: Use generated logging extension methods
+                _logger.Log(LogLevel.Information,
+                    $"Mapping accommodations of {supplier.ToString()} was canceled by client request.");
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error,
+                    $"Mapping accommodations of {supplier.ToString()} was stopped because of {ex.Message}");
             }
         }
 
         // TODO: Change and use return value
         private async Task<Dictionary<string, int>> MapCountry(List<AccommodationDetails> accommodations,
-            Suppliers supplier)
+            Suppliers supplier, CancellationToken cancellationToken)
         {
             var results = new Dictionary<string, int>();
 
             foreach (var accommodation in accommodations)
             {
-                var htId = await Map(accommodation, supplier);
+                var htId = await Map(accommodation, supplier, cancellationToken);
                 results.Add(accommodation.Id, htId);
             }
 
             return results;
         }
 
-        private async Task<int> Map(AccommodationDetails accommodation, Suppliers supplier)
+        private async Task<int> Map(AccommodationDetails accommodation, Suppliers supplier,
+            CancellationToken cancellationToken)
         {
             var normalized = Normalize(accommodation);
 
             var nearestAccommodations = await GetNearest(normalized);
             if (!nearestAccommodations.Any())
-                return await Add(normalized, supplier);
+                return await Add(normalized, supplier, cancellationToken);
 
             var (matchingResult, score, htId) = Match(nearestAccommodations, normalized);
 
             return matchingResult switch
             {
-                MatchingResults.NotMatch => await Add(normalized, supplier),
-                MatchingResults.Uncertain => await AddUncertainMatches(normalized, supplier, htId, score),
-                MatchingResults.Match => await Update(htId, normalized.Id, supplier),
+                MatchingResults.NotMatch => await Add(normalized, supplier, cancellationToken),
+                MatchingResults.Uncertain => await AddUncertainMatches(normalized, supplier, htId, score,
+                    cancellationToken),
+                MatchingResults.Match => await Update(htId, normalized.Id, supplier, cancellationToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(matchingResult))
             };
         }
 
 
-        private async Task<List<AccommodationDetails>> GetAccommodationsForMap(string countryCode, Suppliers supplier)
+        private async Task<List<AccommodationDetails>> GetAccommodationsForMap(string countryCode, Suppliers supplier,
+            CancellationToken cancellationToken)
         {
             var accommodations = await (from ac in _context.RawAccommodations
                 where ac.Supplier == supplier
                     && ac.CountryCode == countryCode
-                select ac).ToListAsync();
+                select ac).ToListAsync(cancellationToken);
 
             return accommodations.Select(ac
                     => JsonConvert.DeserializeObject<AccommodationDetails>(ac.Accommodation.RootElement.ToString()))
@@ -243,32 +264,34 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             }
         }
 
-        private async Task<int> Add(AccommodationDetails accommodation, Suppliers supplier)
+        private async Task<int> Add(AccommodationDetails accommodation, Suppliers supplier,
+            CancellationToken cancellationToken)
         {
             var dbAccommodation = ToDbAccommodation(accommodation);
             dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.Id);
             _context.Accommodations.Add(dbAccommodation);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
             return dbAccommodation.Id;
         }
 
-        private async Task<int> Update(int htId, string supplierAccommodationId, Suppliers supplier)
+        private async Task<int> Update(int htId, string supplierAccommodationId, Suppliers supplier,
+            CancellationToken cancellationToken)
         {
-            var dbAccommodation = await _context.Accommodations.SingleAsync(ac => ac.Id == htId);
+            var dbAccommodation = await _context.Accommodations.SingleAsync(ac => ac.Id == htId, cancellationToken);
             if (dbAccommodation.SupplierAccommodationCodes.All(s => s.Key != supplier))
             {
                 dbAccommodation.SupplierAccommodationCodes.Add(supplier, supplierAccommodationId);
                 _context.Update(dbAccommodation);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
 
             return htId;
         }
 
         private async Task<int> AddUncertainMatches(AccommodationDetails accommodation, Suppliers supplier,
-            int existingHtId, float score)
+            int existingHtId, float score, CancellationToken cancellationToken)
         {
-            var newHtId = await Add(accommodation, supplier);
+            var newHtId = await Add(accommodation, supplier, cancellationToken);
             _context.AccommodationUncertainMatches.Add(new AccommodationUncertainMatches
             {
                 Score = score,
@@ -277,7 +300,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 IsActive = true
             });
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
 
             return newHtId;
         }
@@ -314,7 +337,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             return _countries;
         }
 
-
+        private readonly ILogger<AccommodationMapper> _logger;
         private readonly IAccommodationsTreesCache _treesCache;
         private static List<string> _countries = new List<string>(0);
         private readonly NakijinContext _context;

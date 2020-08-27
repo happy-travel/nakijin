@@ -28,38 +28,58 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
             return await Task.FromResult(Ok());
         }
 
+        [HttpPost("cancelPreloading")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        public IActionResult CancelAccommodationPreloading()
+        {
+            _accommodationPreloaderTokenSource.Cancel();
+            return Ok();
+        }
 
         [HttpPost("preload")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         public IActionResult Preload([FromQuery(Name = "modification-date")]
             DateTime? modificationDate, CancellationToken cancellationToken = default)
         {
-            var source = new CancellationTokenSource(TimeSpan.FromDays(1));
+            _accommodationPreloaderTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
 
             Task.Run(async () =>
             {
                 using var scope = _serviceProvider.CreateScope();
 
                 var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
-                await preloader.Preload(modificationDate, source.Token);
+                await preloader.Preload(modificationDate, _accommodationPreloaderTokenSource.Token);
             }, cancellationToken);
             return Accepted();
+        }
+
+        [HttpPost("cancelMapping")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        public IActionResult CancelAccommodationMapping()
+        {
+            _accommodationMappingTokenSource.Cancel();
+            return Ok();
         }
 
         [HttpPost("map/suppliers/{supplier}")]
         public IActionResult MapSupplierAccommodations(Suppliers supplier)
         {
-            // TODO: add cancellation token support
+            _accommodationMappingTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
+
             Task.Run(async () =>
             {
                 using var scope = _serviceProvider.CreateScope();
 
                 var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                await mapper.MapSupplierAccommodations(supplier);
-            });
+                await mapper.MapSupplierAccommodations(supplier, _accommodationMappingTokenSource.Token);
+            }, _accommodationMappingTokenSource.Token);
 
             return Accepted();
         }
+
+        private static CancellationTokenSource _accommodationMappingTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
+
+        private static CancellationTokenSource _accommodationPreloaderTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
 
         private readonly IServiceProvider _serviceProvider;
     }

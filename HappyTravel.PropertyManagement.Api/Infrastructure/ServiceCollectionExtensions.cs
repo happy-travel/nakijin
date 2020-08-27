@@ -110,11 +110,11 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
                         .ToDictionary(s => s.Key, s => s.Value);
             });
 
-              var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
+            var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
+            var authorityOptions = vaultClient.Get(configuration["Nakijin:Authority:Options"]).GetAwaiter().GetResult();
             services.Configure<TokenRequestOptions>(options =>
             {
-                //TODO
-                var authorityUrl = "";
+                var authorityUrl = authorityOptions["authorityUrl"];
                 var uri = new Uri(new Uri(authorityUrl), "/connect/token");
                 options.Address = uri.ToString();
                 options.ClientId = clientOptions["clientId"];
