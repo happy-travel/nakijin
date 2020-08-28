@@ -37,7 +37,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         }
 
         [HttpPost("preload")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult Preload([FromQuery(Name = "modification-date")]
             DateTime? modificationDate, CancellationToken cancellationToken = default)
         {
@@ -62,6 +62,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         }
 
         [HttpPost("map/suppliers/{supplier}")]
+        [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MapSupplierAccommodations(Suppliers supplier)
         {
             _accommodationMappingTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
@@ -77,9 +78,11 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
             return Accepted();
         }
 
-        private static CancellationTokenSource _accommodationMappingTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
+        private static CancellationTokenSource _accommodationMappingTokenSource =
+            new CancellationTokenSource(TimeSpan.FromDays(1));
 
-        private static CancellationTokenSource _accommodationPreloaderTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
+        private static CancellationTokenSource _accommodationPreloaderTokenSource =
+            new CancellationTokenSource(TimeSpan.FromDays(1));
 
         private readonly IServiceProvider _serviceProvider;
     }
