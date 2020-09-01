@@ -13,11 +13,8 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         public static float Calculate(in Accommodation nearestAccommodation,
             in AccommodationDetails accommodation)
         {
-            float score = 0;
-
-            score += 2 * StringComparisionAlgorithms.GetEqualityCoefficient(nearestAccommodation.Name,
+            float score = 2 * StringComparisionHelper.GetEqualityCoefficient(nearestAccommodation.Name,
                 accommodation.Name, WordsToIgnoreForHotelNamesComparision.ToList());
-
 
             score += GetAddressScore(nearestAccommodation, accommodation);
 
@@ -32,7 +29,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         private static float GetAddressScore(in Accommodation nearestAccommodation,
             in AccommodationDetails accommodation)
         {
-            return 0.5f * StringComparisionAlgorithms.GetEqualityCoefficient(nearestAccommodation.Address,
+            return 0.5f * StringComparisionHelper.GetEqualityCoefficient(nearestAccommodation.Address,
                 accommodation.Location.Address, GetWordsToIgnore(accommodation.Location.Country,
                     accommodation.Location.Locality, accommodation.Location.Locality)
             );

@@ -55,7 +55,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 foreach (var countryCode in await GetCountries())
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var accommodationDetails = await GetAccommodationsForMap(countryCode, supplier, cancellationToken);
+                    var accommodationDetails = await GetAccommodationsForMapping(countryCode, supplier, cancellationToken);
                     await MapCountry(accommodationDetails, supplier, cancellationToken);
                 }
             }
@@ -109,7 +109,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         }
 
 
-        private async Task<List<AccommodationDetails>> GetAccommodationsForMap(string countryCode, Suppliers supplier,
+        private async Task<List<AccommodationDetails>> GetAccommodationsForMapping(string countryCode, Suppliers supplier,
             CancellationToken cancellationToken)
         {
             var accommodations = await (from ac in _context.RawAccommodations
@@ -130,10 +130,10 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             if (tree == default)
                 return new List<Accommodation>();
 
-            var envelope = new Envelope(accommodation.Location.Coordinates.Longitude - 0.01,
+            var accommodationEnvelope = new Envelope(accommodation.Location.Coordinates.Longitude - 0.01,
                 accommodation.Location.Coordinates.Longitude + 0.01,
                 accommodation.Location.Coordinates.Latitude - 0.01, accommodation.Location.Coordinates.Latitude + 0.01);
-            return tree.Query(envelope).ToList();
+            return tree.Query(accommodationEnvelope).ToList();
         }
 
 

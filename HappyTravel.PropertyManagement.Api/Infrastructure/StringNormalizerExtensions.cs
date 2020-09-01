@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace HappyTravel.PropertyManagement.Api.Infrastructure
 {
-    public static class NormalizerForComparision
+    public static class StringNormalizerExtensions
     {
         public static string ToNormalizedPhoneNumber(this string value)
             => Regex.Replace(value, @"[^\d]", "")

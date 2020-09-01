@@ -28,7 +28,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
             return await Task.FromResult(Ok());
         }
 
-        [HttpPost("preloading/cancel")]
+        [HttpPost("preload/cancel")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         public IActionResult CancelAccommodationPreloading()
         {
@@ -53,7 +53,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
             return Accepted();
         }
 
-        [HttpPost("mapping/cancel")]
+        [HttpPost("map/cancel")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         public IActionResult CancelAccommodationMapping()
         {

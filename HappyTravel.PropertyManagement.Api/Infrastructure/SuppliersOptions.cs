@@ -5,10 +5,6 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
 {
     public class SuppliersOptions
     {
-        public SuppliersOptions()
-        {
-            SuppliersUrls = new Dictionary<Suppliers, string>();
-        }
-        public Dictionary<Suppliers, string> SuppliersUrls { get; set; }
+        public Dictionary<Suppliers, string> SuppliersUrls { get; set; } = new Dictionary<Suppliers, string>();
     }
 }

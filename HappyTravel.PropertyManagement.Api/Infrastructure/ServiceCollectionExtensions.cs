@@ -105,9 +105,8 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
             {
                 options.SuppliersUrls = !suppliersOptions.Any()
                     ? new Dictionary<Suppliers, string>()
-                    : suppliersOptions.Select(s
-                            => new KeyValuePair<Suppliers, string>(Enum.Parse<Suppliers>(s.Key, true), s.Value))
-                        .ToDictionary(s => s.Key, s => s.Value);
+                    : suppliersOptions.ToDictionary(s
+                        => Enum.Parse<Suppliers>(s.Key, true), s => s.Value);
             });
 
             var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
