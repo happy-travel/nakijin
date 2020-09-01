@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -47,7 +46,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             _logger = loggerFactory.CreateLogger<AccommodationMapper>();
         }
 
-        public async Task MapSupplierAccommodations(Suppliers supplier, CancellationToken cancellationToken)
+        public async Task MapAccommodations(Suppliers supplier, CancellationToken cancellationToken)
         {
             try
             {
@@ -60,7 +59,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                     await MapCountry(accommodationDetails, supplier, cancellationToken);
                 }
             }
-            catch (OperationCanceledException)
+            catch (TaskCanceledException)
             {
                 // TODO: Use generated logging extension methods
                 _logger.Log(LogLevel.Information,
@@ -144,7 +143,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             var results = new List<(int HtId, float Score)>(nearestAccommodations.Count);
             foreach (var nearestAccommodation in nearestAccommodations)
             {
-                var score = Score(nearestAccommodation, accommodation);
+                var score = ComparisionScoreCalculator.Calculate(nearestAccommodation, accommodation);
 
                 results.Add((nearestAccommodation.Id, score));
             }
@@ -191,59 +190,6 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 accommodation.TypeDescription
             );
 
-
-        private float Score(in Accommodation nearestAccommodation,
-            in AccommodationDetails accommodation)
-        {
-            float score = 0;
-
-            score += 2 * StringComparisionAlgorithms.GetEqualityCoefficient(nearestAccommodation.Name,
-                accommodation.Name,
-                new[] {"hotel", "apartments"});
-
-            score += 0.5f * StringComparisionAlgorithms.GetEqualityCoefficient(nearestAccommodation.Address,
-                accommodation.Location.Address,
-                new[]
-                {
-                    "street", "area", "road",
-                    accommodation.Location.Country.ToLower(CultureInfo.InvariantCulture),
-                    accommodation.Location.Locality.ToLower(CultureInfo.InvariantCulture),
-                    accommodation.Location.LocalityZone.ToLower(CultureInfo.InvariantCulture)
-                });
-
-            if (nearestAccommodation.Rating == accommodation.Rating)
-                score += 0.5f;
-
-            var contactInfoComparisionResults = new List<(bool isAnyEmpty, bool areEqual)>(4);
-
-            contactInfoComparisionResults.Add(GetComparisionResult(nearestAccommodation.ContactInfo.Email,
-                accommodation.Contacts.Email));
-            contactInfoComparisionResults.Add(GetComparisionResult(nearestAccommodation.ContactInfo.WebSite,
-                accommodation.Contacts.WebSite));
-            contactInfoComparisionResults.Add(GetComparisionResult(nearestAccommodation.ContactInfo.Fax,
-                accommodation.Contacts.Fax));
-            contactInfoComparisionResults.Add(GetComparisionResult(
-                nearestAccommodation.ContactInfo.Phone.ToNormalizedPhoneNumber(),
-                accommodation.Contacts.Phone.ToNormalizedPhoneNumber()));
-
-            if (contactInfoComparisionResults.Any(c => !c.isAnyEmpty && c.areEqual) &&
-                !contactInfoComparisionResults.Any(c => !c.isAnyEmpty && !c.areEqual))
-                score += 0.5f;
-
-            return score;
-
-
-            static (bool isAnyEmpty, bool areEqual) GetComparisionResult(string first, string second)
-            {
-                if (string.IsNullOrEmpty(first) || string.IsNullOrEmpty(second))
-                    return (true, false);
-
-                var areEqual = first.Trim().ToLower(CultureInfo.InvariantCulture) ==
-                    second.Trim().ToLower(CultureInfo.InvariantCulture);
-                return (false, areEqual);
-            }
-        }
-
         private async Task ConstructCountryAccommodationsTrees()
         {
             foreach (var countryCode in await GetCountries())
@@ -269,8 +215,10 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         {
             var dbAccommodation = ToDbAccommodation(accommodation);
             dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.Id);
+
             _context.Accommodations.Add(dbAccommodation);
             await _context.SaveChangesAsync(cancellationToken);
+
             return dbAccommodation.Id;
         }
 

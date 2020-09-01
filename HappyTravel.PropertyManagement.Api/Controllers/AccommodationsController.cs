@@ -2,7 +2,7 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
+using HappyTravel.PropertyManagement.Data.Models;
 using HappyTravel.PropertyManagement.Api.Services.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +28,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
             return await Task.FromResult(Ok());
         }
 
-        [HttpPost("cancelPreloading")]
+        [HttpPost("preloading/cancel")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         public IActionResult CancelAccommodationPreloading()
         {
@@ -53,7 +53,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
             return Accepted();
         }
 
-        [HttpPost("cancelMapping")]
+        [HttpPost("mapping/cancel")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         public IActionResult CancelAccommodationMapping()
         {
@@ -63,7 +63,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
 
         [HttpPost("map/suppliers/{supplier}")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult MapSupplierAccommodations(Suppliers supplier)
+        public IActionResult MapAccommodations(Suppliers supplier)
         {
             _accommodationMappingTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
 
@@ -72,7 +72,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
                 using var scope = _serviceProvider.CreateScope();
 
                 var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                await mapper.MapSupplierAccommodations(supplier, _accommodationMappingTokenSource.Token);
+                await mapper.MapAccommodations(supplier, _accommodationMappingTokenSource.Token);
             }, _accommodationMappingTokenSource.Token);
 
             return Accepted();

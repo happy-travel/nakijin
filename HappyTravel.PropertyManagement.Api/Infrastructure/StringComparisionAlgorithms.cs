@@ -6,29 +6,29 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
 {
     public static class StringComparisionAlgorithms
     {
-        public static float GetEqualityCoefficient(string first, string second, string[] unwantedWords)
+        public static float GetEqualityCoefficient(string first, string second, List<string> wordsToIgnore)
         {
             if (string.IsNullOrWhiteSpace(first) || string.IsNullOrWhiteSpace(second))
                 return 0;
-            return GetSorencenDiceCoefficient(first.ToSequence(unwantedWords), second.ToSequence(unwantedWords));
+
+            return GetSorencenDiceCoefficient(first.ToSequence(wordsToIgnore), second.ToSequence(wordsToIgnore));
         }
 
-        private static float GetSorencenDiceCoefficient(List<string> firstSequence, List<string> secondSequence)
+        private static float GetSorencenDiceCoefficient(string[] firstSequence, string[] secondSequence)
         {
             //maybe comparision will work in another way
             var intersectedSequence = firstSequence.Intersect(secondSequence).ToArray();
-            return 2 * (float) intersectedSequence.Length / (firstSequence.Count() + secondSequence.Count());
+            return 2 * (float) intersectedSequence.Length / (firstSequence.Length + secondSequence.Length);
         }
 
-        private static List<string> ToSequence(this string value, string[] unWantedWords)
-        =>  value.ToStringWithoutSpecialCharacters()
+        private static string[] ToSequence(this string value, List<string> wordsToIgnore)
+            => value.ToStringWithoutSpecialCharacters()
                 .ToStringWithoutMultipleWhitespaces()
                 .Split(" ")
-                .ToList()
-                .ToListWithoutUnwantedWords(unWantedWords);
+                .ToArrayWithoutWordsToIgnore(wordsToIgnore);
 
-        private static List<string> ToListWithoutUnwantedWords(this List<string> list, string[] unwantedWords)
-            => list.Where(str => !unwantedWords.Any(w => w.Contains(str.Trim().ToLower()))).ToList();
+        private static string[] ToArrayWithoutWordsToIgnore(this string[] arr, List<string> wordsToIgnore)
+            => arr.Where(str => !wordsToIgnore.Any(w => w.Contains(str.Trim().ToLower()))).ToArray();
 
         private static string ToStringWithoutSpecialCharacters(this string value)
             => Regex.Replace(value, SpecialCharactersProcessingPattern, " ",

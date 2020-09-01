@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using HappyTravel.EdoContracts.Accommodations.Enums;
-using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
 using NetTopologySuite.Geometries;
 
 namespace HappyTravel.PropertyManagement.Data.Models.Accommodations

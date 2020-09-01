@@ -1,9 +1,11 @@
-namespace HappyTravel.PropertyManagement.Api.Models.Mappers.Enums
+namespace HappyTravel.PropertyManagement.Data.Models
 {
     public enum Suppliers
     {
+        Unknown = 0,
         Netstorming = 1,
         Illusions = 2,
-        Etg = 3
+        Direct = 3,
+        Etg = 4
     }
 }

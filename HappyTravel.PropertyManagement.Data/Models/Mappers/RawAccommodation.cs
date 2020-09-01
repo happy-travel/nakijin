@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
 
 namespace HappyTravel.PropertyManagement.Data.Models.Mappers
 {

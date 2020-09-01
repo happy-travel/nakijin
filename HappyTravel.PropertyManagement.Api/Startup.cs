@@ -48,7 +48,6 @@ namespace HappyTravel.PropertyManagement.Api
             vaultClient.Login(EnvironmentVariableHelper.Get("Vault:Token", Configuration)).GetAwaiter().GetResult();
 
             services.AddMemoryCache()
-                .AddMemoryFlow()
                 .AddStackExchangeRedisCache(options =>
                 {
                     options.Configuration = EnvironmentVariableHelper.Get("Redis:Endpoint", Configuration);

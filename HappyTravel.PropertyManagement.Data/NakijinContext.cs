@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
 using HappyTravel.PropertyManagement.Data.Models;
 using HappyTravel.PropertyManagement.Data.Models.Accommodations;
 using HappyTravel.PropertyManagement.Data.Models.Mappers;

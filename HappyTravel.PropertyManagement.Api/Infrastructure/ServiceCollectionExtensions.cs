@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using HappyTravel.PropertyManagement.Api.Infrastructure.Environments;
-using HappyTravel.PropertyManagement.Api.Models.Mappers.Enums;
+using HappyTravel.PropertyManagement.Data.Models;
 using HappyTravel.PropertyManagement.Api.Services.Mappers;
 using HappyTravel.PropertyManagement.Data;
 using HappyTravel.SecurityClient;
