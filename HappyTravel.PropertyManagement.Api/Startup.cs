@@ -54,7 +54,6 @@ namespace HappyTravel.PropertyManagement.Api
                 })
                 .AddDoubleFlow();
 
-
             services.AddHttpClient();
             services.ConfigureServiceOptions(Configuration, vaultClient)
                 .AddServices();

@@ -143,7 +143,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             var results = new List<(int HtId, float Score)>(nearestAccommodations.Count);
             foreach (var nearestAccommodation in nearestAccommodations)
             {
-                var score = ComparisionScoreCalculator.Calculate(nearestAccommodation, accommodation);
+                var score = ComparisonScoreCalculator.Calculate(nearestAccommodation, accommodation);
 
                 results.Add((nearestAccommodation.Id, score));
             }
@@ -199,7 +199,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 if (!accommodations.Any())
                     continue;
 
-                STRtree<Accommodation> tree = new STRtree<Accommodation>(accommodations.Count);
+                var tree = new STRtree<Accommodation>(accommodations.Count);
                 foreach (var ac in accommodations)
                 {
                     tree.Insert(ac.Coordinates.EnvelopeInternal, ac);

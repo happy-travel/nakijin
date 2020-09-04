@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace HappyTravel.PropertyManagement.Api.Infrastructure
 {
-    public static class StringComparisionHelper
+    public static class StringComparisonHelper
     {
         public static float GetEqualityCoefficient(string first, string second, List<string> wordsToIgnore)
         {
@@ -16,7 +16,7 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
 
         private static float GetSorencenDiceCoefficient(string[] firstSequence, string[] secondSequence)
         {
-            // Maybe comparision will work in another way
+            // Maybe comparison will work in another way
             var intersectedSequence = firstSequence.Intersect(secondSequence).ToArray();
             return 2 * (float) intersectedSequence.Length / (firstSequence.Length + secondSequence.Length);
         }
@@ -28,7 +28,7 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
                 .ToArrayWithoutWordsToIgnore(wordsToIgnore);
 
         private static string[] ToArrayWithoutWordsToIgnore(this string[] arr, List<string> wordsToIgnore)
-            => arr.Where(str => !wordsToIgnore.Any(w => w.Contains(str.Trim().ToLower()))).ToArray();
+            => arr.Where(str => !wordsToIgnore.Any(w => w.Contains(str.Trim().ToLowerInvariant()))).ToArray();
 
         private static string ToStringWithoutSpecialCharacters(this string value)
             => Regex.Replace(value, SpecialCharactersProcessingPattern, " ",

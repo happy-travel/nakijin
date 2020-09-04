@@ -41,6 +41,10 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         public IActionResult Preload([FromQuery(Name = "modification-date")]
             DateTime? modificationDate, CancellationToken cancellationToken = default)
         {
+            // Prevent situation when done more than one Preload requests.
+            if (_accommodationPreloaderTokenSource.Token.CanBeCanceled)
+                _accommodationPreloaderTokenSource.Cancel();
+            
             _accommodationPreloaderTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
 
             Task.Run(async () =>
@@ -65,6 +69,10 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MapAccommodations(Suppliers supplier)
         {
+            // Prevent situation when done more than one Map requests.
+            if (_accommodationMappingTokenSource.Token.CanBeCanceled)
+                _accommodationMappingTokenSource.Cancel();
+
             _accommodationMappingTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
 
             Task.Run(async () =>
