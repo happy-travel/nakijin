@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using FloxDc.CacheFlow.Extensions;
 using HappyTravel.PropertyManagement.Api.Infrastructure;
 using HappyTravel.ErrorHandling.Extensions;
 using HappyTravel.PropertyManagement.Api.Infrastructure.Environments;
@@ -46,12 +47,21 @@ namespace HappyTravel.PropertyManagement.Api
             });
             vaultClient.Login(EnvironmentVariableHelper.Get("Vault:Token", Configuration)).GetAwaiter().GetResult();
 
+            services.AddMemoryCache()
+                .AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = EnvironmentVariableHelper.Get("Redis:Endpoint", Configuration);
+                })
+                .AddDoubleFlow();
+
+            services.AddHttpClient();
             services.ConfigureServiceOptions(Configuration, vaultClient)
-                .AddHttpClients()
                 .AddServices();
 
+
             services.AddHealthChecks()
-                .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck));
+                .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck))
+                .AddRedis(EnvironmentVariableHelper.Get("Redis:Endpoint", Configuration));
 
             services.AddResponseCompression()
                 .AddHttpContextAccessor()
@@ -69,9 +79,11 @@ namespace HappyTravel.PropertyManagement.Api
 
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1.0", new OpenApiInfo { Title = "HappyTravel.com Property Management System API", Version = "v1.0" });
+                options.SwaggerDoc("v1.0",
+                    new OpenApiInfo {Title = "HappyTravel.com Property Management System API", Version = "v1.0"});
 
-                var apiXmlCommentsFilePath = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
+                var apiXmlCommentsFilePath = Path.Combine(AppContext.BaseDirectory,
+                    $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
                 options.IncludeXmlComments(apiXmlCommentsFilePath);
 
                 foreach (var assembly in Assembly.GetExecutingAssembly().GetReferencedAssemblies())
@@ -96,7 +108,7 @@ namespace HappyTravel.PropertyManagement.Api
             var logger = _loggerFactory.CreateLogger<Startup>();
             app.UseProblemDetailsExceptionHandler(_environment, logger);
             app.UseHttpContextLogging(
-                options => options.IgnoredPaths = new HashSet<string> { "/health" }
+                options => options.IgnoredPaths = new HashSet<string> {"/health"}
             );
 
             app.UseSwagger()

@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 
-namespace HappyTravel.SecurityTokenManager
+namespace HappyTravel.SecurityClient
 {
     public static class LoggerExtensions
     {

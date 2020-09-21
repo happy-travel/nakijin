@@ -5,8 +5,9 @@ namespace HappyTravel.PropertyManagement.Data.Models.Mappers
     public class RawAccommodation
     {
         public int Id { get; set; }
+        public string CountryCode { get; set; }
         public JsonDocument Accommodation { get; set; }
-        public string Supplier { get; set; }
-        public string SupplierId { get; set; }
+        public Suppliers Supplier { get; set; }
+        public string SupplierAccommodationId { get; set; }
     }
 }

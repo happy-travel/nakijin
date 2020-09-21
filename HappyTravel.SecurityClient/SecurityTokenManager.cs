@@ -6,7 +6,7 @@ using IdentityModel.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace HappyTravel.SecurityTokenManager
+namespace HappyTravel.SecurityClient
 {
     public class SecurityTokenManager : ISecurityTokenManager
     {

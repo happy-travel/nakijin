@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HappyTravel.SecurityTokenManager
+namespace HappyTravel.SecurityClient
 {
     public interface IConnectorClient
     {

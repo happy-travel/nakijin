@@ -3,6 +3,7 @@ using System.Text.Json;
 using HappyTravel.PropertyManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -10,9 +11,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace HappyTravel.PropertyManagement.Data.Migrations
 {
     [DbContext(typeof(NakijinContext))]
-    partial class NakijinContextModelSnapshot : ModelSnapshot
+    [Migration("20200817113552_AccommodationAndUncertainMatchesTable")]
+    partial class AccommodationAndUncertainMatchesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,7 +86,7 @@ namespace HappyTravel.PropertyManagement.Data.Migrations
 
                     b.Property<string>("SupplierAccommodationCodes")
                         .IsRequired()
-                        .HasColumnType("jsonb");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -102,14 +104,11 @@ namespace HappyTravel.PropertyManagement.Data.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
-                    b.Property<string>("CountryCode")
+                    b.Property<string>("Supplier")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Supplier")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SupplierAccommodationId")
+                    b.Property<string>("SupplierId")
                         .IsRequired()
                         .HasColumnType("text");
 

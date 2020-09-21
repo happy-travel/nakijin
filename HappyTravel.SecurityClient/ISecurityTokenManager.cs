@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace HappyTravel.SecurityTokenManager
+namespace HappyTravel.SecurityClient
 {
     public interface ISecurityTokenManager
     {
