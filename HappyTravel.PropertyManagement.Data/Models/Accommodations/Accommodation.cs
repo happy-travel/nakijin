@@ -1,25 +1,33 @@
 using System.Collections.Generic;
-using System.Text.Json;
 using HappyTravel.EdoContracts.Accommodations.Enums;
-using NetTopologySuite.Geometries;
-
+using HappyTravel.EdoContracts.Accommodations.Internals;
 namespace HappyTravel.PropertyManagement.Data.Models.Accommodations
 {
     public class Accommodation
     {
-        public Accommodation()
-        {
-            SupplierAccommodationCodes = new Dictionary<Suppliers, string>();
-        }
-
-        public int Id { get; set; }
         public string Name { get; set; }
-        public string CountryCode { get; set; }
-        public string Address { get; set; }
-        public Point Coordinates { get; set; }
+
+        public string Category { get; set; }
+
         public AccommodationRatings Rating { get; set; }
-        public ContactInfo ContactInfo { get; set; }
-        public Dictionary<Suppliers, string> SupplierAccommodationCodes { get; set; }
-        public JsonDocument AccommodationDetails { get; set; }
+        public ContactInfo ContactInfo { get; set; } = new ContactInfo();
+
+        public SlimLocationInfo Location { get; set; }
+
+        public List<Picture> Pictures { get; set; } = new List<Picture>();
+
+        public ScheduleInfo ScheduleInfo { get; set; } 
+
+        public List<TextualDescription> TextualDescriptions { get; set; } = new List<TextualDescription>();
+
+        public PropertyTypes Type { get; set; }
+
+        public string TypeDescription { get; set; }
+
+        public List<string> AccommodationAmenities { get; set; } = new List<string>();
+
+        public List<string> RoomAmenities { get; set; } = new List<string>();
+
+        public Dictionary<string, string> AdditionalInfo { get; set; } = new Dictionary<string, string>();
     }
 }

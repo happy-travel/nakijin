@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using HappyTravel.PropertyManagement.Api.Infrastructure.Environments;
+using HappyTravel.PropertyManagement.Api.Services;
 using HappyTravel.PropertyManagement.Data.Models;
 using HappyTravel.PropertyManagement.Api.Services.Mappers;
 using HappyTravel.PropertyManagement.Data;
@@ -27,6 +28,8 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
             services.AddSingleton<IAccommodationsTreesCache, AccommodationsTreesCache>();
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
             services.AddTransient<IAccommodationMapper, AccommodationMapper>();
+            services.AddTransient<IAccommodationService, AccommodationService>();
+            services.AddTransient<ISuppliersPriorityService, SuppliersPriorityService>();
             services.AddTransient<IConnectorClient, ConnectorClient>();
             services.AddSingleton<ISecurityTokenManager, SecurityTokenManager>();
 

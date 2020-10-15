@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.Accommodations.Internals;
@@ -39,11 +38,12 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
     public class AccommodationMapper : IAccommodationMapper
     {
         public AccommodationMapper(NakijinContext context, IAccommodationsTreesCache treesCache,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory, IAccommodationService accommodationService)
         {
             _context = context;
             _treesCache = treesCache;
             _logger = loggerFactory.CreateLogger<AccommodationMapper>();
+            _accommodationService = accommodationService;
         }
 
         public async Task MapAccommodations(Suppliers supplier, CancellationToken cancellationToken)
@@ -55,7 +55,8 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 foreach (var countryCode in await GetCountries())
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    var accommodationDetails = await GetAccommodationsForMapping(countryCode, supplier, cancellationToken);
+                    var accommodationDetails =
+                        await GetAccommodationsForMapping(countryCode, supplier, cancellationToken);
                     await MapCountry(accommodationDetails, supplier, cancellationToken);
                 }
             }
@@ -109,7 +110,8 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         }
 
 
-        private async Task<List<AccommodationDetails>> GetAccommodationsForMapping(string countryCode, Suppliers supplier,
+        private async Task<List<AccommodationDetails>> GetAccommodationsForMapping(string countryCode,
+            Suppliers supplier,
             CancellationToken cancellationToken)
         {
             var accommodations = await (from ac in _context.RawAccommodations
@@ -123,12 +125,12 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         }
 
 
-        private async Task<List<Accommodation>> GetNearest(AccommodationDetails accommodation)
+        private async Task<List<KeyValuePair<int, Accommodation>>> GetNearest(AccommodationDetails accommodation)
         {
             var tree = await _treesCache.Get(accommodation.Location.CountryCode);
 
             if (tree == default)
-                return new List<Accommodation>();
+                return new List<KeyValuePair<int, Accommodation>>();
 
             var accommodationEnvelope = new Envelope(accommodation.Location.Coordinates.Longitude - 0.01,
                 accommodation.Location.Coordinates.Longitude + 0.01,
@@ -137,15 +139,16 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         }
 
 
-        private (MatchingResults results, float score, int htId) Match(List<Accommodation> nearestAccommodations,
+        private (MatchingResults results, float score, int htId) Match(
+            List<KeyValuePair<int, Accommodation>> nearestAccommodations,
             in AccommodationDetails accommodation)
         {
             var results = new List<(int HtId, float Score)>(nearestAccommodations.Count);
             foreach (var nearestAccommodation in nearestAccommodations)
             {
-                var score = ComparisonScoreCalculator.Calculate(nearestAccommodation, accommodation);
+                var score = ComparisonScoreCalculator.Calculate(nearestAccommodation.Value, accommodation);
 
-                results.Add((nearestAccommodation.Id, score));
+                results.Add((nearestAccommodation.Key, score));
             }
 
             var (htId, maxScore) = results.Aggregate((r1, r2) => r2.Score > r1.Score ? r2 : r1);
@@ -195,14 +198,16 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             foreach (var countryCode in await GetCountries())
             {
                 var accommodations =
-                    await _context.Accommodations.Where(ac => ac.CountryCode == countryCode).ToListAsync();
+                    await _context.Accommodations.Where(ac => ac.CountryCode == countryCode)
+                        .Select(ac => new KeyValuePair<int, Accommodation>(ac.Id, ac.Accommodation)).ToListAsync();
                 if (!accommodations.Any())
                     continue;
 
-                var tree = new STRtree<Accommodation>(accommodations.Count);
+                var tree = new STRtree<KeyValuePair<int, Accommodation>>(accommodations.Count);
                 foreach (var ac in accommodations)
                 {
-                    tree.Insert(ac.Coordinates.EnvelopeInternal, ac);
+                    tree.Insert(new Point(ac.Value.Location.Coordinates.Longitude,
+                        ac.Value.Location.Coordinates.Latitude).EnvelopeInternal, ac);
                 }
 
                 tree.Build();
@@ -213,9 +218,11 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         private async Task<int> Add(AccommodationDetails accommodation, Suppliers supplier,
             CancellationToken cancellationToken)
         {
-            var dbAccommodation = ToDbAccommodation(accommodation);
+            var dbAccommodation = new WideAccommodationDetails();
+            dbAccommodation.Accommodation = ToDbAccommodation(accommodation);
             dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.Id);
-
+            dbAccommodation.IsCalculated = true;
+            
             _context.Accommodations.Add(dbAccommodation);
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -231,6 +238,8 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 dbAccommodation.SupplierAccommodationCodes.Add(supplier, supplierAccommodationId);
                 _context.Update(dbAccommodation);
                 await _context.SaveChangesAsync(cancellationToken);
+                //TODO get calculated and update here 
+                await _accommodationService.RecalculateAccommodationData(htId);
             }
 
             return htId;
@@ -257,19 +266,29 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             => new Accommodation
             {
                 Name = accommodationDetails.Name,
-                Address = accommodationDetails.Location.Address,
-                Coordinates = new Point(accommodationDetails.Location.Coordinates.Longitude,
-                    accommodationDetails.Location.Coordinates.Latitude),
-                Rating = accommodationDetails.Rating,
-                CountryCode = accommodationDetails.Location.CountryCode,
+                Category = accommodationDetails.Category,
                 ContactInfo = new ContactInfo
                 {
-                    Email = accommodationDetails.Contacts.Email,
-                    Fax = accommodationDetails.Contacts.Fax,
-                    Phone = accommodationDetails.Contacts.Phone,
-                    WebSite = accommodationDetails.Contacts.WebSite
+                    Emails = new List<string>() {accommodationDetails.Contacts.Email},
+                    Phones = new List<string>() {accommodationDetails.Contacts.Phone},
+                    WebSites = new List<string>() {accommodationDetails.Contacts.WebSite},
+                    Faxes = new List<string>() {accommodationDetails.Contacts.Fax}
                 },
-                AccommodationDetails = JsonDocument.Parse(JsonConvert.SerializeObject(accommodationDetails))
+                Location = new SlimLocationInfo(
+                    accommodationDetails.Location.Address,
+                    accommodationDetails.Location.Country,
+                    accommodationDetails.Location.Locality,
+                    accommodationDetails.Location.LocalityZone,
+                    accommodationDetails.Location.Coordinates),
+                Pictures = accommodationDetails.Pictures,
+                Rating = accommodationDetails.Rating,
+                Type = accommodationDetails.Type,
+                AccommodationAmenities = accommodationDetails.AccommodationAmenities,
+                AdditionalInfo = accommodationDetails.AdditionalInfo,
+                RoomAmenities = accommodationDetails.RoomAmenities,
+                ScheduleInfo = accommodationDetails.Schedule,
+                TextualDescriptions = accommodationDetails.TextualDescriptions,
+                TypeDescription = accommodationDetails.TypeDescription
             };
 
         private async Task<List<string>> GetCountries()
@@ -285,6 +304,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             return _countries;
         }
 
+        private readonly IAccommodationService _accommodationService;
         private readonly ILogger<AccommodationMapper> _logger;
         private readonly IAccommodationsTreesCache _treesCache;
         private static List<string> _countries = new List<string>(0);
