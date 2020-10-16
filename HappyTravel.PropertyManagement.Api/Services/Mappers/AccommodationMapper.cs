@@ -199,7 +199,8 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             {
                 var accommodations =
                     await _context.Accommodations.Where(ac => ac.CountryCode == countryCode)
-                        .Select(ac => new KeyValuePair<int, Accommodation>(ac.Id, ac.Accommodation)).ToListAsync();
+                        .Select(ac => new KeyValuePair<int, Accommodation>(ac.Id, ac.CalculatedAccommodation))
+                        .ToListAsync();
                 if (!accommodations.Any())
                     continue;
 
@@ -219,10 +220,11 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             CancellationToken cancellationToken)
         {
             var dbAccommodation = new WideAccommodationDetails();
-            dbAccommodation.Accommodation = ToDbAccommodation(accommodation);
+            dbAccommodation.CountryCode = accommodation.Location.CountryCode;
+            dbAccommodation.CalculatedAccommodation = ToDbAccommodation(accommodation);
             dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.Id);
             dbAccommodation.IsCalculated = true;
-            
+
             _context.Accommodations.Add(dbAccommodation);
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -236,8 +238,11 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             if (dbAccommodation.SupplierAccommodationCodes.All(s => s.Key != supplier))
             {
                 dbAccommodation.SupplierAccommodationCodes.Add(supplier, supplierAccommodationId);
+                dbAccommodation.IsCalculated = false;
                 _context.Update(dbAccommodation);
                 await _context.SaveChangesAsync(cancellationToken);
+
+                _context.Entry(dbAccommodation).State = EntityState.Detached;
                 //TODO get calculated and update here 
                 await _accommodationService.RecalculateAccommodationData(htId);
             }

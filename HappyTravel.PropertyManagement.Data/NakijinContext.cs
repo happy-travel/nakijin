@@ -35,7 +35,7 @@ namespace HappyTravel.PropertyManagement.Data
             builder.Entity<WideAccommodationDetails>(a =>
             {
                 a.HasKey(p => p.Id);
-                a.Property(p => p.Accommodation).IsRequired()
+                a.Property(p => p.CalculatedAccommodation).IsRequired()
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),
                         c => JsonConvert.DeserializeObject<Accommodation>(c));

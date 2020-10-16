@@ -33,8 +33,10 @@ namespace HappyTravel.PropertyManagement.Api.Services
 
             accommodation.SuppliersPriority = suppliersPriority;
             accommodation.IsCalculated = false;
+
             _context.Update(accommodation);
             await _context.SaveChangesAsync();
+
             return Result.Success();
         }
 
@@ -46,8 +48,10 @@ namespace HappyTravel.PropertyManagement.Api.Services
 
             accommodation.AccommodationWithManualCorrections = manualCorrectedAccommodation;
             accommodation.IsCalculated = false;
+
             _context.Update(accommodation);
             await _context.SaveChangesAsync();
+
             return Result.Success();
         }
 
@@ -57,23 +61,33 @@ namespace HappyTravel.PropertyManagement.Api.Services
             if (accommodation.IsCalculated)
                 return Result.Failure($"Accommodation data with {nameof(id)} {id} already calculated");
 
-            //TODO: add supplier check
             var supplierAccommodations = await (from ac in _context.RawAccommodations
                 where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
                 select new
                 {
                     Supplier = ac.Supplier,
+                    SupplierAccommodationId = ac.SupplierAccommodationId,
                     AccommodationDetails = ac.Accommodation
                 }).ToListAsync();
+
+            // Checking coincidence of supplier and accommodation
+            supplierAccommodations = (from sa in supplierAccommodations
+                join acs in accommodation.SupplierAccommodationCodes
+                    on new {Supplier = sa.Supplier, SupplierAccommodationId = sa.SupplierAccommodationId}
+                    equals new {Supplier = acs.Key, SupplierAccommodationId = acs.Value}
+                select sa).ToList();
+
 
             var calculatedData = await MergeAccommodationsData(accommodation, supplierAccommodations
                 .ToDictionary(d => d.Supplier,
                     d => JsonConvert.DeserializeObject<AccommodationDetails>(
                         d.AccommodationDetails.RootElement.ToString())));
-            accommodation.Accommodation = calculatedData;
+            accommodation.CalculatedAccommodation = calculatedData;
             accommodation.IsCalculated = true;
+
             _context.Update(accommodation);
             await _context.SaveChangesAsync();
+
             return Result.Success();
         }
 

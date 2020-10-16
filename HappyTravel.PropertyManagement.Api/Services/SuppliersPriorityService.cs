@@ -51,8 +51,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
             return _suppliersPriority;
         }
 
-        private Dictionary<AccommodationDataTypes, List<Suppliers>> _suppliersPriority =
-            new Dictionary<AccommodationDataTypes, List<Suppliers>>();
+        private Dictionary<AccommodationDataTypes, List<Suppliers>> _suppliersPriority = new Dictionary<AccommodationDataTypes, List<Suppliers>>();
 
         private readonly NakijinContext _context;
     }

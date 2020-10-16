@@ -3,6 +3,7 @@ using HappyTravel.EdoContracts.Accommodations.Enums;
 using HappyTravel.EdoContracts.Accommodations.Internals;
 namespace HappyTravel.PropertyManagement.Data.Models.Accommodations
 {
+    // TODO: remove and use contracts accommodation
     public class Accommodation
     {
         public string Name { get; set; }
