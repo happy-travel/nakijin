@@ -33,9 +33,9 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         [HttpPost("{id}/recalculate")]
         [ProducesResponseType((int) HttpStatusCode.NoContent)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> RecalculateAccommodationData(int id)
+        public async Task<IActionResult> RecalculateData(int id)
         {
-            var (_, isFailure, error) = await _accommodationService.RecalculateAccommodationData(id);
+            var (_, isFailure, error) = await _accommodationService.RecalculateData(id);
             if (isFailure)
                 return BadRequest(error);
 
@@ -51,10 +51,10 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         [HttpPost("{accommodationId}/add-priorities")]
         [ProducesResponseType((int) HttpStatusCode.NoContent)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> AddSuppliersPriorityToAccommodation(int accommodationId, [FromBody]Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriorities)
+        public async Task<IActionResult> AddSuppliersPriority(int accommodationId, [FromBody]Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriorities)
         {
             var (_, isFailure, error) =
-                await _accommodationService.AddSuppliersPriorityToAccommodation(accommodationId, suppliersPriorities);
+                await _accommodationService.AddSuppliersPriority(accommodationId, suppliersPriorities);
 
             if (isFailure)
                 return BadRequest(error);
@@ -74,7 +74,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         public async Task<IActionResult> AddManualCorrectionToAccommodation(int accommodationId, Accommodation accommodation)
         {
             var (_, isFailure, error) =
-                await _accommodationService.AddManualCorrectionToAccommodation(accommodationId, accommodation);
+                await _accommodationService.AddManualCorrection(accommodationId, accommodation);
 
             if (isFailure)
                 return BadRequest(error);

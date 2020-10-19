@@ -24,8 +24,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
             _suppliersPriorityService = suppliersPriorityService;
         }
 
-        public async Task<Result> AddSuppliersPriorityToAccommodation(int id,
-            Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority)
+        public async Task<Result> AddSuppliersPriority(int id, Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority)
         {
             var accommodation = await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == id);
             if (accommodation == default)
@@ -40,7 +39,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
             return Result.Success();
         }
 
-        public async Task<Result> AddManualCorrectionToAccommodation(int id, Accommodation manualCorrectedAccommodation)
+        public async Task<Result> AddManualCorrection(int id, Accommodation manualCorrectedAccommodation)
         {
             var accommodation = await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == id);
             if (accommodation == default)
@@ -55,13 +54,13 @@ namespace HappyTravel.PropertyManagement.Api.Services
             return Result.Success();
         }
 
-        public async Task<Result> RecalculateAccommodationData(int id)
+        public async Task<Result> RecalculateData(int id)
         {
             var accommodation = await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == id);
             if (accommodation.IsCalculated)
                 return Result.Failure($"Accommodation data with {nameof(id)} {id} already calculated");
 
-            var supplierAccommodations = await (from ac in _context.RawAccommodations
+            var supplierAccommodationsDetails = await (from ac in _context.RawAccommodations
                 where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
                 select new
                 {
@@ -70,18 +69,18 @@ namespace HappyTravel.PropertyManagement.Api.Services
                     AccommodationDetails = ac.Accommodation
                 }).ToListAsync();
 
-            // Checking coincidence of supplier and accommodation
-            supplierAccommodations = (from sa in supplierAccommodations
+            // Checking match of supplier and accommodation
+            supplierAccommodationsDetails = (from sa in supplierAccommodationsDetails
                 join acs in accommodation.SupplierAccommodationCodes
                     on new {Supplier = sa.Supplier, SupplierAccommodationId = sa.SupplierAccommodationId}
                     equals new {Supplier = acs.Key, SupplierAccommodationId = acs.Value}
                 select sa).ToList();
 
+            var supplierAccommodations = supplierAccommodationsDetails.ToDictionary(d => d.Supplier,
+                d => JsonConvert.DeserializeObject<AccommodationDetails>(d.AccommodationDetails.RootElement.ToString()));
 
-            var calculatedData = await MergeAccommodationsData(accommodation, supplierAccommodations
-                .ToDictionary(d => d.Supplier,
-                    d => JsonConvert.DeserializeObject<AccommodationDetails>(
-                        d.AccommodationDetails.RootElement.ToString())));
+            var calculatedData = await MergeData(accommodation,supplierAccommodations);
+            
             accommodation.CalculatedAccommodation = calculatedData;
             accommodation.IsCalculated = true;
 
@@ -91,8 +90,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
             return Result.Success();
         }
 
-        public async Task<Accommodation> MergeAccommodationsData(WideAccommodationDetails wideAccommodationDetails,
-            Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails)
+        public async Task<Accommodation> MergeData(WideAccommodationDetails wideAccommodationDetails, Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails)
         {
             var suppliersPriority = wideAccommodationDetails.SuppliersPriority.Any()
                 ? wideAccommodationDetails.SuppliersPriority
@@ -148,6 +146,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
 
             var scheduleInfo = MergeScheduleInfo(suppliersPriority[AccommodationDataTypes.Schedule],
                 supplierAccommodationDetails, accommodationWithManualCorrection);
+            
             var propertyType = MergeData(suppliersPriority[AccommodationDataTypes.PropertyType],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Type),
                 accommodationWithManualCorrection.Type, t => t == PropertyTypes.Any);
@@ -170,9 +169,8 @@ namespace HappyTravel.PropertyManagement.Api.Services
             };
         }
 
-        private SlimLocationInfo MergeLocationInfo(in List<Suppliers> suppliersPriority,
-            in Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails,
-            in Accommodation accommodationWithManualCorrection)
+        private SlimLocationInfo MergeLocationInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails,
+            Accommodation accommodationWithManualCorrection)
         {
             var address = MergeData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
@@ -199,9 +197,8 @@ namespace HappyTravel.PropertyManagement.Api.Services
             return new SlimLocationInfo(address, country, locality, localityZone, coordinates);
         }
 
-        private ContactInfo MergeContactInfo(in List<Suppliers> suppliersPriority,
-            in Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails,
-            in Accommodation accommodationWithManualCorrection)
+        private ContactInfo MergeContactInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails,
+            Accommodation accommodationWithManualCorrection)
 
         {
             var contactInfo = new ContactInfo();
@@ -248,9 +245,8 @@ namespace HappyTravel.PropertyManagement.Api.Services
             return contactInfo;
         }
 
-        private ScheduleInfo MergeScheduleInfo(in List<Suppliers> suppliersPriority,
-            in Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails,
-            in Accommodation accommodationWithManualCorrection)
+        private ScheduleInfo MergeScheduleInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails,
+            Accommodation accommodationWithManualCorrection)
         {
             var checkInTime = MergeData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
@@ -286,8 +282,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
                 roomServiceEndTime);
         }
 
-        private T MergeData<T>(List<Suppliers> suppliersPriority, Dictionary<Suppliers, T> suppliersData,
-            T manualCorrectedData, Func<T, bool> defaultChecker)
+        private T MergeData<T>(List<Suppliers> suppliersPriority, Dictionary<Suppliers, T> suppliersData, T manualCorrectedData, Func<T, bool> defaultChecker)
         {
             if (!defaultChecker(manualCorrectedData))
                 return manualCorrectedData;

@@ -244,7 +244,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
 
                 _context.Entry(dbAccommodation).State = EntityState.Detached;
                 //TODO get calculated and update here 
-                await _accommodationService.RecalculateAccommodationData(htId);
+                await _accommodationService.RecalculateData(htId);
             }
 
             return htId;

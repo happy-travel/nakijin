@@ -9,9 +9,9 @@ namespace HappyTravel.PropertyManagement.Api.Services
 {
     public interface IAccommodationService
     {
-        Task<Result> RecalculateAccommodationData(int id);
-        Task<Result> AddSuppliersPriorityToAccommodation(int id, Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority);
-        Task<Accommodation> MergeAccommodationsData(WideAccommodationDetails wideAccommodationDetails, Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails);
-        Task<Result> AddManualCorrectionToAccommodation(int id, Accommodation manualCorrectedAccommodation);
+        Task<Result> RecalculateData(int id);
+        Task<Result> AddSuppliersPriority(int id, Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority);
+        Task<Accommodation> MergeData(WideAccommodationDetails wideAccommodationDetails, Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails);
+        Task<Result> AddManualCorrection(int id, Accommodation manualCorrectedAccommodation);
     }
 }
