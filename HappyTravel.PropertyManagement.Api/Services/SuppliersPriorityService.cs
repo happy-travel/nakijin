@@ -17,6 +17,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
             _context = context;
         }
 
+
         public async Task AddOrUpdate(Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority)
         {
             var jsonDocument = JsonDocument.Parse(JsonConvert.SerializeObject(suppliersPriority));
@@ -38,6 +39,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
             await _context.SaveChangesAsync();
         }
 
+
         public async ValueTask<Dictionary<AccommodationDataTypes, List<Suppliers>>> Get()
         {
             if (_suppliersPriority.Any())
@@ -50,6 +52,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
                     priorityDocument.RootElement.ToString());
             return _suppliersPriority;
         }
+
 
         private Dictionary<AccommodationDataTypes, List<Suppliers>> _suppliersPriority = new Dictionary<AccommodationDataTypes, List<Suppliers>>();
 

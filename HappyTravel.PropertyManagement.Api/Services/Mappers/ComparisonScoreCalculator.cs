@@ -26,6 +26,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             return score;
         }
 
+
         private static float GetAddressScore(in Accommodation nearestAccommodation,
             in AccommodationDetails accommodation)
         {
@@ -47,6 +48,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 return wordsToIgnoreForAddressComparison;
             }
         }
+
 
         private static float GetContactInfoScore(in ContactInfo nearestAccommodationContactInfo,
             in Contracts.ContactInfo accommodationContactInfo)
@@ -78,6 +80,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 return (false, areContains);
             }
         }
+
 
         public static readonly List<string> WordsToIgnoreForHotelNamesComparison =
             new List<string> {"hotel", "apartments"};

@@ -46,6 +46,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             _accommodationService = accommodationService;
         }
 
+
         public async Task MapAccommodations(Suppliers supplier, CancellationToken cancellationToken)
         {
             try
@@ -73,6 +74,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             }
         }
 
+
         // TODO: Change and use return value
         private async Task<Dictionary<string, int>> MapCountry(List<AccommodationDetails> accommodations,
             Suppliers supplier, CancellationToken cancellationToken)
@@ -87,6 +89,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
 
             return results;
         }
+
 
         private async Task<int> Map(AccommodationDetails accommodation, Suppliers supplier,
             CancellationToken cancellationToken)
@@ -193,6 +196,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 accommodation.TypeDescription
             );
 
+
         private async Task ConstructCountryAccommodationsTrees()
         {
             foreach (var countryCode in await GetCountries())
@@ -216,6 +220,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             }
         }
 
+
         private async Task<int> Add(AccommodationDetails accommodation, Suppliers supplier,
             CancellationToken cancellationToken)
         {
@@ -230,6 +235,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
 
             return dbAccommodation.Id;
         }
+
 
         private async Task<int> Update(int htId, string supplierAccommodationId, Suppliers supplier,
             CancellationToken cancellationToken)
@@ -250,6 +256,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             return htId;
         }
 
+
         private async Task<int> AddUncertainMatches(AccommodationDetails accommodation, Suppliers supplier,
             int existingHtId, float score, CancellationToken cancellationToken)
         {
@@ -266,6 +273,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
 
             return newHtId;
         }
+
 
         private static Accommodation ToDbAccommodation(AccommodationDetails accommodationDetails)
             => new Accommodation
@@ -296,6 +304,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 TypeDescription = accommodationDetails.TypeDescription
             };
 
+
         private async Task<List<string>> GetCountries()
         {
             if (_countries.Any())
@@ -308,6 +317,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
 
             return _countries;
         }
+
 
         private readonly IAccommodationService _accommodationService;
         private readonly ILogger<AccommodationMapper> _logger;
