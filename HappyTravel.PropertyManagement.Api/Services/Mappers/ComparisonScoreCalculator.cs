@@ -26,10 +26,11 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             return score;
         }
 
+
         private static float GetAddressScore(in Accommodation nearestAccommodation,
             in AccommodationDetails accommodation)
         {
-            return 0.5f * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Address,
+            return 0.5f * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Location.Address,
                 accommodation.Location.Address, GetWordsToIgnore(accommodation.Location.Country,
                     accommodation.Location.Locality, accommodation.Location.Locality)
             );
@@ -48,35 +49,38 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             }
         }
 
+
         private static float GetContactInfoScore(in ContactInfo nearestAccommodationContactInfo,
             in Contracts.ContactInfo accommodationContactInfo)
         {
-            var contactInfoComparisonResults = new List<(bool isAnyEmpty, bool areEqual)>
+            var contactInfoComparisonResults = new List<(bool isAnyEmpty, bool areContains)>
             {
-                GetComparisonResult(nearestAccommodationContactInfo.Email, accommodationContactInfo.Email),
-                GetComparisonResult(nearestAccommodationContactInfo.WebSite, accommodationContactInfo.WebSite),
-                GetComparisonResult(nearestAccommodationContactInfo.Fax, accommodationContactInfo.Fax),
-                GetComparisonResult(nearestAccommodationContactInfo.Phone.ToNormalizedPhoneNumber(),
+                GetComparisonResult(nearestAccommodationContactInfo.Emails, accommodationContactInfo.Email),
+                GetComparisonResult(nearestAccommodationContactInfo.WebSites, accommodationContactInfo.WebSite),
+                GetComparisonResult(nearestAccommodationContactInfo.Faxes, accommodationContactInfo.Fax),
+                GetComparisonResult(
+                    nearestAccommodationContactInfo.Phones.Select(ph => ph.ToNormalizedPhoneNumber()).ToList(),
                     accommodationContactInfo.Phone.ToNormalizedPhoneNumber())
             };
 
-            if (contactInfoComparisonResults.Any(c => !c.isAnyEmpty && c.areEqual) &&
-                !contactInfoComparisonResults.Any(c => !c.isAnyEmpty && !c.areEqual))
+            if (contactInfoComparisonResults.Any(c => !c.isAnyEmpty && c.areContains) &&
+                !contactInfoComparisonResults.Any(c => !c.isAnyEmpty && !c.areContains))
                 return 0.5f;
 
             return 0;
 
 
-            static (bool isAnyEmpty, bool areEqual) GetComparisonResult(string first, string second)
+            static (bool isAnyEmpty, bool areContains) GetComparisonResult(List<string> first, string second)
             {
-                if (string.IsNullOrEmpty(first) || string.IsNullOrEmpty(second))
+                if (!first.Any() || string.IsNullOrEmpty(second))
                     return (true, false);
 
-                var areEqual = first.Trim().ToLowerInvariant() ==
-                    second.Trim().ToLowerInvariant();
-                return (false, areEqual);
+                var areContains = first.Any(d => d.Trim().ToLowerInvariant() ==
+                    second.Trim().ToLowerInvariant());
+                return (false, areContains);
             }
         }
+
 
         public static readonly List<string> WordsToIgnoreForHotelNamesComparison =
             new List<string> {"hotel", "apartments"};

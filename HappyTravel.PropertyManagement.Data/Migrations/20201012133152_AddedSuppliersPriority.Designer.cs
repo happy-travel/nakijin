@@ -3,15 +3,17 @@ using System.Text.Json;
 using HappyTravel.PropertyManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace HappyTravel.PropertyManagement.Data.Migrations
 {
     [DbContext(typeof(NakijinContext))]
-    partial class NakijinContextModelSnapshot : ModelSnapshot
+    [Migration("20201012133152_AddedSuppliersPriority")]
+    partial class AddedSuppliersPriority
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,11 +56,11 @@ namespace HappyTravel.PropertyManagement.Data.Migrations
                         .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<string>("AccommodationWithManualCorrections")
+                    b.Property<string>("Accommodation")
+                        .IsRequired()
                         .HasColumnType("jsonb");
 
-                    b.Property<string>("CalculatedAccommodation")
-                        .IsRequired()
+                    b.Property<string>("AccommodationWithManualCorrections")
                         .HasColumnType("jsonb");
 
                     b.Property<string>("CountryCode")

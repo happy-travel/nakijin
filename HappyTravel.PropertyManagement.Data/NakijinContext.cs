@@ -4,7 +4,6 @@ using HappyTravel.PropertyManagement.Data.Models.Accommodations;
 using HappyTravel.PropertyManagement.Data.Models.Mappers;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace HappyTravel.PropertyManagement.Data
 {
@@ -33,24 +32,29 @@ namespace HappyTravel.PropertyManagement.Data
                     .IsRequired();
             });
 
-            builder.Entity<Accommodation>(a =>
+            builder.Entity<WideAccommodationDetails>(a =>
             {
                 a.HasKey(p => p.Id);
-                a.Property(p => p.Name).IsRequired();
-                a.Property(p => p.Address).IsRequired();
-                a.Property(p => p.Coordinates).IsRequired();
-                a.Property(p => p.Rating).IsRequired();
-                a.Property(p => p.CountryCode).IsRequired();
-                a.Property(p => p.ContactInfo).HasColumnType("jsonb")
-                    .HasConversion(c => JsonSerializer.Serialize(c, default),
-                        c => JsonSerializer.Deserialize<ContactInfo>(c, default))
-                    .IsRequired();
-                a.Property(p => p.AccommodationDetails).IsRequired();
+                a.Property(p => p.CalculatedAccommodation).IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasConversion(c => JsonConvert.SerializeObject(c),
+                        c => JsonConvert.DeserializeObject<Accommodation>(c));
+                a.Property(p => p.AccommodationWithManualCorrections)
+                    .HasColumnType("jsonb")
+                    .HasConversion(c => JsonConvert.SerializeObject(c),
+                        c => JsonConvert.DeserializeObject<Accommodation>(c));
                 a.Property(p => p.SupplierAccommodationCodes)
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),
                         c => JsonConvert.DeserializeObject<Dictionary<Suppliers, string>>(c))
                     .IsRequired();
+
+                a.Property(p => p.SuppliersPriority)
+                    .HasColumnType("jsonb")
+                    .HasConversion(c => JsonConvert.SerializeObject(c),
+                        c => JsonConvert.DeserializeObject<Dictionary<AccommodationDataTypes, List<Suppliers>>>(c))
+                    .IsRequired();
+                a.Property(p => p.IsCalculated).IsRequired().HasDefaultValue(true);
             });
 
             builder.Entity<AccommodationUncertainMatches>(m =>
@@ -60,11 +64,21 @@ namespace HappyTravel.PropertyManagement.Data
                 m.Property(p => p.NewHtId).IsRequired();
                 m.Property(p => p.IsActive).HasDefaultValue(true).IsRequired();
             });
+
+            builder.Entity<StaticData>(m =>
+            {
+                m.HasKey(p => p.Id);
+                m.Property(p => p.Type).IsRequired();
+                m.Property(p => p.Value)
+                    .HasColumnType("jsonb");
+            });
         }
 
 
-        public virtual DbSet<Accommodation> Accommodations { get; set; }
+        public virtual DbSet<WideAccommodationDetails> Accommodations { get; set; }
         public virtual DbSet<RawAccommodation> RawAccommodations { get; set; }
         public virtual DbSet<AccommodationUncertainMatches> AccommodationUncertainMatches { get; set; }
+
+        public virtual DbSet<StaticData> StaticDatas { get; set; }
     }
 }

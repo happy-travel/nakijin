@@ -1,13 +1,15 @@
+using System.Collections.Generic;
+
 namespace HappyTravel.PropertyManagement.Data.Models.Accommodations
 {
     public class ContactInfo
     {
-        public string Email { get; set; }
+        public List<string> Emails { get; set; } = new List<string>();
 
-        public string Fax { get; set; }
+        public List<string> Faxes { get; set; } = new List<string>();
 
-        public string Phone { get; set; }
+        public List<string> Phones { get; set; } = new List<string>();
 
-        public string WebSite { get; set; }
+        public List<string> WebSites { get; set; } = new List<string>();
     }
 }
