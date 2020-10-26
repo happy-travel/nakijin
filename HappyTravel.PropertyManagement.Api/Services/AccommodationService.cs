@@ -211,7 +211,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
                 coordinates: coordinates,
                 locationDescriptionCode: locationDescriptionCode,
                 pointsOfInterests: pointOfInterests,
-                countryCode: String.Empty,
+                countryCode: countryCode,
                 localityCode: String.Empty,
                 localityZoneCode: String.Empty);
         }
@@ -221,17 +221,17 @@ namespace HappyTravel.PropertyManagement.Api.Services
             Accommodation accommodationWithManualCorrection)
 
         {
-            var contactInfo = new ContactInfo();
-            if (accommodationWithManualCorrection.Contacts.Phones.Any())
+            var contactInfo = new ContactInfo(new List<string>(), new List<string>(), new List<string>(), new List<string>());
+            if (accommodationWithManualCorrection.Contacts.Phones != null && accommodationWithManualCorrection.Contacts.Phones.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Phones);
 
-            if (accommodationWithManualCorrection.Contacts.Emails.Any())
+            if (accommodationWithManualCorrection.Contacts.Emails!= null && accommodationWithManualCorrection.Contacts.Emails.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Emails);
 
-            if (accommodationWithManualCorrection.Contacts.WebSites.Any())
+            if (accommodationWithManualCorrection.Contacts.WebSites!= null && accommodationWithManualCorrection.Contacts.WebSites.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.WebSites);
 
-            if (accommodationWithManualCorrection.Contacts.Faxes.Any())
+            if (accommodationWithManualCorrection.Contacts.Faxes!= null && accommodationWithManualCorrection.Contacts.Faxes.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Faxes);
 
             foreach (var supplier in suppliersPriority)
