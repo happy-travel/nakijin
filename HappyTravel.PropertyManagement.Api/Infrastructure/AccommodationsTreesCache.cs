@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FloxDc.CacheFlow;
 using FloxDc.CacheFlow.Extensions;
-using HappyTravel.PropertyManagement.Data.Models.Accommodations;
+using HappyTravel.EdoContracts.Accommodations;
 using NetTopologySuite.Index.Strtree;
 
 namespace HappyTravel.PropertyManagement.Api.Infrastructure

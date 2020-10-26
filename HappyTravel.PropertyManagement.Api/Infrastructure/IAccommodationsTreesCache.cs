@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.PropertyManagement.Data.Models.Accommodations;
 using NetTopologySuite.Index.Strtree;
 
