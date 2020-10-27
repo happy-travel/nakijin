@@ -12,7 +12,7 @@ namespace HappyTravel.PropertyManagement.Data.Models.Accommodations
         Category = 4,
         ContactInfo = 5,
         LocationInfo = 6,
-        Pictures = 7,
+        Photos = 7,
         Rating = 8,
         RoomAmenities = 9,
         Schedule = 10,

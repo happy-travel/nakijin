@@ -12,7 +12,6 @@ using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.PropertyManagement.Api.Infrastructure;
 using HappyTravel.PropertyManagement.Data.Models.Accommodations;
 using Newtonsoft.Json;
-using ContactInfo = HappyTravel.PropertyManagement.Data.Models.Accommodations.ContactInfo;
 
 namespace HappyTravel.PropertyManagement.Api.Services
 {
@@ -80,7 +79,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
                 select sa).ToList();
 
             var supplierAccommodations = supplierAccommodationsDetails.ToDictionary(d => d.Supplier,
-                d => JsonConvert.DeserializeObject<AccommodationDetails>(d.AccommodationDetails.RootElement.ToString()));
+                d => JsonConvert.DeserializeObject<Accommodation>(d.AccommodationDetails.RootElement.ToString()));
 
             var calculatedData = await MergeData(accommodation, supplierAccommodations);
 
@@ -94,15 +93,16 @@ namespace HappyTravel.PropertyManagement.Api.Services
         }
 
 
-        public async Task<Accommodation> MergeData(WideAccommodationDetails wideAccommodationDetails,
-            Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails)
+        public async Task<Accommodation> MergeData(RichAccommodationDetails wideAccommodationDetails,
+            Dictionary<Suppliers, Accommodation> supplierAccommodationDetails)
         {
             var suppliersPriority = wideAccommodationDetails.SuppliersPriority.Any()
                 ? wideAccommodationDetails.SuppliersPriority
                 : await _suppliersPriorityService.Get();
 
-            var accommodationWithManualCorrection =
-                wideAccommodationDetails.AccommodationWithManualCorrections ?? new Accommodation();
+            var accommodationWithManualCorrection = wideAccommodationDetails.AccommodationWithManualCorrections;
+            // var accommodationWithManualCorrection =
+            //     wideAccommodationDetails.AccommodationWithManualCorrections ?? new Accommodation();
 
             var name = MergeData(suppliersPriority[AccommodationDataTypes.Name],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Name),
@@ -123,9 +123,9 @@ namespace HappyTravel.PropertyManagement.Api.Services
             var locationInfo = MergeLocationInfo(suppliersPriority[AccommodationDataTypes.LocationInfo],
                 supplierAccommodationDetails, accommodationWithManualCorrection);
 
-            var pictures = MergeData(suppliersPriority[AccommodationDataTypes.Pictures],
-                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Pictures),
-                accommodationWithManualCorrection.Pictures, p => p == null || !p.Any());
+            var photos = MergeData(suppliersPriority[AccommodationDataTypes.Photos],
+                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Photos),
+                accommodationWithManualCorrection.Photos, p => p == null || !p.Any());
 
             var textualDescriptions = MergeData(suppliersPriority[AccommodationDataTypes.TextualDescriptions],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.TextualDescriptions),
@@ -141,14 +141,6 @@ namespace HappyTravel.PropertyManagement.Api.Services
                 accommodationWithManualCorrection.AccommodationAmenities,
                 p => p == null || !p.Any());
 
-            var roomAmenities = MergeData(suppliersPriority[AccommodationDataTypes.RoomAmenities],
-                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.RoomAmenities),
-                accommodationWithManualCorrection.RoomAmenities, p => p == null || !p.Any());
-
-            var typeDescription = MergeData(suppliersPriority[AccommodationDataTypes.TypeDescription],
-                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.TypeDescription),
-                accommodationWithManualCorrection.TypeDescription, string.IsNullOrEmpty);
-
             var scheduleInfo = MergeScheduleInfo(suppliersPriority[AccommodationDataTypes.Schedule],
                 supplierAccommodationDetails, accommodationWithManualCorrection);
 
@@ -157,25 +149,24 @@ namespace HappyTravel.PropertyManagement.Api.Services
                 accommodationWithManualCorrection.Type, t => t == PropertyTypes.Any);
 
             return new Accommodation
-            {
-                Name = name,
-                Category = category,
-                Location = locationInfo,
-                Pictures = pictures,
-                Rating = rating,
-                Type = propertyType,
-                AccommodationAmenities = accommodationAmenities,
-                TypeDescription = typeDescription,
-                ContactInfo = contactInfo,
-                AdditionalInfo = additionalInfo,
-                RoomAmenities = roomAmenities,
-                ScheduleInfo = scheduleInfo,
-                TextualDescriptions = textualDescriptions,
-            };
+            (
+                id: String.Empty,
+                name: name,
+                category: category,
+                location: locationInfo,
+                photos: photos,
+                rating: rating,
+                type: propertyType,
+                accommodationAmenities: accommodationAmenities,
+                contacts: contactInfo,
+                additionalInfo: additionalInfo,
+                schedule: scheduleInfo,
+                textualDescriptions: textualDescriptions
+            );
         }
 
 
-        private SlimLocationInfo MergeLocationInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails,
+        private LocationInfo MergeLocationInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, Accommodation> supplierAccommodationDetails,
             Accommodation accommodationWithManualCorrection)
         {
             var address = MergeData(suppliersPriority,
@@ -200,90 +191,117 @@ namespace HappyTravel.PropertyManagement.Api.Services
                     d => d.Value.Location.Coordinates),
                 accommodationWithManualCorrection.Location.Coordinates, point => point == default);
 
-            return new SlimLocationInfo(address, country, locality, localityZone, coordinates);
+            var pointOfInterests = MergeData(suppliersPriority, supplierAccommodationDetails.ToDictionary(d => d.Key,
+                d => d.Value.Location.PointsOfInterests), accommodationWithManualCorrection.Location.PointsOfInterests, poi => poi == null || !poi.Any());
+
+            var locationDescriptionCode = MergeData(suppliersPriority, supplierAccommodationDetails.ToDictionary(d => d.Key,
+                    d => d.Value.Location.LocationDescriptionCode), accommodationWithManualCorrection.Location.LocationDescriptionCode,
+                c => c == LocationDescriptionCodes.Unspecified);
+
+            // CountryCode must be the same, but for understandability merging too
+            var countryCode = MergeData(suppliersPriority, supplierAccommodationDetails.ToDictionary(d => d.Key,
+                    d => d.Value.Location.CountryCode), accommodationWithManualCorrection.Location.CountryCode,
+                string.IsNullOrEmpty);
+
+            return new LocationInfo(
+                address: address,
+                country: country,
+                locality: locality,
+                localityZone: localityZone,
+                coordinates: coordinates,
+                locationDescriptionCode: locationDescriptionCode,
+                pointsOfInterests: pointOfInterests,
+                countryCode: countryCode,
+                localityCode: String.Empty,
+                localityZoneCode: String.Empty);
         }
 
 
-        private ContactInfo MergeContactInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails,
+        private ContactInfo MergeContactInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, Accommodation> supplierAccommodationDetails,
             Accommodation accommodationWithManualCorrection)
 
         {
-            var contactInfo = new ContactInfo();
-            if (accommodationWithManualCorrection.ContactInfo.Phones.Any())
-                contactInfo.Phones.AddRange(accommodationWithManualCorrection.ContactInfo.Phones);
+            var contactInfo = new ContactInfo(new List<string>(), new List<string>(), new List<string>(), new List<string>());
+            if (accommodationWithManualCorrection.Contacts.Phones != null && accommodationWithManualCorrection.Contacts.Phones.Any())
+                contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Phones);
 
-            if (accommodationWithManualCorrection.ContactInfo.Emails.Any())
-                contactInfo.Phones.AddRange(accommodationWithManualCorrection.ContactInfo.Emails);
+            if (accommodationWithManualCorrection.Contacts.Emails!= null && accommodationWithManualCorrection.Contacts.Emails.Any())
+                contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Emails);
 
-            if (accommodationWithManualCorrection.ContactInfo.WebSites.Any())
-                contactInfo.Phones.AddRange(accommodationWithManualCorrection.ContactInfo.WebSites);
+            if (accommodationWithManualCorrection.Contacts.WebSites!= null && accommodationWithManualCorrection.Contacts.WebSites.Any())
+                contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.WebSites);
 
-            if (accommodationWithManualCorrection.ContactInfo.Faxes.Any())
-                contactInfo.Phones.AddRange(accommodationWithManualCorrection.ContactInfo.Faxes);
+            if (accommodationWithManualCorrection.Contacts.Faxes!= null && accommodationWithManualCorrection.Contacts.Faxes.Any())
+                contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Faxes);
 
             foreach (var supplier in suppliersPriority)
             {
                 if (supplierAccommodationDetails.TryGetValue(supplier, out var accommodationDetails))
                 {
-                    if (!string.IsNullOrEmpty(accommodationDetails.Contacts.Phone)
-                        && contactInfo.Phones.All(p
-                            => p.ToNormalizedPhoneNumber() !=
-                            accommodationDetails.Contacts.Phone.ToNormalizedPhoneNumber()))
-                        contactInfo.Phones.Add(accommodationDetails.Contacts.Phone);
+                    contactInfo.Phones.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.Phones, contactInfo.Phones,
+                        p => p.ToNormalizedPhoneNumber()));
 
-                    if (!string.IsNullOrEmpty(accommodationDetails.Contacts.Email)
-                        && contactInfo.Emails.All(e
-                            => e.ToLowerInvariant() != accommodationDetails.Contacts.Email.ToLowerInvariant()))
-                        contactInfo.Emails.Add(accommodationDetails.Contacts.Email);
+                    contactInfo.Emails.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.Emails, contactInfo.Emails,
+                        e => e.ToLowerInvariant()));
 
-                    if (!string.IsNullOrEmpty(accommodationDetails.Contacts.WebSite)
-                        && contactInfo.WebSites.All(w
-                            => w.ToLowerInvariant() != accommodationDetails.Contacts.WebSite.ToLowerInvariant()))
-                        contactInfo.WebSites.Add(accommodationDetails.Contacts.WebSite);
+                    contactInfo.WebSites.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.WebSites, contactInfo.WebSites,
+                        w => w.ToLowerInvariant()));
 
-                    if (!string.IsNullOrEmpty(accommodationDetails.Contacts.Fax)
-                        && contactInfo.Faxes.All(f
-                            => f.ToLowerInvariant() != accommodationDetails.Contacts.Fax.ToLowerInvariant()))
-                        contactInfo.Emails.Add(accommodationDetails.Contacts.Fax);
+                    contactInfo.Faxes.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.Faxes, contactInfo.Faxes,
+                        f => f.ToLowerInvariant()));
                 }
             }
+
+
+            List<string> GetNotExistingContacts(List<string> source, List<string> contacts, Func<string, string> normalizer)
+            {
+                var result = new List<string>();
+                foreach (var contact in contacts)
+                {
+                    if (source.All(c => normalizer(c) != normalizer(contact)))
+                        result.Add(contact);
+                }
+
+                return result;
+            }
+
 
             return contactInfo;
         }
 
 
-        private ScheduleInfo MergeScheduleInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails,
+        private ScheduleInfo MergeScheduleInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, Accommodation> supplierAccommodationDetails,
             Accommodation accommodationWithManualCorrection)
         {
             var checkInTime = MergeData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Schedule.CheckInTime),
-                accommodationWithManualCorrection.ScheduleInfo.CheckInTime, String.IsNullOrEmpty);
+                accommodationWithManualCorrection.Schedule.CheckInTime, String.IsNullOrEmpty);
 
             var checkOutTime = MergeData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Schedule.CheckOutTime),
-                accommodationWithManualCorrection.ScheduleInfo.CheckOutTime, String.IsNullOrEmpty);
+                accommodationWithManualCorrection.Schedule.CheckOutTime, String.IsNullOrEmpty);
 
             var portersStartTime = MergeData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Schedule.PortersStartTime),
-                accommodationWithManualCorrection.ScheduleInfo.PortersStartTime, String.IsNullOrEmpty);
+                accommodationWithManualCorrection.Schedule.PortersStartTime, String.IsNullOrEmpty);
 
             var portersEndTime = MergeData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Schedule.PortersEndTime),
-                accommodationWithManualCorrection.ScheduleInfo.PortersEndTime, String.IsNullOrEmpty);
+                accommodationWithManualCorrection.Schedule.PortersEndTime, String.IsNullOrEmpty);
 
             var roomServiceStartTime = MergeData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Schedule.RoomServiceStartTime),
-                accommodationWithManualCorrection.ScheduleInfo.RoomServiceStartTime, String.IsNullOrEmpty);
+                accommodationWithManualCorrection.Schedule.RoomServiceStartTime, String.IsNullOrEmpty);
 
             var roomServiceEndTime = MergeData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Schedule.RoomServiceEndTime),
-                accommodationWithManualCorrection.ScheduleInfo.RoomServiceEndTime, String.IsNullOrEmpty);
+                accommodationWithManualCorrection.Schedule.RoomServiceEndTime, String.IsNullOrEmpty);
 
             return new ScheduleInfo(checkInTime, checkOutTime, portersStartTime, portersEndTime, roomServiceStartTime,
                 roomServiceEndTime);

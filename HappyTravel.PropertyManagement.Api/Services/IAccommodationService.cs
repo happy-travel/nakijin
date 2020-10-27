@@ -11,7 +11,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
     {
         Task<Result> RecalculateData(int id);
         Task<Result> AddSuppliersPriority(int id, Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority);
-        Task<Accommodation> MergeData(WideAccommodationDetails wideAccommodationDetails, Dictionary<Suppliers, AccommodationDetails> supplierAccommodationDetails);
+        Task<Accommodation> MergeData(RichAccommodationDetails wideAccommodationDetails, Dictionary<Suppliers, Accommodation> supplierAccommodationDetails);
         Task<Result> AddManualCorrection(int id, Accommodation manualCorrectedAccommodation);
     }
 }

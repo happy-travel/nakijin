@@ -98,18 +98,18 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             }
 
 
-            async Task<List<AccommodationDetails>> GetAccommodations(Suppliers supplier, DateTime modDate, int skip,
+            async Task<List<Accommodation>> GetAccommodations(Suppliers supplier, DateTime modDate, int skip,
                 int take)
             {
                 var url = _suppliersOptions.SuppliersUrls[supplier] +
                     $"{AccommodationUrl}?skip={skip}&top={take}&modification-date={modDate}";
-                var (_, isFailure, response, error) = await _connectorClient.Get<List<AccommodationDetails>>(
+                var (_, isFailure, response, error) = await _connectorClient.Get<List<Accommodation>>(
                     new Uri(url), cancellationToken: cancellationToken);
 
                 if (isFailure)
                 {
                     _logger.Log(LogLevel.Error, error.Detail);
-                    return new List<AccommodationDetails>(0);
+                    return new List<Accommodation>(0);
                 }
 
                 return response;

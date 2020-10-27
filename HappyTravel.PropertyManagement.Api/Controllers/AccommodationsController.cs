@@ -10,6 +10,7 @@ using HappyTravel.PropertyManagement.Api.Services.Mappers;
 using HappyTravel.PropertyManagement.Data.Models.Accommodations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Accommodation = HappyTravel.EdoContracts.Accommodations.Accommodation;
 
 namespace HappyTravel.PropertyManagement.Api.Controllers
 {

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.PropertyManagement.Data.Models;
 using HappyTravel.PropertyManagement.Data.Models.Accommodations;
 using HappyTravel.PropertyManagement.Data.Models.Mappers;
@@ -32,7 +33,7 @@ namespace HappyTravel.PropertyManagement.Data
                     .IsRequired();
             });
 
-            builder.Entity<WideAccommodationDetails>(a =>
+            builder.Entity<RichAccommodationDetails>(a =>
             {
                 a.HasKey(p => p.Id);
                 a.Property(p => p.CalculatedAccommodation).IsRequired()
@@ -75,7 +76,7 @@ namespace HappyTravel.PropertyManagement.Data
         }
 
 
-        public virtual DbSet<WideAccommodationDetails> Accommodations { get; set; }
+        public virtual DbSet<RichAccommodationDetails> Accommodations { get; set; }
         public virtual DbSet<RawAccommodation> RawAccommodations { get; set; }
         public virtual DbSet<AccommodationUncertainMatches> AccommodationUncertainMatches { get; set; }
 

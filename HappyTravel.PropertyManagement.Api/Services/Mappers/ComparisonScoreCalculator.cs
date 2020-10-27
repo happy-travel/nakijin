@@ -11,7 +11,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
     public static class ComparisonScoreCalculator
     {
         public static float Calculate(in Accommodation nearestAccommodation,
-            in AccommodationDetails accommodation)
+            in Accommodation accommodation)
         {
             float score = 2 * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Name,
                 accommodation.Name, WordsToIgnoreForHotelNamesComparison);
@@ -21,14 +21,14 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             if (nearestAccommodation.Rating == accommodation.Rating)
                 score += 0.5f;
 
-            score += GetContactInfoScore(nearestAccommodation.ContactInfo, accommodation.Contacts);
+            score += GetContactInfoScore(nearestAccommodation.Contacts, accommodation.Contacts);
 
             return score;
         }
 
 
         private static float GetAddressScore(in Accommodation nearestAccommodation,
-            in AccommodationDetails accommodation)
+            in Accommodation accommodation)
         {
             return 0.5f * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Location.Address,
                 accommodation.Location.Address, GetWordsToIgnore(accommodation.Location.Country,
@@ -50,17 +50,17 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         }
 
 
-        private static float GetContactInfoScore(in ContactInfo nearestAccommodationContactInfo,
+        private static float GetContactInfoScore(in Contracts.ContactInfo nearestAccommodationContactInfo,
             in Contracts.ContactInfo accommodationContactInfo)
         {
             var contactInfoComparisonResults = new List<(bool isAnyEmpty, bool areContains)>
             {
-                GetComparisonResult(nearestAccommodationContactInfo.Emails, accommodationContactInfo.Email),
-                GetComparisonResult(nearestAccommodationContactInfo.WebSites, accommodationContactInfo.WebSite),
-                GetComparisonResult(nearestAccommodationContactInfo.Faxes, accommodationContactInfo.Fax),
+                GetComparisonResult(nearestAccommodationContactInfo.Emails, accommodationContactInfo.Emails),
+                GetComparisonResult(nearestAccommodationContactInfo.WebSites, accommodationContactInfo.WebSites),
+                GetComparisonResult(nearestAccommodationContactInfo.Faxes, accommodationContactInfo.Faxes),
                 GetComparisonResult(
                     nearestAccommodationContactInfo.Phones.Select(ph => ph.ToNormalizedPhoneNumber()).ToList(),
-                    accommodationContactInfo.Phone.ToNormalizedPhoneNumber())
+                    accommodationContactInfo.Phones.Select(p => p.ToNormalizedPhoneNumber()).ToList())
             };
 
             if (contactInfoComparisonResults.Any(c => !c.isAnyEmpty && c.areContains) &&
@@ -70,14 +70,17 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
             return 0;
 
 
-            static (bool isAnyEmpty, bool areContains) GetComparisonResult(List<string> first, string second)
+            static (bool isAnyEmpty, bool areContains) GetComparisonResult(List<string> first, List<string> second)
             {
-                if (!first.Any() || string.IsNullOrEmpty(second))
+                if (!first.Any() || !second.Any())
                     return (true, false);
 
-                var areContains = first.Any(d => d.Trim().ToLowerInvariant() ==
-                    second.Trim().ToLowerInvariant());
-                return (false, areContains);
+                var mergedData = (from f in first
+                    join s in second
+                        on f.Trim().ToLowerInvariant() equals s.Trim().ToLowerInvariant()
+                    select f);
+
+                return (false, mergedData.Any());
             }
         }
 

@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using HappyTravel.EdoContracts.Accommodations;
 
 namespace HappyTravel.PropertyManagement.Data.Models.Accommodations
 {
-    public class WideAccommodationDetails
+    public class RichAccommodationDetails
     {
         public int Id { get; set; }
 
