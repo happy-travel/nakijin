@@ -171,7 +171,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MergeAccommodationsData()
         {
-            // Prevent situation when done more than one Map requests.
+            // Prevent situation when done more than one Merge requests.
             if (_accommodationDataMergeTokenSource.Token.CanBeCanceled)
                 _accommodationMappingTokenSource.Cancel();
 
