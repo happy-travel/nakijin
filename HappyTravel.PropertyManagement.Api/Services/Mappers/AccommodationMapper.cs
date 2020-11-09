@@ -40,7 +40,9 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
     public class AccommodationMapper : IAccommodationMapper
     {
         public AccommodationMapper(NakijinContext context, IAccommodationsTreesCache treesCache,
-            ILoggerFactory loggerFactory, IAccommodationService accommodationService, IOptions<AccommodationsPreloaderOptions> options)
+            ILoggerFactory loggerFactory, IAccommodationService accommodationService,
+            // TODO: change for generic Options model
+            IOptions<AccommodationsPreloaderOptions> options)
         {
             _context = context;
             _treesCache = treesCache;
