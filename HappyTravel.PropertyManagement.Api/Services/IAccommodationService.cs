@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
@@ -10,8 +11,11 @@ namespace HappyTravel.PropertyManagement.Api.Services
     public interface IAccommodationService
     {
         Task<Result> RecalculateData(int id);
+
         Task<Result> AddSuppliersPriority(int id, Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority);
-        Task<Accommodation> MergeData(RichAccommodationDetails wideAccommodationDetails, Dictionary<Suppliers, Accommodation> supplierAccommodationDetails);
+
         Task<Result> AddManualCorrection(int id, Accommodation manualCorrectedAccommodation);
+
+        Task MergeAccommodationsData(CancellationToken cancellationToken);
     }
 }

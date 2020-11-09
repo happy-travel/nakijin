@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.PropertyManagement.Data;
 using HappyTravel.PropertyManagement.Data.Models;
@@ -11,16 +12,69 @@ using HappyTravel.EdoContracts.Accommodations.Enums;
 using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.PropertyManagement.Api.Infrastructure;
 using HappyTravel.PropertyManagement.Data.Models.Accommodations;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace HappyTravel.PropertyManagement.Api.Services
 {
     public class AccommodationService : IAccommodationService
     {
-        public AccommodationService(NakijinContext context, ISuppliersPriorityService suppliersPriorityService)
+        public AccommodationService(NakijinContext context, ISuppliersPriorityService suppliersPriorityService,
+            IOptions<AccommodationsPreloaderOptions> options, ILoggerFactory loggerFactory)
         {
             _context = context;
             _suppliersPriorityService = suppliersPriorityService;
+            _batchSize = options.Value.BatchSize;
+            _logger = loggerFactory.CreateLogger<AccommodationService>();
+        }
+
+
+        public async Task MergeAccommodationsData(CancellationToken cancellationToken)
+        {
+            var notCalculatedAccommodations = new List<RichAccommodationDetails>();
+            var skip = 0;
+            try
+            {
+                do
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    notCalculatedAccommodations = await _context.Accommodations
+                        .Where(ac => !ac.IsCalculated)
+                        .OrderBy(ac => ac.Id)
+                        .Skip(skip)
+                        .Take(_batchSize)
+                        .ToListAsync();
+                    skip += notCalculatedAccommodations.Count;
+
+                    foreach (var ac in notCalculatedAccommodations)
+                    {
+                        var calculatedData = await MergeData(ac);
+
+                        var dbAccommodation = new RichAccommodationDetails();
+                        dbAccommodation.Id = ac.Id;
+                        dbAccommodation.IsCalculated = true;
+                        dbAccommodation.CalculatedAccommodation = calculatedData;
+                        _context.Accommodations.Attach(dbAccommodation);
+                        _context.Entry(dbAccommodation).Property(p => p.CalculatedAccommodation).IsModified = true;
+                        _context.Entry(dbAccommodation).Property(p => p.IsCalculated).IsModified = true;
+                    }
+
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                } while (notCalculatedAccommodations.Count > 0);
+            }
+            catch (TaskCanceledException)
+            {
+                // TODO: Use generated logging extension methods
+                _logger.Log(LogLevel.Information,
+                    $"Merging accommodations was canceled by client request.");
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error,
+                    $"Merging accommodations was stopped because of {ex.Message}");
+            }
         }
 
 
@@ -62,26 +116,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
             if (accommodation.IsCalculated)
                 return Result.Failure($"Accommodation data with {nameof(id)} {id} already calculated");
 
-            var supplierAccommodationsDetails = await (from ac in _context.RawAccommodations
-                where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
-                select new
-                {
-                    Supplier = ac.Supplier,
-                    SupplierAccommodationId = ac.SupplierAccommodationId,
-                    AccommodationDetails = ac.Accommodation
-                }).ToListAsync();
-
-            // Checking match of supplier and accommodation
-            supplierAccommodationsDetails = (from sa in supplierAccommodationsDetails
-                join acs in accommodation.SupplierAccommodationCodes
-                    on new {Supplier = sa.Supplier, SupplierAccommodationId = sa.SupplierAccommodationId}
-                    equals new {Supplier = acs.Key, SupplierAccommodationId = acs.Value}
-                select sa).ToList();
-
-            var supplierAccommodations = supplierAccommodationsDetails.ToDictionary(d => d.Supplier,
-                d => JsonConvert.DeserializeObject<Accommodation>(d.AccommodationDetails.RootElement.ToString()));
-
-            var calculatedData = await MergeData(accommodation, supplierAccommodations);
+            var calculatedData = await MergeData(accommodation);
 
             accommodation.CalculatedAccommodation = calculatedData;
             accommodation.IsCalculated = true;
@@ -93,14 +128,33 @@ namespace HappyTravel.PropertyManagement.Api.Services
         }
 
 
-        public async Task<Accommodation> MergeData(RichAccommodationDetails wideAccommodationDetails,
-            Dictionary<Suppliers, Accommodation> supplierAccommodationDetails)
+        public async Task<Accommodation> MergeData(RichAccommodationDetails accommodation)
         {
-            var suppliersPriority = wideAccommodationDetails.SuppliersPriority.Any()
-                ? wideAccommodationDetails.SuppliersPriority
+            var supplierAccommodations = await (from ac in _context.RawAccommodations
+                where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
+                select new
+                {
+                    Supplier = ac.Supplier,
+                    SupplierAccommodationId = ac.SupplierAccommodationId,
+                    AccommodationDetails = ac.Accommodation
+                }).ToListAsync();
+
+            // Checking match of supplier and accommodation
+            supplierAccommodations = (from sa in supplierAccommodations
+                join acs in accommodation.SupplierAccommodationCodes
+                    on new {Supplier = sa.Supplier, SupplierAccommodationId = sa.SupplierAccommodationId}
+                    equals new {Supplier = acs.Key, SupplierAccommodationId = acs.Value}
+                select sa).ToList();
+
+            var supplierAccommodationDetails = supplierAccommodations.ToDictionary(d => d.Supplier,
+                d => JsonConvert.DeserializeObject<Accommodation>(d.AccommodationDetails.RootElement.ToString()));
+
+            
+            var suppliersPriority = accommodation.SuppliersPriority.Any()
+                ? accommodation.SuppliersPriority
                 : await _suppliersPriorityService.Get();
 
-            var accommodationWithManualCorrection = wideAccommodationDetails.AccommodationWithManualCorrections;
+            var accommodationWithManualCorrection = accommodation.AccommodationWithManualCorrections;
             // var accommodationWithManualCorrection =
             //     wideAccommodationDetails.AccommodationWithManualCorrections ?? new Accommodation();
 
@@ -225,13 +279,13 @@ namespace HappyTravel.PropertyManagement.Api.Services
             if (accommodationWithManualCorrection.Contacts.Phones != null && accommodationWithManualCorrection.Contacts.Phones.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Phones);
 
-            if (accommodationWithManualCorrection.Contacts.Emails!= null && accommodationWithManualCorrection.Contacts.Emails.Any())
+            if (accommodationWithManualCorrection.Contacts.Emails != null && accommodationWithManualCorrection.Contacts.Emails.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Emails);
 
-            if (accommodationWithManualCorrection.Contacts.WebSites!= null && accommodationWithManualCorrection.Contacts.WebSites.Any())
+            if (accommodationWithManualCorrection.Contacts.WebSites != null && accommodationWithManualCorrection.Contacts.WebSites.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.WebSites);
 
-            if (accommodationWithManualCorrection.Contacts.Faxes!= null && accommodationWithManualCorrection.Contacts.Faxes.Any())
+            if (accommodationWithManualCorrection.Contacts.Faxes != null && accommodationWithManualCorrection.Contacts.Faxes.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Faxes);
 
             foreach (var supplier in suppliersPriority)
@@ -323,8 +377,10 @@ namespace HappyTravel.PropertyManagement.Api.Services
             return manualCorrectedData;
         }
 
-
+        
+        private readonly int _batchSize;
         private readonly ISuppliersPriorityService _suppliersPriorityService;
         private readonly NakijinContext _context;
+        private readonly ILogger<AccommodationService> _logger;
     }
 }
