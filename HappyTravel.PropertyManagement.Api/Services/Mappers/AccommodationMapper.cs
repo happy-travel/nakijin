@@ -175,7 +175,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
 
         private async Task<List<AccommodationKeyData>> GetNearest(Contracts.Accommodation accommodation)
         {
-            var tree = await _treesCache.Get("IT");
+            var tree = await _treesCache.Get(accommodation.Location.CountryCode);
 
             if (tree == default)
                 return new List<AccommodationKeyData>();
