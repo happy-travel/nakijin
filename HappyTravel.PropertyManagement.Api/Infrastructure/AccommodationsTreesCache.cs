@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using FloxDc.CacheFlow;
 using FloxDc.CacheFlow.Extensions;
-using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.PropertyManagement.Api.Models.Mappers;
 using NetTopologySuite.Index.Strtree;
 
 namespace HappyTravel.PropertyManagement.Api.Infrastructure
@@ -15,11 +14,11 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
             _doubleFlow = doubleFlow;
         }
 
-        public Task Set(string countryCode, STRtree<KeyValuePair<int,Accommodation>> tree)
+        public Task Set(string countryCode, STRtree<AccommodationKeyData> tree)
             => _doubleFlow.SetAsync(BuildKey(countryCode), tree, ExpirationPeriod);
 
-        public ValueTask<STRtree<KeyValuePair<int,Accommodation>>> Get(string countryCode)
-            => _doubleFlow.GetAsync<STRtree<KeyValuePair<int,Accommodation>>>(BuildKey(countryCode), ExpirationPeriod);
+        public ValueTask<STRtree<AccommodationKeyData>> Get(string countryCode)
+            => _doubleFlow.GetAsync<STRtree<AccommodationKeyData>>(BuildKey(countryCode), ExpirationPeriod);
 
         private string BuildKey(string countryCode)
             => _doubleFlow.BuildKey(nameof(AccommodationsTreesCache), countryCode);
