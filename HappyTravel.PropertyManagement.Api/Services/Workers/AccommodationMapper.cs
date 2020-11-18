@@ -20,7 +20,7 @@ using NetTopologySuite.Index.Strtree;
 using Newtonsoft.Json;
 using AccommodationDetails = HappyTravel.EdoContracts.Accommodations;
 
-namespace HappyTravel.PropertyManagement.Api.Services.Mappers
+namespace HappyTravel.PropertyManagement.Api.Services.Workers
 {
     /*
         1. Get accommodations by a country
@@ -259,13 +259,15 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                             .Select(ac => new AccommodationKeyData
                                 {HtId = ac.Id, Data = ac.CalculatedAccommodation, SupplierAccommodationCodes = ac.SupplierAccommodationCodes})
                             .ToListAsync();
-                    if (!accommodations.Any())
-                        break;
+                  
 
                     skip += _batchSize;
                     countryAccommodations.AddRange(accommodations);
                 } while (accommodations.Count > 0);
 
+                if (!countryAccommodations.Any())
+                    break;
+                    
                 var tree = new STRtree<AccommodationKeyData>(countryAccommodations.Count);
                 foreach (var ac in countryAccommodations)
                 {

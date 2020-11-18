@@ -17,7 +17,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
-namespace HappyTravel.PropertyManagement.Api.Services.Mappers
+namespace HappyTravel.PropertyManagement.Api.Services.Workers
 {
     public class AccommodationPreloader : IAccommodationPreloader
     {
@@ -42,7 +42,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 var skip = 0;
                 do
                 {
-                    var batch = await GetAccommodations(supplier, modificationDate.Value, skip, _options.BatchSize);
+                                                                                                                                                                                                                                                                                          var batch = await GetAccommodations(supplier, modificationDate.Value, skip, _options.BatchSize);
                     if (!batch.Any())
                         break;
 
@@ -69,7 +69,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                                 Accommodation = json,
                                 Supplier = supplier,
                                 SupplierAccommodationId = accommodation.Id
-                            };
+                            }; 
 
                             if (existedIds.TryGetValue((accommodation.Id, supplier), out var existedId))
                             {

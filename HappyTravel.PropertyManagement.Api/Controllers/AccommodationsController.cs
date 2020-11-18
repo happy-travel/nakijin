@@ -1,29 +1,61 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
+using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.PropertyManagement.Api.Services;
 using HappyTravel.PropertyManagement.Data.Models;
-using HappyTravel.PropertyManagement.Api.Services.Mappers;
 using HappyTravel.PropertyManagement.Data.Models.Accommodations;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Accommodation = HappyTravel.EdoContracts.Accommodations.Accommodation;
 
 namespace HappyTravel.PropertyManagement.Api.Controllers
 {
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/{v:apiVersion}/[controller]")]
+    [Route("api/{v:apiVersion}")]
     [Produces("application/json")]
     public class AccommodationsController : ControllerBase
     {
-        public AccommodationsController(IServiceProvider serviceProvider, IAccommodationService accommodationService)
+        public AccommodationsController(IAccommodationService accommodationService)
         {
-            _serviceProvider = serviceProvider;
             _accommodationService = accommodationService;
+        }
+
+
+        /// <summary>
+        /// Gets accommodation
+        /// </summary>
+        /// <param name="supplier">Supplier</param>
+        /// <param name="supplierAccommodationCode">Supplier Accommodation code </param>
+        /// <returns>Accommodation details</returns>
+        [HttpGet("suppliers/{supplier}/accommodations/{supplierAccommodationCode}")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Accommodation), (int) HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> Get(Suppliers supplier, string supplierAccommodationCode)
+        {
+            var (_, isFailure, result, error) = await _accommodationService.Get(supplier, supplierAccommodationCode);
+            if (isFailure)
+                return BadRequest(error);
+
+            return Ok(result);
+        }
+
+
+        /// <summary>
+        /// Gets accommodation
+        /// </summary>
+        /// <param name="accommodationId">Accommodation Id</param>
+        /// <returns>Accommodation details</returns>
+        [HttpGet("suppliers/{supplier}/accommodations/{supplierAccommodationCode}")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Accommodation), (int) HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> Get(int accommodationId)
+        {
+            var (_, isFailure, result, error) = await _accommodationService.Get(accommodationId);
+            if (isFailure)
+                return BadRequest(error);
+
+            return Ok(result);
         }
 
 
@@ -32,7 +64,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         /// </summary>
         /// <param name="id">Accommodation id</param>
         /// <returns></returns>
-        [HttpPost("{id}/recalculate")]
+        [HttpPost("accommodations/{id}/recalculate")]
         [ProducesResponseType((int) HttpStatusCode.NoContent)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> RecalculateData(int id)
@@ -51,7 +83,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         /// <param name="accommodationId"></param>
         /// <param name="suppliersPriorities"></param>
         /// <returns></returns>
-        [HttpPost("{accommodationId}/add-priorities")]
+        [HttpPost("accommodations/{accommodationId}/add-priorities")]
         [ProducesResponseType((int) HttpStatusCode.NoContent)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> AddSuppliersPriority(int accommodationId,
@@ -73,7 +105,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         /// <param name="accommodationId"></param>
         /// <param name="accommodation"></param>
         /// <returns></returns>
-        [HttpPost("{accommodationId}/manual-correction")]
+        [HttpPost("accommodations/{accommodationId}/manual-correction")]
         [ProducesResponseType((int) HttpStatusCode.NoContent)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> AddManualCorrectionToAccommodation(int accommodationId, Accommodation accommodation)
@@ -88,117 +120,6 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         }
 
 
-        [HttpGet]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
-        public async Task<IActionResult> Get()
-        {
-            return await Task.FromResult(Ok());
-        }
-
-
-        [HttpPost("preload/cancel")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
-        public IActionResult CancelAccommodationPreloading()
-        {
-            _accommodationPreloaderTokenSource.Cancel();
-            return Ok();
-        }
-
-
-        [HttpPost("preload")]
-        [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult Preload([FromQuery(Name = "modification-date")]
-            DateTime? modificationDate, CancellationToken cancellationToken = default)
-        {
-            // Prevent situation when done more than one Preload requests.
-            if (_accommodationPreloaderTokenSource.Token.CanBeCanceled)
-                _accommodationPreloaderTokenSource.Cancel();
-
-            _accommodationPreloaderTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
-
-            Task.Run(async () =>
-            {
-                using var scope = _serviceProvider.CreateScope();
-
-                var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
-                await preloader.Preload(modificationDate, _accommodationPreloaderTokenSource.Token);
-            }, cancellationToken);
-            return Accepted();
-        }
-
-
-        [HttpPost("map/cancel")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
-        public IActionResult CancelAccommodationMapping()
-        {
-            _accommodationMappingTokenSource.Cancel();
-            return Ok();
-        }
-
-
-        [HttpPost("merge/cancel")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
-        public IActionResult CancelAccommodationDataMerge()
-        {
-            _accommodationDataMergeTokenSource.Cancel();
-            return Ok();
-        }
-
-
-        [HttpPost("map/suppliers/{supplier}")]
-        [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult MapAccommodations(Suppliers supplier)
-        {
-            // Prevent situation when done more than one Map requests.
-            if (_accommodationMappingTokenSource.Token.CanBeCanceled)
-                _accommodationMappingTokenSource.Cancel();
-
-            _accommodationMappingTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
-
-            Task.Run(async () =>
-            {
-                using var scope = _serviceProvider.CreateScope();
-
-                var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                await mapper.MapAccommodations(supplier, _accommodationMappingTokenSource.Token);
-            }, _accommodationMappingTokenSource.Token);
-
-            return Accepted();
-        }
-
-
-        [HttpPost("merge")]
-        [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult MergeAccommodationsData()
-        {
-            // Prevent situation when done more than one Merge requests.
-            if (_accommodationDataMergeTokenSource.Token.CanBeCanceled)
-                _accommodationMappingTokenSource.Cancel();
-
-            _accommodationDataMergeTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
-
-            Task.Run(async () =>
-            {
-                using var scope = _serviceProvider.CreateScope();
-
-                var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationService>();
-                await accommodationService.MergeAccommodationsData(_accommodationDataMergeTokenSource.Token);
-            }, _accommodationDataMergeTokenSource.Token);
-
-            return Accepted();
-        }
-
-
-        private static CancellationTokenSource _accommodationDataMergeTokenSource =
-            new CancellationTokenSource(TimeSpan.FromDays(1));
-
-        private static CancellationTokenSource _accommodationMappingTokenSource =
-            new CancellationTokenSource(TimeSpan.FromDays(1));
-
-        private static CancellationTokenSource _accommodationPreloaderTokenSource =
-            new CancellationTokenSource(TimeSpan.FromDays(1));
-
         private readonly IAccommodationService _accommodationService;
-        private readonly IServiceProvider _serviceProvider;
     }
 }

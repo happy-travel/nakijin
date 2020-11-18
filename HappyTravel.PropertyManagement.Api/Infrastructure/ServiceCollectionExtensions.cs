@@ -5,7 +5,7 @@ using System.Net.Http;
 using HappyTravel.PropertyManagement.Api.Infrastructure.Environments;
 using HappyTravel.PropertyManagement.Api.Services;
 using HappyTravel.PropertyManagement.Data.Models;
-using HappyTravel.PropertyManagement.Api.Services.Mappers;
+using HappyTravel.PropertyManagement.Api.Services.Workers;
 using HappyTravel.PropertyManagement.Data;
 using HappyTravel.SecurityClient;
 using IdentityModel;
@@ -28,6 +28,7 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
             services.AddSingleton<IAccommodationsTreesCache, AccommodationsTreesCache>();
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
             services.AddTransient<IAccommodationMapper, AccommodationMapper>();
+            services.AddTransient<IAccommodationsDataMerger, AccommodationDataMerger>();
             services.AddTransient<IAccommodationService, AccommodationService>();
             services.AddTransient<ISuppliersPriorityService, SuppliersPriorityService>();
             services.AddTransient<IConnectorClient, ConnectorClient>();
@@ -97,10 +98,10 @@ namespace HappyTravel.PropertyManagement.Api.Infrastructure
             {
                 var suppliers = EnvironmentVariableHelper.Get("Nakijin:Preloader:Suppliers", configuration);
                 var batchSize = EnvironmentVariableHelper.Get("Nakijin:Preloader:BatchSize", configuration);
-                o.Suppliers = string.IsNullOrEmpty(suppliers)
+               o.Suppliers = string.IsNullOrEmpty(suppliers)
                     ? Enum.GetValues(typeof(Suppliers)).Cast<Suppliers>().ToList()
-                    : suppliers.Split(";").Cast<Suppliers>().ToList();
-                o.BatchSize = string.IsNullOrEmpty(batchSize) ? 1000 : int.Parse(batchSize);
+                    : suppliers.Split(";").Cast<Suppliers>().ToList();                
+                    o.BatchSize = string.IsNullOrEmpty(batchSize) ? 1000 : int.Parse(batchSize);
             });
 
             var suppliersOptions = vaultClient.Get(configuration["Nakijin:Suppliers:Options"]).GetAwaiter().GetResult();

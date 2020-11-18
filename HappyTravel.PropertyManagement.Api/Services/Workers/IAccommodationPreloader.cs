@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace HappyTravel.PropertyManagement.Api.Services.Mappers
+namespace HappyTravel.PropertyManagement.Api.Services.Workers
 {
     public interface IAccommodationPreloader
     {
