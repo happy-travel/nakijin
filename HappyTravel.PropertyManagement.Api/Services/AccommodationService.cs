@@ -87,7 +87,7 @@ namespace HappyTravel.PropertyManagement.Api.Services
             if (accommodation.IsCalculated)
                 return Result.Failure($"Accommodation data with {nameof(id)} {id} already calculated");
 
-            var calculatedData = await _accommodationsDataMerger.MergeData(accommodation);
+            var calculatedData = await _accommodationsDataMerger.Merge(accommodation);
 
             accommodation.CalculatedAccommodation = calculatedData;
             accommodation.IsCalculated = true;

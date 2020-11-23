@@ -107,7 +107,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
                 using var scope = _serviceProvider.CreateScope();
 
                 var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
-                await accommodationService.MergeAccommodationsData(_accommodationDataMergeTokenSource.Token);
+                await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
             }, _accommodationDataMergeTokenSource.Token);
 
             return Accepted();
