@@ -7,8 +7,8 @@ namespace HappyTravel.PropertyManagement.Api.Services.Workers
 {
     public interface IAccommodationsDataMerger
     {
-        Task MergeAccommodationsData(CancellationToken cancellationToken);
+        Task MergeAll(CancellationToken cancellationToken);
 
-        Task<Accommodation> MergeData(RichAccommodationDetails accommodation);
+        Task<Accommodation> Merge(RichAccommodationDetails accommodation);
     }
 }

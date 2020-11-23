@@ -46,7 +46,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         /// </summary>
         /// <param name="accommodationId">Accommodation Id</param>
         /// <returns>Accommodation details</returns>
-        [HttpGet("suppliers/{supplier}/accommodations/{accommodationId}")]
+        [HttpGet("accommodations/{accommodationId}")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(Accommodation), (int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> Get(int accommodationId)

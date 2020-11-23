@@ -29,7 +29,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Workers
         }
 
 
-        public async Task MergeAccommodationsData(CancellationToken cancellationToken)
+        public async Task MergeAll(CancellationToken cancellationToken)
         {
             var notCalculatedAccommodations = new List<RichAccommodationDetails>();
             var skip = 0;
@@ -48,7 +48,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Workers
 
                     foreach (var ac in notCalculatedAccommodations)
                     {
-                        var calculatedData = await MergeData(ac);
+                        var calculatedData = await Merge(ac);
 
                         var dbAccommodation = new RichAccommodationDetails();
                         dbAccommodation.Id = ac.Id;
@@ -76,7 +76,7 @@ namespace HappyTravel.PropertyManagement.Api.Services.Workers
         }
 
 
-        public async Task<Accommodation> MergeData(RichAccommodationDetails accommodation)
+        public async Task<Accommodation> Merge(RichAccommodationDetails accommodation)
         {
             var supplierAccommodations = await (from ac in _context.RawAccommodations
                 where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
