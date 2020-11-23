@@ -4,6 +4,21 @@
         <name>HappyTravel.PropertyManagement.Api</name>
     </assembly>
     <members>
+        <member name="M:HappyTravel.PropertyManagement.Api.Controllers.AccommodationsController.Get(HappyTravel.PropertyManagement.Data.Models.Suppliers,System.String)">
+            <summary>
+            Gets accommodation
+            </summary>
+            <param name="supplier">Supplier</param>
+            <param name="supplierAccommodationCode">Supplier Accommodation code </param>
+            <returns>Accommodation details</returns>
+        </member>
+        <member name="M:HappyTravel.PropertyManagement.Api.Controllers.AccommodationsController.Get(System.Int32)">
+            <summary>
+            Gets accommodation
+            </summary>
+            <param name="accommodationId">Accommodation Id</param>
+            <returns>Accommodation details</returns>
+        </member>
         <member name="M:HappyTravel.PropertyManagement.Api.Controllers.AccommodationsController.RecalculateData(System.Int32)">
             <summary>
             Calculates accommodation final data

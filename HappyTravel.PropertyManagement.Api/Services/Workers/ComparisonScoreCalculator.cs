@@ -1,12 +1,10 @@
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.PropertyManagement.Api.Infrastructure;
-using HappyTravel.PropertyManagement.Data.Models.Accommodations;
 using Contracts = HappyTravel.EdoContracts.Accommodations.Internals;
 
-namespace HappyTravel.PropertyManagement.Api.Services.Mappers
+namespace HappyTravel.PropertyManagement.Api.Services.Workers
 {
     public static class ComparisonScoreCalculator
     {
@@ -32,7 +30,8 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
         {
             return 0.5f * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Location.Address,
                 accommodation.Location.Address, GetWordsToIgnore(accommodation.Location.Country,
-                    accommodation.Location.Locality, accommodation.Location.Locality)
+                    //Not all providers have localityZone
+                    accommodation.Location.Locality, accommodation.Location.LocalityZone, nearestAccommodation.Location.LocalityZone)
             );
 
 
@@ -59,8 +58,8 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
                 GetComparisonResult(nearestAccommodationContactInfo.WebSites, accommodationContactInfo.WebSites),
                 GetComparisonResult(nearestAccommodationContactInfo.Faxes, accommodationContactInfo.Faxes),
                 GetComparisonResult(
-                    nearestAccommodationContactInfo.Phones.Select(ph => ph.ToNormalizedPhoneNumber()).ToList(),
-                    accommodationContactInfo.Phones.Select(p => p.ToNormalizedPhoneNumber()).ToList())
+                    nearestAccommodationContactInfo.Phones.Select(ph => ph?.ToNormalizedPhoneNumber()).ToList(),
+                    accommodationContactInfo.Phones.Select(p => p?.ToNormalizedPhoneNumber()).ToList())
             };
 
             if (contactInfoComparisonResults.Any(c => !c.isAnyEmpty && c.areContains) &&
@@ -72,12 +71,12 @@ namespace HappyTravel.PropertyManagement.Api.Services.Mappers
 
             static (bool isAnyEmpty, bool areContains) GetComparisonResult(List<string> first, List<string> second)
             {
-                if (!first.Any() || !second.Any())
+                if (!first.Any() || !second.Any() || first.All(string.IsNullOrEmpty)|| second.All(string.IsNullOrEmpty ))
                     return (true, false);
 
                 var mergedData = (from f in first
                     join s in second
-                        on f.Trim().ToLowerInvariant() equals s.Trim().ToLowerInvariant()
+                        on f?.Trim().ToLowerInvariant() equals s?.Trim().ToLowerInvariant()
                     select f);
 
                 return (false, mergedData.Any());
