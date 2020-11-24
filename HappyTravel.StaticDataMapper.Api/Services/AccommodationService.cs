@@ -22,12 +22,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services
 
         public async Task<Result> MatchUncertain(int uncertainMatchId)
         {
-            var uncertainMatch = await _context.AccommodationUncertainMatches.SingleOrDefaultAsync(um => um.Id == uncertainMatchId);
+            var uncertainMatch = await _context.AccommodationUncertainMatches
+                .SingleOrDefaultAsync(um => um.Id == uncertainMatchId && um.IsActive);
 
             if (uncertainMatch == default)
-                return Result.Failure($"Uncertain match with id {uncertainMatchId} does not exist.");
-
-            if (!uncertainMatch.IsActive)
                 return Result.Success();
 
             var firstAccommodation = await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.ExistingHtId);
