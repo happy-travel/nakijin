@@ -120,7 +120,7 @@ namespace HappyTravel.PropertyManagement.Api.Controllers
         }
 
 
-        [HttpPost("accommodations/uncertainMatches/{uncertainMatchId}/match")]
+        [HttpPost("accommodations/uncertain֊matches/{uncertainMatchId}/match")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> MatchUncertain(int uncertainMatchId)
