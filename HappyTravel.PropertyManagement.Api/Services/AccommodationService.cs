@@ -20,6 +20,35 @@ namespace HappyTravel.PropertyManagement.Api.Services
         }
 
 
+        public async Task<Result> MatchUncertain(int uncertainMatchId)
+        {
+            var uncertainMatch = await _context.AccommodationUncertainMatches
+                .SingleOrDefaultAsync(um => um.Id == uncertainMatchId && um.IsActive);
+
+            if (uncertainMatch == default)
+                return Result.Success();
+
+            var firstAccommodation = await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.ExistingHtId);
+            var secondAccommodation = await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.NewHtId);
+
+            foreach (var supplierAccommodation in secondAccommodation.SupplierAccommodationCodes)
+                firstAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key, supplierAccommodation.Value);
+
+            firstAccommodation.IsCalculated = false;
+            secondAccommodation.IsActive = false;
+            uncertainMatch.IsActive = false;
+
+            _context.Update(firstAccommodation);
+            _context.Update(secondAccommodation);
+            _context.Update(uncertainMatch);
+            await _context.SaveChangesAsync();
+
+            await _accommodationsDataMerger.Merge(firstAccommodation);
+
+            return Result.Success();
+        }
+
+
         public async Task<Result<Accommodation>> Get(Suppliers supplier, string supplierAccommodationCode)
         {
             var searchJson = "{" + $"\"{supplier.ToString().ToLower()}\":\"{supplierAccommodationCode}\"" + "}";

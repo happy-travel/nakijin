@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyTravel.PropertyManagem
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HappyTravel.SecurityClient", "HappyTravel.SecurityClient\HappyTravel.SecurityClient.csproj", "{87B97B8B-BC55-4C09-8CC9-BBE16657082A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HappyTravel.PropertyManagement.Tests", "HappyTravel.PropertyManagement.Tests\HappyTravel.PropertyManagement.Tests.csproj", "{1A1E6C46-C76A-47CF-A2EB-5344CD9902A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{87B97B8B-BC55-4C09-8CC9-BBE16657082A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87B97B8B-BC55-4C09-8CC9-BBE16657082A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{87B97B8B-BC55-4C09-8CC9-BBE16657082A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A1E6C46-C76A-47CF-A2EB-5344CD9902A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A1E6C46-C76A-47CF-A2EB-5344CD9902A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A1E6C46-C76A-47CF-A2EB-5344CD9902A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A1E6C46-C76A-47CF-A2EB-5344CD9902A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

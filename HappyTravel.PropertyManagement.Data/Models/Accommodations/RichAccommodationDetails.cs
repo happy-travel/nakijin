@@ -17,5 +17,7 @@ namespace HappyTravel.PropertyManagement.Data.Models.Accommodations
         public Dictionary<Suppliers, string> SupplierAccommodationCodes { get; set; } = new Dictionary<Suppliers, string>();
 
         public bool IsCalculated { get; set; }
+        
+        public bool IsActive { get; set; }
     }
 }

@@ -56,6 +56,7 @@ namespace HappyTravel.PropertyManagement.Data
                         c => JsonConvert.DeserializeObject<Dictionary<AccommodationDataTypes, List<Suppliers>>>(c))
                     .IsRequired();
                 a.Property(p => p.IsCalculated).IsRequired().HasDefaultValue(true);
+                a.Property(p => p.IsActive).IsRequired().HasDefaultValue(true);
             });
 
             builder.Entity<AccommodationUncertainMatches>(m =>
