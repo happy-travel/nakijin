@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>HappyTravel.StaticDataMapper.Api</name>
+    </assembly>
+    <members>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(HappyTravel.StaticDataMapper.Data.Models.Suppliers,System.String)">
+            <summary>
+            Gets accommodation
+            </summary>
+            <param name="supplier">Supplier</param>
+            <param name="supplierAccommodationCode">Supplier Accommodation code </param>
+            <returns>Accommodation details</returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.Int32)">
+            <summary>
+            Gets accommodation
+            </summary>
+            <param name="accommodationId">Accommodation Id</param>
+            <returns>Accommodation details</returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.RecalculateData(System.Int32)">
+            <summary>
+            Calculates accommodation final data
+            </summary>
+            <param name="id">Accommodation id</param>
+            <returns></returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.AddSuppliersPriority(System.Int32,System.Collections.Generic.Dictionary{HappyTravel.StaticDataMapper.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers}})">
+            <summary>
+            Adds suppliers priority to accommodation
+            </summary>
+            <param name="accommodationId"></param>
+            <param name="suppliersPriorities"></param>
+            <returns></returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.AddManualCorrectionToAccommodation(System.Int32,HappyTravel.EdoContracts.Accommodations.Accommodation)">
+            <summary>
+             Adds manual correction to accommodation
+            </summary>
+            <param name="accommodationId"></param>
+            <param name="accommodation"></param>
+            <returns></returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.SuppliersPriorityController.AddOrUpdateDefaultPriority(System.Collections.Generic.Dictionary{HappyTravel.StaticDataMapper.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers}})">
+            <summary>
+            Sets or updates default priority
+            </summary>
+            <param name="suppliersPriority"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
