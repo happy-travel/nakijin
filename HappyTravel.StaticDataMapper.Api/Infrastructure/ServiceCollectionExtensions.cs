@@ -9,6 +9,7 @@ using HappyTravel.StaticDataMapper.Api.Infrastructure.Environments;
 using HappyTravel.StaticDataMapper.Api.Services;
 using HappyTravel.StaticDataMapper.Api.Services.Workers;
 using IdentityModel;
+using LocationNameNormalizer.Extensions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,13 +27,19 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
             services.AddSingleton<IAccommodationsTreesCache, AccommodationsTreesCache>();
+            services.AddSingleton<ILocalitiesCache, LocalitiesCache>();
+            services.AddSingleton<ICountriesCache, CountriesCache>();
+
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
             services.AddTransient<IAccommodationMapper, AccommodationMapper>();
             services.AddTransient<IAccommodationsDataMerger, AccommodationDataMerger>();
+            services.AddTransient<ILocationMapper, LocationMapper>();
             services.AddTransient<IAccommodationService, AccommodationService>();
             services.AddTransient<ISuppliersPriorityService, SuppliersPriorityService>();
             services.AddTransient<IConnectorClient, ConnectorClient>();
             services.AddSingleton<ISecurityTokenManager, SecurityTokenManager>();
+
+            services.AddNameNormalizationServices();
 
             return services;
         }
@@ -98,10 +105,10 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             {
                 var suppliers = EnvironmentVariableHelper.Get("Nakijin:Preloader:Suppliers", configuration);
                 var batchSize = EnvironmentVariableHelper.Get("Nakijin:Preloader:BatchSize", configuration);
-               o.Suppliers = string.IsNullOrEmpty(suppliers)
+                o.Suppliers = string.IsNullOrEmpty(suppliers)
                     ? Enum.GetValues(typeof(Suppliers)).Cast<Suppliers>().ToList()
-                    : suppliers.Split(";").Cast<Suppliers>().ToList();                
-                    o.BatchSize = string.IsNullOrEmpty(batchSize) ? 1000 : int.Parse(batchSize);
+                    : suppliers.Split(";").Cast<Suppliers>().ToList();
+                o.BatchSize = string.IsNullOrEmpty(batchSize) ? 1000 : int.Parse(batchSize);
             });
 
             var suppliersOptions = vaultClient.Get(configuration["Nakijin:Suppliers:Options"]).GetAwaiter().GetResult();

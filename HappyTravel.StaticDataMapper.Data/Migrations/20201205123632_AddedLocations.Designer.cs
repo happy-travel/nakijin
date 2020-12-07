@@ -3,15 +3,17 @@ using System.Text.Json;
 using HappyTravel.StaticDataMapper.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace HappyTravel.StaticDataMapper.Data.Migrations
 {
     [DbContext(typeof(NakijinContext))]
-    partial class NakijinContextModelSnapshot : ModelSnapshot
+    [Migration("20201205123632_AddedLocations")]
+    partial class AddedLocations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
