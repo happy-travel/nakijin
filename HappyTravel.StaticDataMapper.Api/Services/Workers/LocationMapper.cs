@@ -20,11 +20,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public class LocationMapper : ILocationMapper
     {
         public LocationMapper(NakijinContext context, ICountriesCache countriesCache, ILocalitiesCache localitiesCache,
-            ILocationNameNormalizer locationNameNormalizer, IOptions<AccommodationsPreloaderOptions> options, ILoggerFactory loggerFactory)
+            LocalityZonesCache localityZonesCache,
+            ILocationNameNormalizer locationNameNormalizer, IOptions<AccommodationsPreloaderOptions> options,
+            ILoggerFactory loggerFactory)
         {
             _context = context;
             _countriesCache = countriesCache;
             _localitiesCache = localitiesCache;
+            _localityZonesCache = localityZonesCache;
             _batchSize = options.Value.BatchSize;
             _locationNameNormalizer = locationNameNormalizer;
             _logger = loggerFactory.CreateLogger<LocationMapper>();
@@ -291,7 +294,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private async Task ConstructCountriesCache()
+        public async Task ConstructCountriesCache()
         {
             // Countries data are not large, so not need to get by batches 
             var countries = await _context.Countries.ToListAsync();
@@ -300,7 +303,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 await _countriesCache.Set(country.Code, country);
         }
 
-        private async Task ConstructLocalitiesCache()
+        public async Task ConstructLocalitiesCache()
         {
             var localities = new List<KeyValuePair<string, Locality>>();
             int skip = 0;
@@ -320,9 +323,38 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             } while (localities.Count > 0);
         }
 
+        public async Task ConstructLocalityZonesCache()
+        {
+            var localityZones = new List<KeyValuePair<(string CountryCode,string LocalityName), LocalityZone>>();
+            int skip = 0;
+            do
+            {
+                localityZones = await (from z in _context.LocalityZones
+                        join l in _context.Localities on z.LocalityId equals l.Id
+                        join c in _context.Countries on l.CountryId equals c.Id
+                        select new
+                            KeyValuePair<(string CountryCode, string LocalityName), LocalityZone>(
+                                // TODO: check
+                                ValueTuple.Create(c.Code, l.Names.RootElement.GetProperty(Constants.DefaultLanguageCode).GetString()),
+                                z))
+                    .Skip(skip).Take(_batchSize).ToListAsync();
+
+                skip += localityZones.Count();
+
+                foreach (var localityZone in localityZones)
+                {
+                    var defaultLocalityZoneName =
+                        LanguageHelper.GetValue(localityZone.Value.Names, Constants.DefaultLanguageCode);
+                    await _localityZonesCache.Set(localityZone.Key.Item1, localityZone.Key.Item2,
+                        defaultLocalityZoneName, localityZone.Value);
+                }
+            } while (localityZones.Count > 0);
+        }
+
         private const string DefaultLanguageCode = "en";
         private readonly ILocalitiesCache _localitiesCache;
         private readonly ICountriesCache _countriesCache;
+        private readonly ILocalityZonesCache _localityZonesCache;
         private readonly NakijinContext _context;
         private readonly ILocationNameNormalizer _locationNameNormalizer;
         private readonly ILogger<LocationMapper> _logger;

@@ -29,6 +29,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             services.AddSingleton<IAccommodationsTreesCache, AccommodationsTreesCache>();
             services.AddSingleton<ILocalitiesCache, LocalitiesCache>();
             services.AddSingleton<ICountriesCache, CountriesCache>();
+            services.AddSingleton<ILocalityZonesCache, LocalityZonesCache>();
 
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
             services.AddTransient<IAccommodationMapper, AccommodationMapper>();

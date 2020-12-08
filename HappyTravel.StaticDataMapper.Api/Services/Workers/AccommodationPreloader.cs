@@ -12,6 +12,8 @@ using HappyTravel.StaticDataMapper.Data.Models;
 using HappyTravel.StaticDataMapper.Data.Models.Mappers;
 using HappyTravel.SecurityClient;
 using HappyTravel.StaticDataMapper.Api.Infrastructure;
+using HappyTravel.StaticDataMapper.Api.Models;
+using LocationNameNormalizer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -23,13 +25,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     {
         public AccommodationPreloader(NakijinContext context,
             IConnectorClient connectorClient, ILoggerFactory loggerFactory,
-            IOptions<AccommodationsPreloaderOptions> options, IOptions<SuppliersOptions> supplierOptions)
+            IOptions<AccommodationsPreloaderOptions> options, IOptions<SuppliersOptions> supplierOptions, ILocationNameNormalizer locationNameNormalizer)
         {
             _context = context;
             _logger = loggerFactory.CreateLogger<AccommodationPreloader>();
             _options = options.Value;
             _connectorClient = connectorClient;
             _suppliersOptions = supplierOptions.Value;
+            _locationNameNormalizer = locationNameNormalizer;
         }
 
 
@@ -62,10 +65,15 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                             var str = JsonConvert.SerializeObject(accommodation);
                             var json = JsonDocument.Parse(str);
 
+                            var defaultCountryName = LanguageHelper.GetValue(accommodation.Location.Country,
+                                Constants.DefaultLanguageCode);
+                            var normalizedCountryCode =
+                                _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName,
+                                    accommodation.Location.CountryCode);
                             var entity = new RawAccommodation
                             {
                                 Id = 0,
-                                CountryCode = accommodation.Location.CountryCode,
+                                CountryCode = normalizedCountryCode,
                                 Accommodation = json,
                                 Supplier = supplier,
                                 SupplierAccommodationId = accommodation.Id
@@ -118,7 +126,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
 
         private const string AccommodationUrl = "accommodations";
-
+        private readonly ILocationNameNormalizer _locationNameNormalizer;
         private readonly IConnectorClient _connectorClient;
         private readonly SuppliersOptions _suppliersOptions;
         private readonly NakijinContext _context;
