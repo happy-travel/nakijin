@@ -21,7 +21,8 @@ namespace HappyTravel.StaticDataMapper.Data
             var dbOptions = GetDbOptions(configuration);
 
             var dbContextOptions = new DbContextOptionsBuilder<NakijinContext>();
-            dbContextOptions.UseNpgsql(GetConnectionString(configuration, dbOptions), builder => builder.UseNetTopologySuite());
+            dbContextOptions.UseNpgsql(GetConnectionString(configuration, dbOptions),
+                builder => builder.UseNetTopologySuite());
             var context = new NakijinContext(dbContextOptions.Options);
 
             return context;
@@ -30,17 +31,18 @@ namespace HappyTravel.StaticDataMapper.Data
 
         private static string GetConnectionString(IConfiguration configuration, Dictionary<string, string> dbOptions)
             => string.Format(configuration["ConnectionStrings:Nakijin"],
-                "127.0.0.1",
-                "54320",
-                "docker",
-                "docker");
+                dbOptions["host"],
+                dbOptions["port"],
+                dbOptions["userId"],
+                dbOptions["password"]);
 
 
         private static Dictionary<string, string> GetDbOptions(IConfiguration configuration)
         {
             using var vaultClient = new VaultClient.VaultClient(new VaultOptions
             {
-                BaseUrl = new Uri(Environment.GetEnvironmentVariable(configuration["Vault:Endpoint"])!, UriKind.Absolute),
+                BaseUrl = new Uri(Environment.GetEnvironmentVariable(configuration["Vault:Endpoint"])!,
+                    UriKind.Absolute),
                 Engine = configuration["Vault:Engine"],
                 Role = configuration["Vault:Role"]
             });
