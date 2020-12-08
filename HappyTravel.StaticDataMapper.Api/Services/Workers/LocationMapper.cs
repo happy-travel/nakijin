@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using HappyTravel.StaticDataMapper.Data;
 using HappyTravel.StaticDataMapper.Data.Models;
 using System.Threading.Tasks;
@@ -9,6 +11,7 @@ using HappyTravel.StaticDataMapper.Api.Models;
 using LocationNameNormalizer;
 using LocationNameNormalizer.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
@@ -17,24 +20,38 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public class LocationMapper : ILocationMapper
     {
         public LocationMapper(NakijinContext context, ICountriesCache countriesCache, ILocalitiesCache localitiesCache,
-            ILocationNameNormalizer locationNameNormalizer, IOptions<AccommodationsPreloaderOptions> options)
+            ILocationNameNormalizer locationNameNormalizer, IOptions<AccommodationsPreloaderOptions> options, ILoggerFactory loggerFactory)
         {
             _context = context;
             _countriesCache = countriesCache;
             _localitiesCache = localitiesCache;
             _batchSize = options.Value.BatchSize;
             _locationNameNormalizer = locationNameNormalizer;
+            _logger = loggerFactory.CreateLogger<LocationMapper>();
         }
 
 
-        public async Task MapLocations(Suppliers supplier)
+        public async Task MapLocations(Suppliers supplier, CancellationToken cancellationToken = default)
         {
-            await MapCountries(supplier);
-            await MapLocalities(supplier);
-            await MapLocalityZones(supplier);
+            try
+            {
+                await MapCountries(supplier, cancellationToken);
+                await MapLocalities(supplier, cancellationToken);
+                await MapLocalityZones(supplier, cancellationToken);
+            }
+            catch (TaskCanceledException)
+            {
+                _logger.Log(LogLevel.Information,
+                    $"Mapping locations of {supplier.ToString()} was canceled by client request.");
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error,
+                    $"Mapping locations of {supplier.ToString()} was stopped because of {ex.Message}");
+            }
         }
 
-        private async Task MapCountries(Suppliers supplier)
+        private async Task MapCountries(Suppliers supplier, CancellationToken cancellationToken)
         {
             await ConstructCountriesCache();
 
@@ -47,13 +64,15 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         Code = ac.Accommodation.RootElement.GetProperty("location").GetProperty("countryCode")
                             .GetString()
                     })
-                .Distinct().ToListAsync();
+                .Distinct().ToListAsync(cancellationToken);
 
             var existingCountries = new List<Country>();
             var newCountries = new List<Country>();
 
             foreach (var country in countries)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var defaultName = LanguageHelper.GetValue(country.Names, DefaultLanguageCode);
                 var code = _locationNameNormalizer.GetNormalizedCountryCode(defaultName, country.Code);
                 var dbCountry = new Country
@@ -84,11 +103,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             _context.UpdateRange(existingCountries);
             _context.AddRange(newCountries);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
 
-        private async Task MapLocalities(Suppliers supplier)
+        private async Task MapLocalities(Suppliers supplier, CancellationToken cancellationToken)
         {
             await ConstructCountriesCache();
             await ConstructLocalitiesCache();
@@ -107,10 +126,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         LocalityNames = ac.Accommodation.RootElement.GetProperty("location").GetProperty("locality")
                             .GetString()
                     })
-                .Distinct().ToListAsync();
+                .Distinct().ToListAsync(cancellationToken);
 
             foreach (var locality in localities)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var defaultCountryName = LanguageHelper.GetValue(locality.CountryNames, DefaultLanguageCode);
                 var countryCode =
                     _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName, locality.CountryCode);
@@ -153,7 +174,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
         }
 
-        private async Task MapLocalityZones(Suppliers supplier)
+        private async Task MapLocalityZones(Suppliers supplier, CancellationToken cancellationToken)
         {
             await ConstructCountriesCache();
             await ConstructLocalitiesCache();
@@ -175,10 +196,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                             .GetProperty("localityZoneCode")
                             .GetString()
                     })
-                .Distinct().ToListAsync();
+                .Distinct().ToListAsync(cancellationToken);
 
             var normalizedLocalityZones = localityZones.Select(lz =>
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var defaultCountryName = LanguageHelper.GetValue(lz.CountryNames, DefaultLanguageCode);
                 var countryCode =
                     _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName, lz.CountryCode);
@@ -228,7 +251,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             _context.Update(localityZonesToUpdate);
             _context.AddRange(newLocalityZones);
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
 
@@ -302,6 +325,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         private readonly ICountriesCache _countriesCache;
         private readonly NakijinContext _context;
         private readonly ILocationNameNormalizer _locationNameNormalizer;
+        private readonly ILogger<LocationMapper> _logger;
         private readonly int _batchSize;
     }
 }
