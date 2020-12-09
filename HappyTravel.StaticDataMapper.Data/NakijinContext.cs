@@ -36,6 +36,9 @@ namespace HappyTravel.StaticDataMapper.Data
             builder.Entity<RichAccommodationDetails>(a =>
             {
                 a.HasKey(p => p.Id);
+                a.Property(p => p.CountryId).IsRequired();
+                a.Property(p => p.LocalityId).IsRequired();
+                a.Property(p => p.LocalityZoneId);
                 a.Property(p => p.CalculatedAccommodation).IsRequired()
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),
@@ -80,13 +83,13 @@ namespace HappyTravel.StaticDataMapper.Data
                 c.HasKey(p => p.Id);
                 c.Property(p => p.Code).IsRequired();
                 c.Property(p => p.Names).HasColumnType("jsonb").IsRequired();
-                c.Property(p=> p.SupplierCountryCodes).HasColumnType("jsonb")
+                c.Property(p => p.SupplierCountryCodes).HasColumnType("jsonb")
                     .HasConversion(p => JsonConvert.SerializeObject(p),
-                        p => JsonConvert.DeserializeObject<Dictionary<Suppliers,string>>(p))
+                        p => JsonConvert.DeserializeObject<Dictionary<Suppliers, string>>(p))
                     .IsRequired();
                 c.Property(p => p.IsActive).IsRequired().HasDefaultValue(true);
             });
-            
+
             builder.Entity<Locality>(l =>
             {
                 l.HasKey(p => p.Id);
@@ -103,7 +106,7 @@ namespace HappyTravel.StaticDataMapper.Data
                 lz.HasKey(p => p.Id);
                 lz.Property(p => p.LocalityId).IsRequired();
                 lz.Property(p => p.Names).HasColumnType("jsonb").IsRequired();
-                lz.Property(p=> p.SupplierLocalityZoneCodes).HasColumnType("jsonb")
+                lz.Property(p => p.SupplierLocalityZoneCodes).HasColumnType("jsonb")
                     .HasConversion(p => JsonConvert.SerializeObject(p),
                         p => JsonConvert.DeserializeObject<Dictionary<Suppliers, string>>(p));
                 lz.Property(p => p.IsActive).IsRequired();
