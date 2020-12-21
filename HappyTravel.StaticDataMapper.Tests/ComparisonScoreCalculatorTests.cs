@@ -30,16 +30,14 @@ namespace HappyTravel.StaticDataMapper.Tests
                     locality: "Rapolano Terme",
                     coordinates: new GeoPoint(45.478919982910156, 9.145230293273926),
                     countryCode: "IT",
-                    localityCode: "",
                     localityZone: "San Marco",
-                    localityZoneCode: "",
                     pointsOfInterests: new List<PoiInfo>(),
                     isHistoricalBuilding: false,
                     locationDescriptionCode: LocationDescriptionCodes.Unspecified
                 ),
                 accommodationAmenities: null,
                 additionalInfo: null,
-                type: PropertyTypes.Any,
+                type: PropertyTypes.Hotels,
                 photos: null,
                 category: null,
                 schedule: new ScheduleInfo(),
@@ -64,16 +62,14 @@ namespace HappyTravel.StaticDataMapper.Tests
                     locality: "Venice",
                     coordinates: new GeoPoint(45.4789183436, 9.14515969029),
                     countryCode: "IT",
-                    localityCode: "",
                     localityZone: "",
-                    localityZoneCode: "",
                     pointsOfInterests: new List<PoiInfo>(),
                     isHistoricalBuilding: false,
                     locationDescriptionCode: LocationDescriptionCodes.Unspecified
                 ),
                 accommodationAmenities: null,
                 additionalInfo: null,
-                type: PropertyTypes.Any,
+                type: PropertyTypes.Hotels,
                 photos: null,
                 category: null,
                 schedule: new ScheduleInfo(),
@@ -82,7 +78,7 @@ namespace HappyTravel.StaticDataMapper.Tests
                 textualDescriptions: null
             );
 
-            var score = ComparisonScoreCalculator.Calculate(nearestAccommodation, accommodation);
+           // var score = ComparisonScoreCalculator.Calculate(nearestAccommodation, accommodation);
 
             Assert.True(true);
         }

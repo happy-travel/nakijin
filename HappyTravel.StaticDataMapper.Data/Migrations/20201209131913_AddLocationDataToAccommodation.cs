@@ -32,7 +32,7 @@ namespace HappyTravel.StaticDataMapper.Data.Migrations
             migrationBuilder.DropColumn(
                 name: "CountryId",
                 table: "Accommodations");
-
+                                                                                                                                                               
             migrationBuilder.DropColumn(
                 name: "LocalityId",
                 table: "Accommodations");

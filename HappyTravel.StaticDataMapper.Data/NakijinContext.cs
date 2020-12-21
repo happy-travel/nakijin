@@ -42,11 +42,11 @@ namespace HappyTravel.StaticDataMapper.Data
                 a.Property(p => p.CalculatedAccommodation).IsRequired()
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),
-                        c => JsonConvert.DeserializeObject<Accommodation>(c));
+                        c => JsonConvert.DeserializeObject<MultilingualAccommodation>(c));
                 a.Property(p => p.AccommodationWithManualCorrections)
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),
-                        c => JsonConvert.DeserializeObject<Accommodation>(c));
+                        c => JsonConvert.DeserializeObject<MultilingualAccommodation>(c));
                 a.Property(p => p.SupplierAccommodationCodes)
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),

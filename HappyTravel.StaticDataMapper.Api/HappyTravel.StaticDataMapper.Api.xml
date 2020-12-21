@@ -34,7 +34,7 @@
             <param name="suppliersPriorities"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.AddManualCorrectionToAccommodation(System.Int32,HappyTravel.EdoContracts.Accommodations.Accommodation)">
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.AddManualCorrectionToAccommodation(System.Int32,HappyTravel.EdoContracts.Accommodations.MultilingualAccommodation)">
             <summary>
              Adds manual correction to accommodation
             </summary>

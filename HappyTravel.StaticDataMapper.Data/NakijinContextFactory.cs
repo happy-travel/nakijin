@@ -31,10 +31,10 @@ namespace HappyTravel.StaticDataMapper.Data
 
         private static string GetConnectionString(IConfiguration configuration, Dictionary<string, string> dbOptions)
             => string.Format(configuration["ConnectionStrings:Nakijin"],
-                dbOptions["host"],
-                dbOptions["port"],
-                dbOptions["userId"],
-                dbOptions["password"]);
+                "127.0.0.1",
+                "54320",
+                "docker",
+                "docker");
 
 
         private static Dictionary<string, string> GetDbOptions(IConfiguration configuration)

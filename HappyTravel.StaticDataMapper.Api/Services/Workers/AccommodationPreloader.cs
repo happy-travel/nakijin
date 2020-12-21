@@ -25,7 +25,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     {
         public AccommodationPreloader(NakijinContext context,
             IConnectorClient connectorClient, ILoggerFactory loggerFactory,
-            IOptions<AccommodationsPreloaderOptions> options, IOptions<SuppliersOptions> supplierOptions, ILocationNameNormalizer locationNameNormalizer)
+            IOptions<AccommodationsPreloaderOptions> options, IOptions<SuppliersOptions> supplierOptions,
+            ILocationNameNormalizer locationNameNormalizer)
         {
             _context = context;
             _logger = loggerFactory.CreateLogger<AccommodationPreloader>();
@@ -45,11 +46,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 var skip = 0;
                 do
                 {
-                                                                                                                                                                                                                                                                                          var batch = await GetAccommodations(supplier, modificationDate.Value, skip, _options.BatchSize);
+                    var batch = await GetAccommodations(supplier, modificationDate.Value, skip, _options.BatchSize);
                     if (!batch.Any())
                         break;
 
-                    var ids = batch.Select(a => a.Id);
+                    var ids = batch.Select(a => a.SupplierCode);
                     var existedIds = await _context.RawAccommodations
                         .Where(a => a.Supplier == supplier && ids.Contains(a.SupplierAccommodationId))
                         .Select(a => new {a.Id, a.Supplier, SupplierId = a.SupplierAccommodationId})
@@ -65,8 +66,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                             var str = JsonConvert.SerializeObject(accommodation);
                             var json = JsonDocument.Parse(str);
 
-                            var defaultCountryName = LanguageHelper.GetValue(accommodation.Location.Country,
-                                Constants.DefaultLanguageCode);
+                            accommodation.Location.Country.TryGetValueOrDefault(Constants.DefaultLanguageCode,
+                                out var defaultCountryName);
                             var normalizedCountryCode =
                                 _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName,
                                     accommodation.Location.CountryCode);
@@ -76,10 +77,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                                 CountryCode = normalizedCountryCode,
                                 Accommodation = json,
                                 Supplier = supplier,
-                                SupplierAccommodationId = accommodation.Id
-                            }; 
+                                SupplierAccommodationId = accommodation.SupplierCode
+                            };
 
-                            if (existedIds.TryGetValue((accommodation.Id, supplier), out var existedId))
+                            if (existedIds.TryGetValue((accommodation.SupplierCode, supplier), out var existedId))
                             {
                                 entity.Id = existedId;
                                 existedAccommodations.Add(entity);
@@ -106,18 +107,18 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
 
 
-            async Task<List<Accommodation>> GetAccommodations(Suppliers supplier, DateTime modDate, int skip,
+            async Task<List<MultilingualAccommodation>> GetAccommodations(Suppliers supplier, DateTime modDate, int skip,
                 int take)
             {
                 var url = _suppliersOptions.SuppliersUrls[supplier] +
                     $"{AccommodationUrl}?skip={skip}&top={take}&modification-date={modDate}";
-                var (_, isFailure, response, error) = await _connectorClient.Get<List<Accommodation>>(
+                var (_, isFailure, response, error) = await _connectorClient.Get<List<MultilingualAccommodation>>(
                     new Uri(url), cancellationToken: cancellationToken);
 
                 if (isFailure)
                 {
                     _logger.Log(LogLevel.Error, error.Detail);
-                    return new List<Accommodation>(0);
+                    return new List<MultilingualAccommodation>(0);
                 }
 
                 return response;

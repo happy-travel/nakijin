@@ -14,7 +14,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
     [ApiVersion("1.0")]
     [Route("api/{v:apiVersion}")]
     [Produces("application/json")]
-    public class AccommodationsController : ControllerBase
+    public class AccommodationsController : StaticDataControllerBase
     {
         public AccommodationsController(IAccommodationService accommodationService)
         {
@@ -33,7 +33,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> Get(Suppliers supplier, string supplierAccommodationCode)
         {
-            var (_, isFailure, result, error) = await _accommodationService.Get(supplier, supplierAccommodationCode);
+            var (_, isFailure, result, error) = await _accommodationService.Get(supplier, supplierAccommodationCode, LanguageCode);
             if (isFailure)
                 return BadRequest(error);
 
@@ -51,7 +51,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> Get(int accommodationId)
         {
-            var (_, isFailure, result, error) = await _accommodationService.Get(accommodationId);
+            var (_, isFailure, result, error) = await _accommodationService.Get(accommodationId, LanguageCode);
             if (isFailure)
                 return BadRequest(error);
 
@@ -108,7 +108,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         [HttpPost("accommodations/{accommodationId}/manual-correction")]
         [ProducesResponseType((int) HttpStatusCode.NoContent)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> AddManualCorrectionToAccommodation(int accommodationId, Accommodation accommodation)
+        public async Task<IActionResult> AddManualCorrectionToAccommodation(int accommodationId, MultilingualAccommodation accommodation)
         {
             var (_, isFailure, error) =
                 await _accommodationService.AddManualCorrection(accommodationId, accommodation);

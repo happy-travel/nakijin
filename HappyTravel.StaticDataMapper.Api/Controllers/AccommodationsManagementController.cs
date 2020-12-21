@@ -13,7 +13,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
     [ApiVersion("1.0")]
     [Route("api/{v:apiVersion}/[controller]")]
     [Produces("application/json")]
-    public class AccommodationsManagementController : ControllerBase
+    public class AccommodationsManagementController : StaticDataControllerBase
     {
         public AccommodationsManagementController(IServiceProvider serviceProvider)
         {
