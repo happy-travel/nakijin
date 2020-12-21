@@ -293,8 +293,15 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             return JsonConvert.SerializeObject(normalized);
         }
 
+        public async Task ConstructLocationsCache()
+        {
+            await ConstructCountriesCache();
+            await ConstructLocalitiesCache();
+            await ConstructLocalityZonesCache();
+        }
 
-        public async Task ConstructCountriesCache()
+
+        private async Task ConstructCountriesCache()
         {
             // Countries data are not large, so not need to get by batches 
             var countries = await _context.Countries.ToListAsync();
@@ -303,7 +310,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 await _countriesCache.Set(country.Code, country);
         }
 
-        public async Task ConstructLocalitiesCache()
+        private async Task ConstructLocalitiesCache()
         {
             var localities = new List<KeyValuePair<string, Locality>>();
             int skip = 0;
@@ -323,7 +330,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             } while (localities.Count > 0);
         }
 
-        public async Task ConstructLocalityZonesCache()
+        private async Task ConstructLocalityZonesCache()
         {
             var localityZones = new List<KeyValuePair<(string CountryCode,string LocalityName), LocalityZone>>();
             int skip = 0;

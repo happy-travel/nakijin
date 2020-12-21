@@ -65,9 +65,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             try
             {
                 await ConstructCountryAccommodationsTrees();
-                await _locationMapper.ConstructCountriesCache();
-                await _locationMapper.ConstructLocalitiesCache();
-                await _locationMapper.ConstructLocalityZonesCache();
+                await _locationMapper.ConstructLocationsCache();
 
                 foreach (var countryCode in await GetCountries())
                 {

@@ -6,6 +6,7 @@ namespace HappyTravel.StaticDataMapper.Data.Models.Mappers
     {
         public int Id { get; set; }
         public string CountryCode { get; set; }
+        // TODO: change to MultLingualAccommodation
         public JsonDocument Accommodation { get; set; }
         public Suppliers Supplier { get; set; }
         public string SupplierAccommodationId { get; set; }
