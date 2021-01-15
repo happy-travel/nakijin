@@ -109,7 +109,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Name),
                 accommodationWithManualCorrection.Name, string.IsNullOrEmpty);
 
-            var category = MergeData(suppliersPriority[AccommodationDataTypes.Category],
+            var category = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.Category],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Category),
                 accommodationWithManualCorrection.Category, string.IsNullOrEmpty);
 
@@ -133,11 +133,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 accommodationWithManualCorrection.TextualDescriptions,
                 p => p == null || !p.Any());
 
-            var additionalInfo = MergeData(suppliersPriority[AccommodationDataTypes.AdditionalInfo],
+            var additionalInfo = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.AdditionalInfo],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.AdditionalInfo),
                 accommodationWithManualCorrection.AdditionalInfo, p => p == null || !p.Any());
 
-            var accommodationAmenities = MergeData(suppliersPriority[AccommodationDataTypes.AccommodationAmenities],
+            var accommodationAmenities = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.AccommodationAmenities],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.AccommodationAmenities),
                 accommodationWithManualCorrection.AccommodationAmenities,
                 p => p == null || !p.Any());
@@ -171,7 +171,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             Dictionary<Suppliers, MultilingualAccommodation> supplierAccommodationDetails,
             MultilingualAccommodation accommodationWithManualCorrection)
         {
-            var address = MergeData(suppliersPriority,
+            var address = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.Address),
                 accommodationWithManualCorrection.Location.Address, string.IsNullOrEmpty);
@@ -349,7 +349,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             var result = new MultiLanguage<T>();
             foreach (var language in Enum.GetValues(typeof(Languages)))
             {
-                var languageCode = MultiLanguage.LanguagesHelper.GetLanguageCode((Languages) language);
+                var languageCode = LanguagesHelper.GetLanguageCode((Languages) language);
                 var selectedLanguageData = suppliersData.ToDictionary(d => d.Key, d =>
                 {
                     d.Value.TryGetValueOrDefault(languageCode, out var value);

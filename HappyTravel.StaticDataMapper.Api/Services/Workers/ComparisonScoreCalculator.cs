@@ -29,8 +29,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         private static float GetAddressScore(in MultilingualAccommodation nearestAccommodation,
             in MultilingualAccommodation accommodation)
         {
-            return 0.5f * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Location.Address,
-                accommodation.Location.Address, GetWordsToIgnore(accommodation.Location.Country.En,
+            return 0.5f * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Location.Address.En,
+                accommodation.Location.Address.En, GetWordsToIgnore(accommodation.Location.Country.En,
                     //Not all providers have localityZone
                     accommodation.Location.Locality.En, accommodation.Location.LocalityZone.En,
                     nearestAccommodation.Location.LocalityZone.En)

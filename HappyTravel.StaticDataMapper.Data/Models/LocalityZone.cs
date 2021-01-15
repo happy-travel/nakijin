@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Text.Json;
+using HappyTravel.MultiLanguage;
 
 namespace HappyTravel.StaticDataMapper.Data.Models
 {
@@ -7,7 +7,7 @@ namespace HappyTravel.StaticDataMapper.Data.Models
     {
         public int Id { get; set; }
         public int LocalityId { get; set; }
-        public JsonDocument Names { get; set; }
+        public MultiLanguage<string> Names { get; set; }
         public Dictionary<Suppliers, string> SupplierLocalityZoneCodes { get; set; }
         public bool IsActive { get; set; }
     }

@@ -25,8 +25,21 @@ namespace HappyTravel.StaticDataMapper.Data
                 a.HasKey(p => p.Id);
                 a.Property(p => p.CountryCode)
                     .IsRequired();
-                a.Property(p => p.Accommodation)
+                a.Property(p => p.CountryNames)
+                    .HasColumnType("jsonb")
                     .IsRequired();
+                a.Property(p => p.Accommodation)
+                    .HasColumnType("jsonb")
+                    .IsRequired();
+
+                a.Property(p => p.SupplierLocalityCode);
+                a.Property(p => p.LocalityNames)
+                    .HasColumnType("jsonb");
+
+                a.Property(p => p.SupplierLocalityZoneCode);
+                a.Property(p => p.LocalityZoneNames)
+                    .HasColumnType("jsonb");
+
                 a.Property(p => p.Supplier)
                     .IsRequired();
                 a.Property(p => p.SupplierAccommodationId)

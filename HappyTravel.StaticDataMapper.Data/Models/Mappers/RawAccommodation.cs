@@ -1,4 +1,6 @@
 ﻿using System.Text.Json;
+using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.MultiLanguage;
 
 namespace HappyTravel.StaticDataMapper.Data.Models.Mappers
 {
@@ -6,8 +8,16 @@ namespace HappyTravel.StaticDataMapper.Data.Models.Mappers
     {
         public int Id { get; set; }
         public string CountryCode { get; set; }
+
+        public MultiLanguage<string> CountryNames { get; set; }
+        public string SupplierLocalityCode { get; set; }
+        public MultiLanguage<string> LocalityNames { get; set; }
+        public string SupplierLocalityZoneCode { get; set; }
+        public MultiLanguage<string> LocalityZoneNames { get; set; }
+
         // TODO: change to MultLingualAccommodation
         public JsonDocument Accommodation { get; set; }
+
         public Suppliers Supplier { get; set; }
         public string SupplierAccommodationId { get; set; }
     }

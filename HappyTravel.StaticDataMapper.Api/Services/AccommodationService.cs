@@ -138,6 +138,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         private Accommodation MapToAccommodation(int htId, MultilingualAccommodation accommodation, string language)
         {
             accommodation.Name.TryGetValueOrDefault(language, out var name);
+            accommodation.AccommodationAmenities.TryGetValueOrDefault(language, out var accommodationAmenities);
+            accommodation.AdditionalInfo.TryGetValueOrDefault(language, out var additionalInfo);
+            accommodation.Category.TryGetValueOrDefault(language, out var category);
+            accommodation.Location.Address.TryGetValueOrDefault(language, out var address);
             accommodation.Location.Locality.TryGetValueOrDefault(language, out var localityName);
             accommodation.Location.Country.TryGetValueOrDefault(language, out var countryName);
             accommodation.Location.LocalityZone.TryGetValueOrDefault(language, out var localityZoneName);
@@ -152,9 +156,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             return new Accommodation(
                 htId.ToString(),
                 name,
-                accommodation.AccommodationAmenities,
-                accommodation.AdditionalInfo,
-                accommodation.Category,
+                accommodationAmenities,
+                additionalInfo,
+                category,
                 accommodation.Contacts,
                 new LocationInfo(
                     accommodation.Location.CountryCode,
@@ -162,7 +166,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                     localityName,
                     localityZoneName,
                     accommodation.Location.Coordinates,
-                    accommodation.Location.Address,
+                    address,
                     accommodation.Location.LocationDescriptionCode,
                     accommodation.Location.PointsOfInterests,
                     accommodation.Location.IsHistoricalBuilding

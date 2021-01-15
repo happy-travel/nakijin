@@ -264,7 +264,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     accommodation.Location.SupplierLocalityZoneCode,
                     accommodation.Location.LocalityZone,
                     accommodation.Location.Coordinates,
-                    accommodation.Location.Address.ToNormalizedName(),
+                    NormalizeMultilingualName(accommodation.Location.Address),
                     accommodation.Location.LocationDescriptionCode,
                     accommodation.Location.PointsOfInterests
                 ),

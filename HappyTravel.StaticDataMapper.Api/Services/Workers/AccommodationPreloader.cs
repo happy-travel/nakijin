@@ -75,6 +75,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                             {
                                 Id = 0,
                                 CountryCode = normalizedCountryCode,
+                                CountryNames = accommodation.Location.Country,
+                                SupplierLocalityCode = accommodation.Location.SupplierLocalityCode,
+                                LocalityNames = accommodation.Location.Locality,
+                                SupplierLocalityZoneCode = accommodation.Location.SupplierLocalityZoneCode,
+                                LocalityZoneNames = accommodation.Location.LocalityZone,
                                 Accommodation = json,
                                 Supplier = supplier,
                                 SupplierAccommodationId = accommodation.SupplierCode

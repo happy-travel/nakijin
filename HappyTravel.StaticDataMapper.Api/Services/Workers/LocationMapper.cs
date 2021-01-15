@@ -1,26 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using HappyTravel.StaticDataMapper.Data;
 using HappyTravel.StaticDataMapper.Data.Models;
 using System.Threading.Tasks;
 using HappyTravel.StaticDataMapper.Api.Infrastructure;
-using HappyTravel.StaticDataMapper.Api.Models;
 using LocationNameNormalizer;
 using LocationNameNormalizer.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
+using HappyTravel.MultiLanguage;
+using HappyTravel.StaticDataMapper.Api.Comparers;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 {
     public class LocationMapper : ILocationMapper
     {
         public LocationMapper(NakijinContext context, ICountriesCache countriesCache, ILocalitiesCache localitiesCache,
-            LocalityZonesCache localityZonesCache,
+            ILocalityZonesCache localityZonesCache,
             ILocationNameNormalizer locationNameNormalizer, IOptions<AccommodationsPreloaderOptions> options,
             ILoggerFactory loggerFactory)
         {
@@ -62,10 +61,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 .Select(ac
                     => new
                     {
-                        Names = ac.Accommodation.RootElement.GetProperty("location").GetProperty("country")
-                            .GetString(),
-                        Code = ac.Accommodation.RootElement.GetProperty("location").GetProperty("countryCode")
-                            .GetString()
+                        Names = ac.CountryNames,
+                        Code = ac.CountryCode
                     })
                 .Distinct().ToListAsync(cancellationToken);
 
@@ -76,12 +73,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var defaultName = LanguageHelper.GetValue(country.Names, DefaultLanguageCode);
+                country.Names.TryGetValueOrDefault(DefaultLanguageCode, out var defaultName);
                 var code = _locationNameNormalizer.GetNormalizedCountryCode(defaultName, country.Code);
                 var dbCountry = new Country
                 {
                     Code = code,
-                    Names = JsonDocument.Parse(NormalizeCountryNamesJson(country.Names))
+                    Names = NormalizeCountryMultiLingualNames(country.Names)
                 };
 
                 // Maybe after testing we will change to get data from db
@@ -89,9 +86,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 if (cached != default)
                 {
                     dbCountry.Id = cached.Id;
-                    dbCountry.Names =
-                        JsonDocument.Parse(LanguageHelper.MergeLanguages(dbCountry.Names.RootElement.ToString(),
-                            cached.Names.RootElement.ToString()));
+                    dbCountry.Names = MultiLanguageHelpers.Merge(dbCountry.Names, cached.Names);
                     dbCountry.SupplierCountryCodes = new Dictionary<Suppliers, string>(cached.SupplierCountryCodes);
                     dbCountry.SupplierCountryCodes.TryAdd(supplier, code);
 
@@ -104,8 +99,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 }
             }
 
-            _context.UpdateRange(existingCountries);
-            _context.AddRange(newCountries);
+            // TODO: Remove Distinct ( in connectors may be the same data in different forms normalized or not that is why needed distinct here )
+            _context.UpdateRange(existingCountries.Distinct(new CountryComparer()));
+            _context.AddRange(newCountries.Distinct(new CountryComparer()));
             await _context.SaveChangesAsync(cancellationToken);
         }
 
@@ -116,47 +112,44 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             await ConstructLocalitiesCache();
 
             // After testing maybe will change to batches 
-            var localities = await _context.RawAccommodations.Where(ac => ac.Supplier == supplier)
+            var localities = await _context.RawAccommodations
+                .Where(ac => ac.Supplier == supplier && ac.LocalityNames != null)
                 .Select(ac
                     => new
                     {
-                        CountryCode = ac.Accommodation.RootElement.GetProperty("location").GetProperty("countryCode")
-                            .GetString(),
-                        CountryNames = ac.Accommodation.RootElement.GetProperty("location").GetProperty("country")
-                            .GetString(),
-                        LocalityCode = ac.Accommodation.RootElement.GetProperty("location").GetProperty("localityCode")
-                            .GetString(),
-                        LocalityNames = ac.Accommodation.RootElement.GetProperty("location").GetProperty("locality")
-                            .GetString()
+                        CountryCode = ac.CountryCode,
+                        CountryNames = ac.CountryNames,
+                        LocalityCode = ac.SupplierLocalityCode,
+                        LocalityNames = ac.LocalityNames
                     })
                 .Distinct().ToListAsync(cancellationToken);
-
+            var existingLocalities = new List<Locality>();
+            var newLocalities = new List<Locality>();
             foreach (var locality in localities)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var defaultCountryName = LanguageHelper.GetValue(locality.CountryNames, DefaultLanguageCode);
+                locality.CountryNames.TryGetValueOrDefault(DefaultLanguageCode, out var defaultCountryName);
+                // TODO: review and remove 
                 var countryCode =
                     _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName, locality.CountryCode);
-                var defaultLocalityName = _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName,
-                    LanguageHelper.GetValue(locality.LocalityNames, DefaultLanguageCode));
+                locality.LocalityNames.TryGetValueOrDefault(DefaultLanguageCode, out var defaultLocalityName);
+                var normalizedLocalityName =
+                    _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
 
                 // Maybe after testing will be db call instead of cache 
-                var cached = await _localitiesCache.Get(countryCode, defaultLocalityName);
+                var cached = await _localitiesCache.Get(countryCode, normalizedLocalityName);
 
-                var existingLocalities = new List<Locality>();
-                var newLocalities = new List<Locality>();
+
                 var dbLocality = new Locality
                 {
-                    Names = JsonDocument.Parse(NormalizeLocalityNamesJson(defaultCountryName, locality.LocalityNames))
+                    Names = NormalizeLocalityMultilingualNames(defaultCountryName, locality.LocalityNames)
                 };
                 if (cached != default)
                 {
                     dbLocality.Id = cached.Id;
                     dbLocality.CountryId = cached.CountryId;
-                    dbLocality.Names =
-                        JsonDocument.Parse(LanguageHelper.MergeLanguages(dbLocality.Names.RootElement.ToString(),
-                            cached.Names.RootElement.ToString()));
+                    dbLocality.Names = MultiLanguageHelpers.Merge(dbLocality.Names, cached.Names);
                     dbLocality.SupplierLocalityCodes =
                         new Dictionary<Suppliers, string>(cached.SupplierLocalityCodes);
                     dbLocality.SupplierLocalityCodes.TryAdd(supplier, locality.LocalityCode);
@@ -165,16 +158,17 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 else
                 {
                     var cachedCountry = await _countriesCache.Get(countryCode);
-                    dbLocality.CountryId = cachedCountry.Id;
+                    dbLocality.CountryId = cachedCountry!.Id;
                     dbLocality.SupplierLocalityCodes = new Dictionary<Suppliers, string>
                         {{supplier, locality.LocalityCode}};
                     newLocalities.Add(dbLocality);
                 }
-
-                _context.Update(existingLocalities);
-                _context.Add(newLocalities);
-                await _context.SaveChangesAsync();
             }
+
+            // TODO: Remove Distinct 
+            _context.UpdateRange(existingLocalities.Distinct(new LocalityComparer()));
+            _context.AddRange(newLocalities.Distinct(new LocalityComparer()));
+            await _context.SaveChangesAsync();
         }
 
         private async Task MapLocalityZones(Suppliers supplier, CancellationToken cancellationToken)
@@ -182,22 +176,16 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             await ConstructCountriesCache();
             await ConstructLocalitiesCache();
 
-            var localityZones = await _context.RawAccommodations.Where(ac => ac.Supplier == supplier)
+            var localityZones = await _context.RawAccommodations
+                .Where(ac => ac.Supplier == supplier && ac.LocalityZoneNames != null)
                 .Select(ac
                     => new
                     {
-                        LocalityNames = ac.Accommodation.RootElement.GetProperty("location").GetProperty("locality")
-                            .GetString(),
-                        CountryCode = ac.Accommodation.RootElement.GetProperty("location").GetProperty("countryCode")
-                            .GetString(),
-                        CountryNames = ac.Accommodation.RootElement.GetProperty("location").GetProperty("countryName")
-                            .GetString(),
-                        LocalityZoneNames = ac.Accommodation.RootElement.GetProperty("location")
-                            .GetProperty("localityZone")
-                            .GetString(),
-                        LocalityZoneCode = ac.Accommodation.RootElement.GetProperty("location")
-                            .GetProperty("localityZoneCode")
-                            .GetString()
+                        LocalityNames = ac.LocalityNames,
+                        CountryCode = ac.CountryCode,
+                        CountryNames = ac.CountryNames,
+                        LocalityZoneNames = ac.LocalityZoneNames,
+                        LocalityZoneCode = ac.SupplierLocalityZoneCode
                     })
                 .Distinct().ToListAsync(cancellationToken);
 
@@ -205,92 +193,94 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var defaultCountryName = LanguageHelper.GetValue(lz.CountryNames, DefaultLanguageCode);
+                lz.CountryNames.TryGetValueOrDefault(DefaultLanguageCode, out var defaultCountryName);
                 var countryCode =
                     _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName, lz.CountryCode);
-                var defaultLocalityName = _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName,
-                    LanguageHelper.GetValue(lz.LocalityNames, DefaultLanguageCode));
-                var cachedLocality = _localitiesCache.Get(countryCode, defaultLocalityName).Result;
-                var normalizedNames = NormalizeLocalityZoneNamesJson(lz.LocalityZoneNames);
+                lz.LocalityNames.TryGetValueOrDefault(DefaultLanguageCode, out var defaultLocalityName);
+                var normalizedLocalityName =
+                    _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
+                var cachedLocality = _localitiesCache.Get(countryCode, normalizedLocalityName).Result;
+                var normalizedNames = NormalizeLocalityZoneMultilingualNames(lz.LocalityZoneNames);
+                normalizedNames.TryGetValueOrDefault(DefaultLanguageCode, out var defaultNormalized);
                 return new
                 {
-                    LocalityId = cachedLocality.Id,
+                    LocalityId = cachedLocality!.Id,
                     Names = normalizedNames,
                     Code = lz.LocalityZoneCode,
-                    DefaultName = LanguageHelper.GetValue(normalizedNames, DefaultLanguageCode)
+                    DefaultName = defaultNormalized
                 };
             }).ToList();
 
-            var existingDbZones = await _context.LocalityZones.Where(lz =>
-                normalizedLocalityZones.Select(nl => nl.LocalityId + nl.DefaultName)
-                    .Contains(lz.LocalityId + lz.Names.RootElement.GetProperty("en").GetString())).ToListAsync();
+            var normalizedKeyNames = normalizedLocalityZones.Select(nl => nl.DefaultName + nl.LocalityId).ToList();
+
+            var existingDbZones = await _context.LocalityZones
+                .Where(lz => normalizedKeyNames.Contains(lz.Names.En + lz.LocalityId))
+                .ToListAsync();
 
             var localityZonesToUpdate = (from nz in normalizedLocalityZones
                 join dz in existingDbZones
-                    on nz.LocalityId + nz.DefaultName equals dz.LocalityId +
-                    LanguageHelper.GetValue(dz.Names.RootElement.ToString(), DefaultLanguageCode)
+                    on nz.LocalityId + nz.DefaultName equals dz.LocalityId + dz.Names.En
                 let sz = dz.SupplierLocalityZoneCodes.TryAdd(supplier, nz.Code)
                 select new LocalityZone
                 {
                     Id = dz.Id,
                     LocalityId = dz.LocalityId,
                     SupplierLocalityZoneCodes = dz.SupplierLocalityZoneCodes,
-                    Names = JsonDocument.Parse(LanguageHelper.MergeLanguages(nz.Names, dz.Names.RootElement.ToString()))
+                    Names = MultiLanguageHelpers.Merge(nz.Names, dz.Names)
                 }).ToList();
 
             var newLocalityZones = normalizedLocalityZones
                 .Where(nz =>
-                    !localityZonesToUpdate.Select(dz => dz.LocalityId +
-                            LanguageHelper.GetValue(dz.Names.RootElement.ToString(), DefaultLanguageCode))
+                    !localityZonesToUpdate.Select(dz => dz.LocalityId + dz.Names.En)
                         .Contains(nz.LocalityId + nz.DefaultName))
                 .Select(nz => new LocalityZone
                 {
                     LocalityId = nz.LocalityId,
-                    Names = JsonDocument.Parse(nz.Names),
+                    Names = nz.Names,
                     SupplierLocalityZoneCodes = new Dictionary<Suppliers, string> {{supplier, nz.Code}},
                     IsActive = true,
                 });
 
-            _context.Update(localityZonesToUpdate);
-            _context.AddRange(newLocalityZones);
+            _context.UpdateRange(localityZonesToUpdate.Distinct(new LocalityZoneComparer()));
+            _context.AddRange(newLocalityZones.Distinct(new LocalityZoneComparer()));
 
             await _context.SaveChangesAsync(cancellationToken);
         }
 
 
-        private string NormalizeCountryNamesJson(string? countryNamesJson)
+        private MultiLanguage<string> NormalizeCountryMultiLingualNames(MultiLanguage<string> countryNames)
         {
-            if (string.IsNullOrWhiteSpace(countryNamesJson))
-                return Constants.DefaultJsonString;
+            var normalized = new MultiLanguage<string>();
+            var allNames = countryNames.GetAll();
 
-            var deserialized = JsonConvert.DeserializeObject<Dictionary<string, string>>(countryNamesJson);
-            var normalized =
-                deserialized.ToDictionary(s => (s.Key, _locationNameNormalizer.GetNormalizedCountryName(s.Value)));
-            return JsonConvert.SerializeObject(normalized);
+            foreach (var name in allNames)
+                normalized.TrySetValue(name.languageCode, _locationNameNormalizer.GetNormalizedCountryName(name.value));
+
+            return normalized;
         }
 
-        private string NormalizeLocalityNamesJson(string defaultCountry, string? localityNamesJson)
+        private MultiLanguage<string> NormalizeLocalityMultilingualNames(string defaultCountry,
+            MultiLanguage<string> localityNames)
         {
-            if (string.IsNullOrWhiteSpace(localityNamesJson))
-                return Constants.DefaultJsonString;
+            var normalizedLocalityNames = new MultiLanguage<string>();
+            var allNames = localityNames.GetAll();
 
-            var deserialized = JsonConvert.DeserializeObject<Dictionary<string, string>>(localityNamesJson);
-            var normalized =
-                deserialized.ToDictionary(
-                    s => (s.Key, _locationNameNormalizer.GetLocalityNames(defaultCountry, s.Value)));
-            return JsonConvert.SerializeObject(normalized);
+            foreach (var name in allNames)
+                normalizedLocalityNames.TrySetValue(name.languageCode,
+                    _locationNameNormalizer.GetNormalizedLocalityName(defaultCountry, name.value));
+
+            return normalizedLocalityNames;
         }
 
-        private string NormalizeLocalityZoneNamesJson(string? localityZoneNamesJson)
+        private MultiLanguage<string> NormalizeLocalityZoneMultilingualNames(MultiLanguage<string> localityZoneNames)
         {
-            if (string.IsNullOrWhiteSpace(localityZoneNamesJson))
-                return Constants.DefaultJsonString;
+            var normalizedLocalityZoneNames = new MultiLanguage<string>();
+            var allNames = localityZoneNames.GetAll();
 
-            var deserialized = JsonConvert.DeserializeObject<Dictionary<string, string>>(localityZoneNamesJson);
-            var normalized =
-                deserialized.ToDictionary(
-                    s => (s.Key, s.Value.ToNormalizedName()));
-            return JsonConvert.SerializeObject(normalized);
+            foreach (var name in allNames)
+                normalizedLocalityZoneNames.TrySetValue(name.languageCode, name.value.ToNormalizedName());
+
+            return normalizedLocalityZoneNames;
         }
 
         public async Task ConstructLocationsCache()
@@ -317,14 +307,23 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             do
             {
-                localities = await _context.Localities.Join(_context.Countries, l => l.CountryId, c => c.Id, (l, c) =>
-                        new KeyValuePair<string, Locality>(c.Code, l))
-                    .OrderBy(l => l.Value.Id).Skip(skip).Take(_batchSize).ToListAsync();
+                localities = await _context.Localities.Join(_context.Countries, l => l.CountryId, c => c.Id, (l, c)
+                        => new
+                        {
+                            CountryCode = c.Code,
+                            Locality = l
+                        })
+                    .OrderBy(l => l.Locality.Id)
+                    .Skip(skip)
+                    .Take(_batchSize)
+                    .Select(l => new KeyValuePair<string, Locality>(l.CountryCode, l.Locality))
+                    .ToListAsync();
+
                 skip += localities.Count;
 
                 foreach (var locality in localities)
                 {
-                    var defaultLocality = LanguageHelper.GetValue(locality.Value.Names, DefaultLanguageCode);
+                    locality.Value.Names.TryGetValueOrDefault(DefaultLanguageCode, out var defaultLocality);
                     await _localitiesCache.Set(locality.Key, defaultLocality, locality.Value);
                 }
             } while (localities.Count > 0);
@@ -332,7 +331,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
         private async Task ConstructLocalityZonesCache()
         {
-            var localityZones = new List<KeyValuePair<(string CountryCode,string LocalityName), LocalityZone>>();
+            var localityZones = new List<KeyValuePair<(string CountryCode, string LocalityName), LocalityZone>>();
             int skip = 0;
             do
             {
@@ -342,7 +341,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         select new
                             KeyValuePair<(string CountryCode, string LocalityName), LocalityZone>(
                                 // TODO: check
-                                ValueTuple.Create(c.Code, l.Names.RootElement.GetProperty(Constants.DefaultLanguageCode).GetString()),
+                                ValueTuple.Create(c.Code, l.Names.En),
                                 z))
                     .Skip(skip).Take(_batchSize).ToListAsync();
 
@@ -350,8 +349,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
                 foreach (var localityZone in localityZones)
                 {
-                    var defaultLocalityZoneName =
-                        LanguageHelper.GetValue(localityZone.Value.Names, Constants.DefaultLanguageCode);
+                    localityZone.Value.Names.TryGetValueOrDefault(DefaultLanguageCode, out var defaultLocalityZoneName);
                     await _localityZonesCache.Set(localityZone.Key.Item1, localityZone.Key.Item2,
                         defaultLocalityZoneName, localityZone.Value);
                 }
