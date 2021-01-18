@@ -36,6 +36,9 @@ namespace HappyTravel.StaticDataMapper.Data
             builder.Entity<RichAccommodationDetails>(a =>
             {
                 a.HasKey(p => p.Id);
+                a.Property(p => p.CountryId).IsRequired();
+                a.Property(p => p.LocalityId).IsRequired();
+                a.Property(p => p.LocalityZoneId);
                 a.Property(p => p.CalculatedAccommodation).IsRequired()
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),
@@ -74,9 +77,46 @@ namespace HappyTravel.StaticDataMapper.Data
                 m.Property(p => p.Value)
                     .HasColumnType("jsonb");
             });
+
+            builder.Entity<Country>(c =>
+            {
+                c.HasKey(p => p.Id);
+                c.Property(p => p.Code).IsRequired();
+                c.Property(p => p.Names).HasColumnType("jsonb").IsRequired();
+                c.Property(p => p.SupplierCountryCodes).HasColumnType("jsonb")
+                    .HasConversion(p => JsonConvert.SerializeObject(p),
+                        p => JsonConvert.DeserializeObject<Dictionary<Suppliers, string>>(p))
+                    .IsRequired();
+                c.Property(p => p.IsActive).IsRequired().HasDefaultValue(true);
+            });
+
+            builder.Entity<Locality>(l =>
+            {
+                l.HasKey(p => p.Id);
+                l.Property(p => p.CountryId).IsRequired();
+                l.Property(p => p.Names).HasColumnType("jsonb").IsRequired();
+                l.Property(p => p.SupplierLocalityCodes).HasColumnType("jsonb")
+                    .HasConversion(p => JsonConvert.SerializeObject(p),
+                        p => JsonConvert.DeserializeObject<Dictionary<Suppliers, string>>(p));
+                l.Property(p => p.IsActive).IsRequired().HasDefaultValue(true);
+            });
+
+            builder.Entity<LocalityZone>(lz =>
+            {
+                lz.HasKey(p => p.Id);
+                lz.Property(p => p.LocalityId).IsRequired();
+                lz.Property(p => p.Names).HasColumnType("jsonb").IsRequired();
+                lz.Property(p => p.SupplierLocalityZoneCodes).HasColumnType("jsonb")
+                    .HasConversion(p => JsonConvert.SerializeObject(p),
+                        p => JsonConvert.DeserializeObject<Dictionary<Suppliers, string>>(p));
+                lz.Property(p => p.IsActive).IsRequired();
+            });
         }
 
 
+        public virtual DbSet<Country> Countries { get; set; }
+        public virtual DbSet<Locality> Localities { get; set; }
+        public virtual DbSet<LocalityZone> LocalityZones { get; set; }
         public virtual DbSet<RichAccommodationDetails> Accommodations { get; set; }
         public virtual DbSet<RawAccommodation> RawAccommodations { get; set; }
         public virtual DbSet<AccommodationUncertainMatches> AccommodationUncertainMatches { get; set; }
