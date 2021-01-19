@@ -141,24 +141,28 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.SupplierCode);
                 dbAccommodation.IsCalculated = true;
 
-                accommodation.Location.Locality.TryGetValueOrDefault(Constants.DefaultLanguageCode,
-                    out var defaultLocalityName);
-                // Here cached could not be null
+
                 var cachedCountry = await _countriesCache.Get(countryCode);
-                var cachedLocality = await _localitiesCache.Get(countryCode, defaultLocalityName);
+                dbAccommodation.CountryId = cachedCountry!.Id;
 
-                dbAccommodation.CountryId = cachedCountry.Id;
-                dbAccommodation.LocalityId = cachedLocality.Id;
-
-                if (accommodation.Location.LocalityZone != default)
+                if (accommodation.Location.Locality != null!)
                 {
-                    accommodation.Location.LocalityZone.TryGetValueOrDefault(
-                        Constants.DefaultLanguageCode, out var defaultLocalityZoneName);
-                    //Cached could not be null
-                    var cachedLocalityZone = await _localityZonesCache.Get(countryCode, defaultLocalityName,
-                        defaultLocalityZoneName);
-                    dbAccommodation.LocalityZoneId = cachedLocalityZone.Id;
+                    accommodation.Location.Locality.TryGetValueOrDefault(Constants.DefaultLanguageCode,
+                        out var defaultLocalityName);
+                    var cachedLocality = await _localitiesCache.Get(countryCode, defaultLocalityName);
+                    dbAccommodation.LocalityId = cachedLocality!.Id;
+
+                    if (accommodation.Location.LocalityZone != null!)
+                    {
+                        accommodation.Location.LocalityZone.TryGetValueOrDefault(
+                            Constants.DefaultLanguageCode, out var defaultLocalityZoneName);
+
+                        var cachedLocalityZone = await _localityZonesCache.Get(countryCode, defaultLocalityName,
+                            defaultLocalityZoneName);
+                        dbAccommodation.LocalityZoneId = cachedLocalityZone!.Id;
+                    }
                 }
+
 
                 accommodationsToAdd.Add(dbAccommodation);
             }
@@ -189,6 +193,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
 
             await _context.SaveChangesAsync(cancellationToken);
+
+            foreach (var ac in accommodationsToAdd)
+                _context.Entry(ac).State = EntityState.Detached;
+            foreach (var ac in accommodationsToUpdate)
+                _context.Entry(ac).State = EntityState.Detached;
         }
 
 
@@ -262,9 +271,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     accommodation.Location.SupplierLocalityCode,
                     NormalizeMultilingualLocality(accommodation.Location),
                     accommodation.Location.SupplierLocalityZoneCode,
-                    accommodation.Location.LocalityZone,
+                    NormalizeMultilingualName(accommodation.Location.LocalityZone),
                     accommodation.Location.Coordinates,
-                    NormalizeMultilingualName(accommodation.Location.Address),
+                    accommodation.Location.Address,
                     accommodation.Location.LocationDescriptionCode,
                     accommodation.Location.PointsOfInterests
                 ),
@@ -289,6 +298,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             MultiLanguage<string> NormalizeMultilingualLocality(in MultilingualLocationInfo location)
             {
+                if (location.Locality == null)
+                    return null;
+
                 var result = new MultiLanguage<string>();
                 location.Country.TryGetValueOrDefault(Constants.DefaultLanguageCode, out var defaultCountry);
                 var allValues = location.Locality.GetAll();
@@ -302,6 +314,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             MultiLanguage<string> NormalizeMultilingualName(in MultiLanguage<string> name)
             {
+                if (name == null)
+                    return null;
+
                 var result = new MultiLanguage<string>();
                 var allValues = name.GetAll();
                 foreach (var item in allValues)
@@ -311,6 +326,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
         }
 
+        // TODO: For performance construct tree for each country and then remove 
         private async Task ConstructCountryAccommodationsTrees()
         {
             foreach (var countryCode in await GetCountries())
@@ -327,7 +343,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                             .Take(_batchSize)
                             .Select(ac => new AccommodationKeyData
                             {
-                                HtId = ac.Id, Data = ac.CalculatedAccommodation,
+                                HtId = ac.Id,
+                                Data = ac.CalculatedAccommodation,
                                 SupplierAccommodationCodes = ac.SupplierAccommodationCodes
                             })
                             .ToListAsync();
@@ -388,6 +405,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
+        // TODO: change get from Countries table
         private async Task<List<string>> GetCountries()
         {
             if (_countries.Any())

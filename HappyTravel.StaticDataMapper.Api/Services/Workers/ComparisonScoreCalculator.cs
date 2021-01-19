@@ -32,8 +32,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             return 0.5f * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Location.Address.En,
                 accommodation.Location.Address.En, GetWordsToIgnore(accommodation.Location.Country.En,
                     //Not all providers have localityZone
-                    accommodation.Location.Locality.En, accommodation.Location.LocalityZone.En,
-                    nearestAccommodation.Location.LocalityZone.En)
+                    accommodation.Location.Locality?.En, accommodation.Location.LocalityZone?.En,
+                    nearestAccommodation.Location.LocalityZone?.En)
             );
 
 

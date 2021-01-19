@@ -78,7 +78,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 var dbCountry = new Country
                 {
                     Code = code,
-                    Names = NormalizeCountryMultiLingualNames(country.Names)
+                    Names = NormalizeCountryMultiLingualNames(country.Names),
+                    IsActive = true
                 };
 
                 // Maybe after testing we will change to get data from db
@@ -88,6 +89,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     dbCountry.Id = cached.Id;
                     dbCountry.Names = MultiLanguageHelpers.Merge(dbCountry.Names, cached.Names);
                     dbCountry.SupplierCountryCodes = new Dictionary<Suppliers, string>(cached.SupplierCountryCodes);
+                    // TODO: Test and remove this 
                     dbCountry.SupplierCountryCodes.TryAdd(supplier, code);
 
                     existingCountries.Add(dbCountry);
@@ -100,6 +102,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
 
             // TODO: Remove Distinct ( in connectors may be the same data in different forms normalized or not that is why needed distinct here )
+            // Change distinct to deactivate not needed and change relation with accommodation
             _context.UpdateRange(existingCountries.Distinct(new CountryComparer()));
             _context.AddRange(newCountries.Distinct(new CountryComparer()));
             await _context.SaveChangesAsync(cancellationToken);
@@ -111,7 +114,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             await ConstructCountriesCache();
             await ConstructLocalitiesCache();
 
-            // After testing maybe will change to batches 
+            // After testing of all connectors maybe will be changed to batches 
             var localities = await _context.RawAccommodations
                 .Where(ac => ac.Supplier == supplier && ac.LocalityNames != null)
                 .Select(ac
@@ -137,13 +140,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 var normalizedLocalityName =
                     _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
 
-                // Maybe after testing will be db call instead of cache 
                 var cached = await _localitiesCache.Get(countryCode, normalizedLocalityName);
-
 
                 var dbLocality = new Locality
                 {
-                    Names = NormalizeLocalityMultilingualNames(defaultCountryName, locality.LocalityNames)
+                    Names = NormalizeLocalityMultilingualNames(defaultCountryName, locality.LocalityNames),
+                    IsActive = true
                 };
                 if (cached != default)
                 {
@@ -226,7 +228,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     Id = dz.Id,
                     LocalityId = dz.LocalityId,
                     SupplierLocalityZoneCodes = dz.SupplierLocalityZoneCodes,
-                    Names = MultiLanguageHelpers.Merge(nz.Names, dz.Names)
+                    Names = MultiLanguageHelpers.Merge(nz.Names, dz.Names),
+                    IsActive = true 
                 }).ToList();
 
             var newLocalityZones = normalizedLocalityZones
@@ -340,9 +343,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         join c in _context.Countries on l.CountryId equals c.Id
                         select new
                             KeyValuePair<(string CountryCode, string LocalityName), LocalityZone>(
-                                // TODO: check
-                                ValueTuple.Create(c.Code, l.Names.En),
-                                z))
+                                ValueTuple.Create(c.Code, l.Names.En),z))
                     .Skip(skip).Take(_batchSize).ToListAsync();
 
                 skip += localityZones.Count();

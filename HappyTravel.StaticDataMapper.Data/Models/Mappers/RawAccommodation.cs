@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
-using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.MultiLanguage;
 
 namespace HappyTravel.StaticDataMapper.Data.Models.Mappers
 {
+    // TODO change name 
     public class RawAccommodation
     {
         public int Id { get; set; }
@@ -15,7 +15,7 @@ namespace HappyTravel.StaticDataMapper.Data.Models.Mappers
         public string SupplierLocalityZoneCode { get; set; }
         public MultiLanguage<string> LocalityZoneNames { get; set; }
 
-        // TODO: change to MultLingualAccommodation
+        // TODO: think about to change to MultLingualAccommodation
         public JsonDocument Accommodation { get; set; }
 
         public Suppliers Supplier { get; set; }
