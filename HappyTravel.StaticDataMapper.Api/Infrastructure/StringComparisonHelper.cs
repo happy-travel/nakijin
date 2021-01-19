@@ -11,10 +11,10 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             if (string.IsNullOrWhiteSpace(first) || string.IsNullOrWhiteSpace(second))
                 return 0;
 
-            return GetSorencenDiceCoefficient(first.ToSequence(wordsToIgnore), second.ToSequence(wordsToIgnore));
+            return GetSorensenDiceCoefficient(first.ToSequence(wordsToIgnore), second.ToSequence(wordsToIgnore));
         }
 
-        private static float GetSorencenDiceCoefficient(string[] firstSequence, string[] secondSequence)
+        private static float GetSorensenDiceCoefficient(string[] firstSequence, string[] secondSequence)
         {
             if (!firstSequence.Any() && !secondSequence.Any())
                 return 1;
