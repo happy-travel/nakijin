@@ -8,11 +8,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 {
     public static class ComparisonScoreCalculator
     {
-        public static float Calculate(in Accommodation nearestAccommodation,
-            in Accommodation accommodation)
+        // Considering that accommodations always have default(En) value
+        public static float Calculate(in MultilingualAccommodation nearestAccommodation,
+            in MultilingualAccommodation accommodation)
         {
-            float score = 2 * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Name,
-                accommodation.Name, WordsToIgnoreForHotelNamesComparison);
+            float score = 2 * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Name.En,
+                accommodation.Name.En, WordsToIgnoreForHotelNamesComparison);
 
             score += GetAddressScore(nearestAccommodation, accommodation);
 
@@ -25,13 +26,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private static float GetAddressScore(in Accommodation nearestAccommodation,
-            in Accommodation accommodation)
+        private static float GetAddressScore(in MultilingualAccommodation nearestAccommodation,
+            in MultilingualAccommodation accommodation)
         {
-            return 0.5f * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Location.Address,
-                accommodation.Location.Address, GetWordsToIgnore(accommodation.Location.Country,
+            return 0.5f * StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Location.Address.En,
+                accommodation.Location.Address.En, GetWordsToIgnore(accommodation.Location.Country.En,
                     //Not all providers have localityZone
-                    accommodation.Location.Locality, accommodation.Location.LocalityZone, nearestAccommodation.Location.LocalityZone)
+                    accommodation.Location.Locality?.En, accommodation.Location.LocalityZone?.En,
+                    nearestAccommodation.Location.LocalityZone?.En)
             );
 
 
@@ -71,7 +73,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             static (bool isAnyEmpty, bool areContains) GetComparisonResult(List<string> first, List<string> second)
             {
-                if (!first.Any() || !second.Any() || first.All(string.IsNullOrEmpty)|| second.All(string.IsNullOrEmpty ))
+                if (!first.Any() || !second.Any() || first.All(string.IsNullOrEmpty) ||
+                    second.All(string.IsNullOrEmpty))
                     return (true, false);
 
                 var mergedData = (from f in first

@@ -9,6 +9,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     {
         Task MergeAll(CancellationToken cancellationToken);
 
-        Task<Accommodation> Merge(RichAccommodationDetails accommodation);
+        Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation);
     }
 }

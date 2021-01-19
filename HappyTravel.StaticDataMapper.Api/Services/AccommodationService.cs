@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HappyTravel.StaticDataMapper.Data;
@@ -6,6 +7,7 @@ using HappyTravel.StaticDataMapper.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
 using HappyTravel.StaticDataMapper.Api.Services.Workers;
 
@@ -28,11 +30,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             if (uncertainMatch == default)
                 return Result.Success();
 
-            var firstAccommodation = await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.ExistingHtId);
-            var secondAccommodation = await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.NewHtId);
+            var firstAccommodation =
+                await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.ExistingHtId);
+            var secondAccommodation =
+                await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.NewHtId);
 
             foreach (var supplierAccommodation in secondAccommodation.SupplierAccommodationCodes)
-                firstAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key, supplierAccommodation.Value);
+                firstAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key,
+                    supplierAccommodation.Value);
 
             firstAccommodation.IsCalculated = false;
             secondAccommodation.IsActive = false;
@@ -49,36 +54,39 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         }
 
 
-        public async Task<Result<Accommodation>> Get(Suppliers supplier, string supplierAccommodationCode)
+        public async Task<Result<Accommodation>> Get(Suppliers supplier, string supplierAccommodationCode,
+            string languageCode)
         {
             var searchJson = "{" + $"\"{supplier.ToString().ToLower()}\":\"{supplierAccommodationCode}\"" + "}";
-            var accommodation = await _context.Accommodations
+            var accommodationWithId = await _context.Accommodations
                 .Where(ac => EF.Functions.JsonContains(ac.SupplierAccommodationCodes, searchJson))
-                .Select(ac => ac.CalculatedAccommodation)
+                .Select(ac => new {ac.CalculatedAccommodation, ac.Id})
                 .SingleOrDefaultAsync();
 
-            if (accommodation.Equals(default(Accommodation)))
+            if (accommodationWithId == null)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
-            return Result.Success(accommodation);
+            return Result.Success(MapToAccommodation(accommodationWithId.Id,
+                accommodationWithId.CalculatedAccommodation, languageCode));
         }
 
 
-        public async Task<Result<Accommodation>> Get(int accommodationId)
+        public async Task<Result<Accommodation>> Get(int accommodationId, string languageCode)
         {
             var accommodation = await _context.Accommodations
                 .Where(ac => ac.Id == accommodationId)
                 .Select(ac => ac.CalculatedAccommodation)
                 .SingleOrDefaultAsync();
 
-            if (accommodation.Equals(default(Accommodation)))
+            if (accommodation.Equals(default(MultilingualAccommodation)))
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
-            return Result.Success(accommodation);
+            return Result.Success(MapToAccommodation(accommodationId, accommodation, languageCode));
         }
 
 
-        public async Task<Result> AddSuppliersPriority(int id, Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority)
+        public async Task<Result> AddSuppliersPriority(int id,
+            Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority)
         {
             var accommodation = await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == id);
             if (accommodation == default)
@@ -94,7 +102,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         }
 
 
-        public async Task<Result> AddManualCorrection(int id, Accommodation manualCorrectedAccommodation)
+        public async Task<Result> AddManualCorrection(int id, MultilingualAccommodation manualCorrectedAccommodation)
         {
             var accommodation = await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == id);
             if (accommodation == default)
@@ -125,6 +133,50 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             await _context.SaveChangesAsync();
 
             return Result.Success();
+        }
+
+        private Accommodation MapToAccommodation(int htId, MultilingualAccommodation accommodation, string language)
+        {
+            accommodation.Name.TryGetValueOrDefault(language, out var name);
+            accommodation.AccommodationAmenities.TryGetValueOrDefault(language, out var accommodationAmenities);
+            accommodation.AdditionalInfo.TryGetValueOrDefault(language, out var additionalInfo);
+            accommodation.Category.TryGetValueOrDefault(language, out var category);
+            accommodation.Location.Address.TryGetValueOrDefault(language, out var address);
+            accommodation.Location.Locality.TryGetValueOrDefault(language, out var localityName);
+            accommodation.Location.Country.TryGetValueOrDefault(language, out var countryName);
+            accommodation.Location.LocalityZone.TryGetValueOrDefault(language, out var localityZoneName);
+            var textualDescriptions = new List<TextualDescription>();
+
+            foreach (var descriptions in accommodation.TextualDescriptions)
+            {
+                descriptions.Description.TryGetValueOrDefault(language, out var description);
+                textualDescriptions.Add(new TextualDescription(descriptions.Type, description));
+            }
+
+            return new Accommodation(
+                htId.ToString(),
+                name,
+                accommodationAmenities,
+                additionalInfo,
+                category,
+                accommodation.Contacts,
+                new LocationInfo(
+                    accommodation.Location.CountryCode,
+                    countryName,
+                    localityName,
+                    localityZoneName,
+                    accommodation.Location.Coordinates,
+                    address,
+                    accommodation.Location.LocationDescriptionCode,
+                    accommodation.Location.PointsOfInterests,
+                    accommodation.Location.IsHistoricalBuilding
+                ),
+                accommodation.Photos,
+                accommodation.Rating,
+                accommodation.Schedule,
+                textualDescriptions,
+                accommodation.Type
+            );
         }
 
 

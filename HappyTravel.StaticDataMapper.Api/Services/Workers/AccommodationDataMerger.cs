@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using HappyTravel.MultiLanguage;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 {
@@ -76,7 +77,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        public async Task<Accommodation> Merge(RichAccommodationDetails accommodation)
+        public async Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation)
         {
             var supplierAccommodations = await (from ac in _context.RawAccommodations
                 where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
@@ -95,28 +96,27 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 select sa).ToList();
 
             var supplierAccommodationDetails = supplierAccommodations.ToDictionary(d => d.Supplier,
-                d => JsonConvert.DeserializeObject<Accommodation>(d.AccommodationDetails.RootElement.ToString()));
+                d => JsonConvert.DeserializeObject<MultilingualAccommodation>(d.AccommodationDetails.RootElement
+                    .ToString()));
 
             var suppliersPriority = accommodation.SuppliersPriority.Any()
                 ? accommodation.SuppliersPriority
                 : await _suppliersPriorityService.Get();
 
             var accommodationWithManualCorrection = accommodation.AccommodationWithManualCorrections;
-            // var accommodationWithManualCorrection =
-            //     wideAccommodationDetails.AccommodationWithManualCorrections ?? new Accommodation();
 
-            var name = MergeData(suppliersPriority[AccommodationDataTypes.Name],
+            var name = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.Name],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Name),
                 accommodationWithManualCorrection.Name, string.IsNullOrEmpty);
 
-            var category = MergeData(suppliersPriority[AccommodationDataTypes.Category],
+            var category = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.Category],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Category),
                 accommodationWithManualCorrection.Category, string.IsNullOrEmpty);
 
             var rating = MergeData(suppliersPriority[AccommodationDataTypes.Rating],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Rating),
                 accommodationWithManualCorrection.Rating,
-                r => r == AccommodationRatings.Unknown || r == 0);
+                r => r == 0);
 
             var contactInfo = MergeContactInfo(suppliersPriority[AccommodationDataTypes.ContactInfo],
                 supplierAccommodationDetails, accommodationWithManualCorrection);
@@ -133,11 +133,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 accommodationWithManualCorrection.TextualDescriptions,
                 p => p == null || !p.Any());
 
-            var additionalInfo = MergeData(suppliersPriority[AccommodationDataTypes.AdditionalInfo],
+            var additionalInfo = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.AdditionalInfo],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.AdditionalInfo),
                 accommodationWithManualCorrection.AdditionalInfo, p => p == null || !p.Any());
 
-            var accommodationAmenities = MergeData(suppliersPriority[AccommodationDataTypes.AccommodationAmenities],
+            var accommodationAmenities = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.AccommodationAmenities],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.AccommodationAmenities),
                 accommodationWithManualCorrection.AccommodationAmenities,
                 p => p == null || !p.Any());
@@ -147,11 +147,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             var propertyType = MergeData(suppliersPriority[AccommodationDataTypes.PropertyType],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Type),
-                accommodationWithManualCorrection.Type, t => t == PropertyTypes.Any);
+                accommodationWithManualCorrection.Type, t => t == 0);
 
-            return new Accommodation
+            return new MultilingualAccommodation
             (
-                id: String.Empty,
+                String.Empty,
                 name: name,
                 category: category,
                 location: locationInfo,
@@ -167,22 +167,23 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private LocationInfo MergeLocationInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, Accommodation> supplierAccommodationDetails,
-            Accommodation accommodationWithManualCorrection)
+        private MultilingualLocationInfo MergeLocationInfo(List<Suppliers> suppliersPriority,
+            Dictionary<Suppliers, MultilingualAccommodation> supplierAccommodationDetails,
+            MultilingualAccommodation accommodationWithManualCorrection)
         {
-            var address = MergeData(suppliersPriority,
+            var address = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.Address),
                 accommodationWithManualCorrection.Location.Address, string.IsNullOrEmpty);
-            var country = MergeData(suppliersPriority,
+            var country = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.Country),
                 accommodationWithManualCorrection.Location.Country, string.IsNullOrEmpty);
-            var locality = MergeData(suppliersPriority,
+            var locality = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.Locality),
                 accommodationWithManualCorrection.Location.Locality, string.IsNullOrEmpty);
-            var localityZone = MergeData(suppliersPriority,
+            var localityZone = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.LocalityZone),
                 accommodationWithManualCorrection.Location.LocalityZone, string.IsNullOrEmpty);
@@ -193,10 +194,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 accommodationWithManualCorrection.Location.Coordinates, point => point == default);
 
             var pointOfInterests = MergeData(suppliersPriority, supplierAccommodationDetails.ToDictionary(d => d.Key,
-                d => d.Value.Location.PointsOfInterests), accommodationWithManualCorrection.Location.PointsOfInterests, poi => poi == null || !poi.Any());
+                    d => d.Value.Location.PointsOfInterests),
+                accommodationWithManualCorrection.Location.PointsOfInterests,
+                poi => poi == null || !poi.Any());
 
-            var locationDescriptionCode = MergeData(suppliersPriority, supplierAccommodationDetails.ToDictionary(d => d.Key,
-                    d => d.Value.Location.LocationDescriptionCode), accommodationWithManualCorrection.Location.LocationDescriptionCode,
+            var locationDescriptionCode = MergeData(suppliersPriority, supplierAccommodationDetails.ToDictionary(
+                    d => d.Key,
+                    d => d.Value.Location.LocationDescriptionCode),
+                accommodationWithManualCorrection.Location.LocationDescriptionCode,
                 c => c == LocationDescriptionCodes.Unspecified);
 
             // CountryCode must be the same, but for understandability merging too
@@ -204,7 +209,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     d => d.Value.Location.CountryCode), accommodationWithManualCorrection.Location.CountryCode,
                 string.IsNullOrEmpty);
 
-            return new LocationInfo(
+            return new MultilingualLocationInfo(
                 address: address,
                 country: country,
                 locality: locality,
@@ -213,48 +218,59 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 locationDescriptionCode: locationDescriptionCode,
                 pointsOfInterests: pointOfInterests,
                 countryCode: countryCode,
-                localityCode: String.Empty,
-                localityZoneCode: String.Empty);
+                supplierLocalityCode: string.Empty,
+                supplierLocalityZoneCode: String.Empty);
         }
 
 
-        private ContactInfo MergeContactInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, Accommodation> supplierAccommodationDetails,
-            Accommodation accommodationWithManualCorrection)
+        private ContactInfo MergeContactInfo(List<Suppliers> suppliersPriority,
+            Dictionary<Suppliers, MultilingualAccommodation> supplierAccommodationDetails,
+            MultilingualAccommodation accommodationWithManualCorrection)
 
         {
-            var contactInfo = new ContactInfo(new List<string>(), new List<string>(), new List<string>(), new List<string>());
-            if (accommodationWithManualCorrection.Contacts.Phones != null && accommodationWithManualCorrection.Contacts.Phones.Any())
+            var contactInfo = new ContactInfo(new List<string>(), new List<string>(), new List<string>(),
+                new List<string>());
+            if (accommodationWithManualCorrection.Contacts.Phones != null &&
+                accommodationWithManualCorrection.Contacts.Phones.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Phones);
 
-            if (accommodationWithManualCorrection.Contacts.Emails != null && accommodationWithManualCorrection.Contacts.Emails.Any())
+            if (accommodationWithManualCorrection.Contacts.Emails != null &&
+                accommodationWithManualCorrection.Contacts.Emails.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Emails);
 
-            if (accommodationWithManualCorrection.Contacts.WebSites != null && accommodationWithManualCorrection.Contacts.WebSites.Any())
+            if (accommodationWithManualCorrection.Contacts.WebSites != null &&
+                accommodationWithManualCorrection.Contacts.WebSites.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.WebSites);
 
-            if (accommodationWithManualCorrection.Contacts.Faxes != null && accommodationWithManualCorrection.Contacts.Faxes.Any())
+            if (accommodationWithManualCorrection.Contacts.Faxes != null &&
+                accommodationWithManualCorrection.Contacts.Faxes.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Faxes);
 
             foreach (var supplier in suppliersPriority)
             {
                 if (supplierAccommodationDetails.TryGetValue(supplier, out var accommodationDetails))
                 {
-                    contactInfo.Phones.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.Phones, contactInfo.Phones,
+                    contactInfo.Phones.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.Phones,
+                        contactInfo.Phones,
                         p => p.ToNormalizedPhoneNumber()));
 
-                    contactInfo.Emails.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.Emails, contactInfo.Emails,
+                    contactInfo.Emails.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.Emails,
+                        contactInfo.Emails,
                         e => e.ToLowerInvariant()));
 
-                    contactInfo.WebSites.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.WebSites, contactInfo.WebSites,
+                    contactInfo.WebSites.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.WebSites,
+                        contactInfo.WebSites,
                         w => w.ToLowerInvariant()));
 
-                    contactInfo.Faxes.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.Faxes, contactInfo.Faxes,
+                    contactInfo.Faxes.AddRange(GetNotExistingContacts(accommodationDetails.Contacts.Faxes,
+                        contactInfo.Faxes,
                         f => f.ToLowerInvariant()));
                 }
             }
 
 
-            List<string> GetNotExistingContacts(List<string> source, List<string> contacts, Func<string, string> normalizer)
+            List<string> GetNotExistingContacts(List<string> source, List<string> contacts,
+                Func<string, string> normalizer)
             {
                 var result = new List<string>();
                 foreach (var contact in contacts)
@@ -271,8 +287,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private ScheduleInfo MergeScheduleInfo(List<Suppliers> suppliersPriority, Dictionary<Suppliers, Accommodation> supplierAccommodationDetails,
-            Accommodation accommodationWithManualCorrection)
+        private ScheduleInfo MergeScheduleInfo(List<Suppliers> suppliersPriority,
+            Dictionary<Suppliers, MultilingualAccommodation> supplierAccommodationDetails,
+            MultilingualAccommodation accommodationWithManualCorrection)
         {
             var checkInTime = MergeData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
@@ -309,7 +326,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private T MergeData<T>(List<Suppliers> suppliersPriority, Dictionary<Suppliers, T> suppliersData, T manualCorrectedData, Func<T, bool> defaultChecker)
+        private T MergeData<T>(List<Suppliers> suppliersPriority, Dictionary<Suppliers, T> suppliersData,
+            T manualCorrectedData, Func<T, bool> defaultChecker)
         {
             if (!defaultChecker(manualCorrectedData))
                 return manualCorrectedData;
@@ -322,6 +340,30 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
 
             return manualCorrectedData;
+        }
+
+        private MultiLanguage<T> MergeMultilingualData<T>(List<Suppliers> suppliersPriority,
+            Dictionary<Suppliers, MultiLanguage<T>> suppliersData, MultiLanguage<T> manualCorrectedData,
+            Func<T, bool> defaultChecker)
+        {
+            var result = new MultiLanguage<T>();
+            foreach (var language in Enum.GetValues(typeof(Languages)))
+            {
+                var languageCode = LanguagesHelper.GetLanguageCode((Languages) language);
+                var selectedLanguageData = suppliersData.ToDictionary(d => d.Key, d =>
+                {
+                    d.Value.TryGetValueOrDefault(languageCode, out var value);
+                    return value;
+                });
+
+                manualCorrectedData.TryGetValueOrDefault(languageCode, out var manualCorrectedValue);
+                var mergedData = MergeData(suppliersPriority, selectedLanguageData, manualCorrectedValue,
+                    defaultChecker);
+
+                result.TrySetValue(languageCode, mergedData);
+            }
+
+            return result;
         }
 
 
