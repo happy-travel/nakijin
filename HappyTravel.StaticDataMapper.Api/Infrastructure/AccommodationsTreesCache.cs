@@ -20,6 +20,8 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
         public ValueTask<STRtree<AccommodationKeyData>> Get(string countryCode)
             => _doubleFlow.GetAsync<STRtree<AccommodationKeyData>>(BuildKey(countryCode), ExpirationPeriod);
 
+        public Task Remove(string countryCode) => _doubleFlow.RemoveAsync(BuildKey(countryCode));
+
         private string BuildKey(string countryCode)
             => _doubleFlow.BuildKey(nameof(AccommodationsTreesCache), countryCode);
 

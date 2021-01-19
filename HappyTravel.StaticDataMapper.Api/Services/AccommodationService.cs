@@ -137,19 +137,19 @@ namespace HappyTravel.StaticDataMapper.Api.Services
 
         private Accommodation MapToAccommodation(int htId, MultilingualAccommodation accommodation, string language)
         {
-            accommodation.Name.TryGetValueOrDefault(language, out var name);
-            accommodation.AccommodationAmenities.TryGetValueOrDefault(language, out var accommodationAmenities);
-            accommodation.AdditionalInfo.TryGetValueOrDefault(language, out var additionalInfo);
-            accommodation.Category.TryGetValueOrDefault(language, out var category);
-            accommodation.Location.Address.TryGetValueOrDefault(language, out var address);
-            accommodation.Location.Locality.TryGetValueOrDefault(language, out var localityName);
-            accommodation.Location.Country.TryGetValueOrDefault(language, out var countryName);
-            accommodation.Location.LocalityZone.TryGetValueOrDefault(language, out var localityZoneName);
+            var name = accommodation.Name.GetValueOrDefault(language);
+            var accommodationAmenities = accommodation.AccommodationAmenities.GetValueOrDefault(language);
+            var additionalInfo =accommodation.AdditionalInfo.GetValueOrDefault(language);
+            var category = accommodation.Category.GetValueOrDefault(language);
+            var address = accommodation.Location.Address.GetValueOrDefault(language);
+            var localityName = accommodation.Location.Locality.GetValueOrDefault(language);
+            var countryName = accommodation.Location.Country.GetValueOrDefault(language);
+            var localityZoneName = accommodation.Location.LocalityZone.GetValueOrDefault(language);
             var textualDescriptions = new List<TextualDescription>();
 
             foreach (var descriptions in accommodation.TextualDescriptions)
             {
-                descriptions.Description.TryGetValueOrDefault(language, out var description);
+                var description = descriptions.Description.GetValueOrDefault(language);
                 textualDescriptions.Add(new TextualDescription(descriptions.Type, description));
             }
 

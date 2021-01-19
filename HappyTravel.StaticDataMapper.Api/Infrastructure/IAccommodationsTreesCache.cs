@@ -8,5 +8,6 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
     {
         Task Set(string countryCode, STRtree<AccommodationKeyData> tree);
         ValueTask<STRtree<AccommodationKeyData>> Get(string countryCode);
+        Task Remove(string countryCode);
     }
 }

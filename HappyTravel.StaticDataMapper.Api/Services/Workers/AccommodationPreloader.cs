@@ -66,8 +66,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                             var str = JsonConvert.SerializeObject(accommodation);
                             var json = JsonDocument.Parse(str);
 
-                            accommodation.Location.Country.TryGetValueOrDefault(Constants.DefaultLanguageCode,
-                                out var defaultCountryName);
+                            var defaultCountryName = accommodation.Location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
                             var normalizedCountryCode =
                                 _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName,
                                     accommodation.Location.CountryCode);
