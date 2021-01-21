@@ -20,7 +20,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     {
         public LocationMapper(NakijinContext context, ICountriesCache countriesCache, ILocalitiesCache localitiesCache,
             ILocalityZonesCache localityZonesCache,
-            ILocationNameNormalizer locationNameNormalizer, IOptions<AccommodationsPreloaderOptions> options,
+            ILocationNameNormalizer locationNameNormalizer, IOptions<StaticDataLoadingOptions> options,
             ILoggerFactory loggerFactory)
         {
             _context = context;
@@ -73,7 +73,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                country.Names.TryGetValueOrDefault(DefaultLanguageCode, out var defaultName);
+                var defaultName = country.Names.GetValueOrDefault(DefaultLanguageCode);
                 var code = _locationNameNormalizer.GetNormalizedCountryCode(defaultName, country.Code);
                 var dbCountry = new Country
                 {
@@ -132,11 +132,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                locality.CountryNames.TryGetValueOrDefault(DefaultLanguageCode, out var defaultCountryName);
+                var defaultCountryName = locality.CountryNames.GetValueOrDefault(DefaultLanguageCode);
                 // TODO: review and remove 
                 var countryCode =
                     _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName, locality.CountryCode);
-                locality.LocalityNames.TryGetValueOrDefault(DefaultLanguageCode, out var defaultLocalityName);
+                var defaultLocalityName = locality.LocalityNames.GetValueOrDefault(DefaultLanguageCode);
                 var normalizedLocalityName =
                     _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
 
@@ -195,15 +195,15 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                lz.CountryNames.TryGetValueOrDefault(DefaultLanguageCode, out var defaultCountryName);
+                var defaultCountryName = lz.CountryNames.GetValueOrDefault(DefaultLanguageCode);
                 var countryCode =
                     _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName, lz.CountryCode);
-                lz.LocalityNames.TryGetValueOrDefault(DefaultLanguageCode, out var defaultLocalityName);
+                var defaultLocalityName = lz.LocalityNames.GetValueOrDefault(DefaultLanguageCode);
                 var normalizedLocalityName =
                     _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
                 var cachedLocality = _localitiesCache.Get(countryCode, normalizedLocalityName).Result;
                 var normalizedNames = NormalizeLocalityZoneMultilingualNames(lz.LocalityZoneNames);
-                normalizedNames.TryGetValueOrDefault(DefaultLanguageCode, out var defaultNormalized);
+                var defaultNormalized = normalizedNames.GetValueOrDefault(DefaultLanguageCode);
                 return new
                 {
                     LocalityId = cachedLocality!.Id,
@@ -326,7 +326,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
                 foreach (var locality in localities)
                 {
-                    locality.Value.Names.TryGetValueOrDefault(DefaultLanguageCode, out var defaultLocality);
+                    var defaultLocality = locality.Value.Names.GetValueOrDefault(DefaultLanguageCode);
                     await _localitiesCache.Set(locality.Key, defaultLocality, locality.Value);
                 }
             } while (localities.Count > 0);
@@ -350,7 +350,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
                 foreach (var localityZone in localityZones)
                 {
-                    localityZone.Value.Names.TryGetValueOrDefault(DefaultLanguageCode, out var defaultLocalityZoneName);
+                    var defaultLocalityZoneName = localityZone.Value.Names.GetValueOrDefault(DefaultLanguageCode);
                     await _localityZonesCache.Set(localityZone.Key.Item1, localityZone.Key.Item2,
                         defaultLocalityZoneName, localityZone.Value);
                 }

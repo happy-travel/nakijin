@@ -25,7 +25,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     {
         public AccommodationPreloader(NakijinContext context,
             IConnectorClient connectorClient, ILoggerFactory loggerFactory,
-            IOptions<AccommodationsPreloaderOptions> options, IOptions<SuppliersOptions> supplierOptions,
+            IOptions<StaticDataLoadingOptions> options, IOptions<SuppliersOptions> supplierOptions,
             ILocationNameNormalizer locationNameNormalizer)
         {
             _context = context;
@@ -37,11 +37,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        public async Task Preload(DateTime? modificationDate = null, CancellationToken cancellationToken = default)
+        public async Task Preload(List<Suppliers> suppliers, DateTime? modificationDate = null, CancellationToken cancellationToken = default)
         {
             modificationDate ??= DateTime.MinValue;
 
-            foreach (var supplier in _options.Suppliers)
+            foreach (var supplier in suppliers)
             {
                 var skip = 0;
                 do
@@ -66,8 +66,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                             var str = JsonConvert.SerializeObject(accommodation);
                             var json = JsonDocument.Parse(str);
 
-                            accommodation.Location.Country.TryGetValueOrDefault(Constants.DefaultLanguageCode,
-                                out var defaultCountryName);
+                            var defaultCountryName = accommodation.Location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
                             var normalizedCountryCode =
                                 _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName,
                                     accommodation.Location.CountryCode);
@@ -137,6 +136,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         private readonly SuppliersOptions _suppliersOptions;
         private readonly NakijinContext _context;
         private readonly ILogger<AccommodationPreloader> _logger;
-        private readonly AccommodationsPreloaderOptions _options;
+        private readonly StaticDataLoadingOptions _options;
     }
 }

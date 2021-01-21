@@ -21,7 +21,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public class AccommodationDataMerger : IAccommodationsDataMerger
     {
         public AccommodationDataMerger(NakijinContext context, ISuppliersPriorityService suppliersPriorityService,
-            IOptions<AccommodationsPreloaderOptions> options, ILoggerFactory loggerFactory)
+            IOptions<StaticDataLoadingOptions> options, ILoggerFactory loggerFactory)
         {
             _context = context;
             _suppliersPriorityService = suppliersPriorityService;
@@ -80,24 +80,23 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         public async Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation)
         {
             var supplierAccommodations = await (from ac in _context.RawAccommodations
-                where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
-                select new
-                {
-                    Supplier = ac.Supplier,
-                    SupplierAccommodationId = ac.SupplierAccommodationId,
-                    AccommodationDetails = ac.Accommodation
-                }).ToListAsync();
+                                                where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
+                                                select new
+                                                {
+                                                    Supplier = ac.Supplier,
+                                                    SupplierAccommodationId = ac.SupplierAccommodationId,
+                                                    AccommodationDetails = ac.Accommodation
+                                                }).ToListAsync();
 
             // Checking match of supplier and accommodation
             supplierAccommodations = (from sa in supplierAccommodations
-                join acs in accommodation.SupplierAccommodationCodes
-                    on new {Supplier = sa.Supplier, SupplierAccommodationId = sa.SupplierAccommodationId}
-                    equals new {Supplier = acs.Key, SupplierAccommodationId = acs.Value}
-                select sa).ToList();
+                                      join acs in accommodation.SupplierAccommodationCodes
+                                          on new { Supplier = sa.Supplier, SupplierAccommodationId = sa.SupplierAccommodationId }
+                                          equals new { Supplier = acs.Key, SupplierAccommodationId = acs.Value }
+                                      select sa).ToList();
 
             var supplierAccommodationDetails = supplierAccommodations.ToDictionary(d => d.Supplier,
-                d => JsonConvert.DeserializeObject<MultilingualAccommodation>(d.AccommodationDetails.RootElement
-                    .ToString()));
+                d => JsonConvert.DeserializeObject<MultilingualAccommodation>(d.AccommodationDetails.RootElement.ToString()));
 
             var suppliersPriority = accommodation.SuppliersPriority.Any()
                 ? accommodation.SuppliersPriority
@@ -137,7 +136,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.AdditionalInfo),
                 accommodationWithManualCorrection.AdditionalInfo, p => p == null || !p.Any());
 
-            var accommodationAmenities = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.AccommodationAmenities],
+            var accommodationAmenities = MergeMultilingualData(
+                suppliersPriority[AccommodationDataTypes.AccommodationAmenities],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.AccommodationAmenities),
                 accommodationWithManualCorrection.AccommodationAmenities,
                 p => p == null || !p.Any());
@@ -175,6 +175,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.Address),
                 accommodationWithManualCorrection.Location.Address, string.IsNullOrEmpty);
+            
+            // TODO: Get country, locality, localityZone from db 
             var country = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.Country),
@@ -349,15 +351,17 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             var result = new MultiLanguage<T>();
             foreach (var language in Enum.GetValues(typeof(Languages)))
             {
-                var languageCode = LanguagesHelper.GetLanguageCode((Languages) language);
-                var selectedLanguageData = suppliersData.ToDictionary(d => d.Key, d =>
-                {
-                    d.Value.TryGetValueOrDefault(languageCode, out var value);
-                    return value;
-                });
+                if ((Languages)language == Languages.Unknown)
+                    continue;
 
-                manualCorrectedData.TryGetValueOrDefault(languageCode, out var manualCorrectedValue);
-                var mergedData = MergeData(suppliersPriority, selectedLanguageData, manualCorrectedValue,
+                var languageCode = LanguagesHelper.GetLanguageCode((Languages)language);
+                var selectedLanguageData = suppliersData.ToDictionary(d => d.Key,
+                    d => d.Value.GetValueOrDefault(languageCode));
+
+                var manualCorrectedValue = manualCorrectedData != null
+                    ? manualCorrectedData.GetValueOrDefault(languageCode)
+                    : default(T);
+                var mergedData = MergeData<T>(suppliersPriority, selectedLanguageData, manualCorrectedValue!,
                     defaultChecker);
 
                 result.TrySetValue(languageCode, mergedData);

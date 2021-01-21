@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
     <Nullable>enable</Nullable>
     <UserSecretsId>978bf5d9-05a6-482a-9759-2485abb349b9</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
@@ -19,6 +20,7 @@
     <PackageReference Include="FloxDc.CacheFlow" Version="1.7.0" />
     <PackageReference Include="HappyTravel.EdoContracts" Version="1.5.1" />
     <PackageReference Include="HappyTravel.ErrorHandling" Version="1.0.0" />
+    <PackageReference Include="HappyTravel.MultiLanguage" Version="1.0.2" />
     <PackageReference Include="HappyTravel.StdOutLogger" Version="1.0.15" />
     <PackageReference Include="HappyTravel.VaultClient" Version="1.0.5" />
     <PackageReference Include="LocationNameNormalizer" Version="1.6.2" />

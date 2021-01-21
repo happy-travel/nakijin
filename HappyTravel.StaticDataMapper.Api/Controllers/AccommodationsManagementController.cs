@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
 
         [HttpPost("preload")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult Preload([FromQuery(Name = "modification-date")]
+        public IActionResult Preload([FromBody] List<Suppliers> suppliers, [FromQuery(Name = "modification-date")]
             DateTime? modificationDate, CancellationToken cancellationToken = default)
         {
             // Prevent situation when done more than one Preload requests.
@@ -46,7 +47,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
                 using var scope = _serviceProvider.CreateScope();
 
                 var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
-                await preloader.Preload(modificationDate, _accommodationPreloaderTokenSource.Token);
+                await preloader.Preload(suppliers, modificationDate, _accommodationPreloaderTokenSource.Token);
             }, cancellationToken);
             return Accepted();
         }
