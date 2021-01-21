@@ -21,7 +21,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public class AccommodationDataMerger : IAccommodationsDataMerger
     {
         public AccommodationDataMerger(NakijinContext context, ISuppliersPriorityService suppliersPriorityService,
-            IOptions<AccommodationsPreloaderOptions> options, ILoggerFactory loggerFactory)
+            IOptions<StaticDataLoadingOptions> options, ILoggerFactory loggerFactory)
         {
             _context = context;
             _suppliersPriorityService = suppliersPriorityService;
@@ -175,6 +175,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.Address),
                 accommodationWithManualCorrection.Location.Address, string.IsNullOrEmpty);
+            
+            // TODO: Get country, locality, localityZone from db 
             var country = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.Country),

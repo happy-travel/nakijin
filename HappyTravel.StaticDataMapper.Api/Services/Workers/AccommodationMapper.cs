@@ -42,9 +42,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public class AccommodationMapper : IAccommodationMapper
     {
         public AccommodationMapper(NakijinContext context, IAccommodationsTreesCache treesCache,
-            ILoggerFactory loggerFactory,
-            // TODO: change for generic Options model
-            IOptions<AccommodationsPreloaderOptions> options, ILocationNameNormalizer locationNameNormalizer,
+            ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options, ILocationNameNormalizer locationNameNormalizer,
             ICountriesCache countriesCache, ILocalitiesCache localitiesCache, ILocalityZonesCache localityZonesCache,
             ILocationMapper locationMapper)
         {
@@ -300,6 +298,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             MultiLanguage<string> NormalizeMultilingualLocality(in MultilingualLocationInfo location)
             {
+                // TODO: make Locality nullable in contracts
                 if (location.Locality == null)
                     return null;
 
@@ -316,6 +315,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             MultiLanguage<string> NormalizeMultilingualName(in MultiLanguage<string> name)
             {
+                // TODO: make LocalityZone nullable in contracts
                 if (name == null)
                     return null;
 

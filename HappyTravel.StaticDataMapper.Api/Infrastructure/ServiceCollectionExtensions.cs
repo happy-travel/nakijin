@@ -102,13 +102,10 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             }, 16);
 
-            services.Configure<AccommodationsPreloaderOptions>(o =>
+            services.Configure<StaticDataLoadingOptions>(o =>
             {
                 var suppliers = EnvironmentVariableHelper.Get("Nakijin:Preloader:Suppliers", configuration);
                 var batchSize = EnvironmentVariableHelper.Get("Nakijin:Preloader:BatchSize", configuration);
-                o.Suppliers = string.IsNullOrEmpty(suppliers)
-                    ? Enum.GetValues(typeof(Suppliers)).Cast<Suppliers>().ToList()
-                    : suppliers.Split(";").Cast<Suppliers>().ToList();
                 o.BatchSize = string.IsNullOrEmpty(batchSize) ? 1000 : int.Parse(batchSize);
             });
 

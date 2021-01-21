@@ -20,7 +20,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     {
         public LocationMapper(NakijinContext context, ICountriesCache countriesCache, ILocalitiesCache localitiesCache,
             ILocalityZonesCache localityZonesCache,
-            ILocationNameNormalizer locationNameNormalizer, IOptions<AccommodationsPreloaderOptions> options,
+            ILocationNameNormalizer locationNameNormalizer, IOptions<StaticDataLoadingOptions> options,
             ILoggerFactory loggerFactory)
         {
             _context = context;
