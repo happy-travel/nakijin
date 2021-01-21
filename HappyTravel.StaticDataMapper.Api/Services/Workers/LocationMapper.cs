@@ -132,7 +132,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             var existingLocalities = new List<Locality>();
             var newLocalities = new List<Locality>();
             var utcDate = DateTime.UtcNow;
-            
+
             foreach (var locality in localities)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -144,7 +144,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 var defaultLocalityName = locality.LocalityNames.GetValueOrDefault(DefaultLanguageCode);
                 var normalizedLocalityName =
                     _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
-                
+
                 var cached = await _localitiesCache.Get(countryCode, normalizedLocalityName);
 
                 var dbLocality = new Locality
@@ -165,7 +165,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 }
                 else
                 {
-                    dbLocality.Created =utcDate;
+                    dbLocality.Created = utcDate;
                     var cachedCountry = await _countriesCache.Get(countryCode);
                     dbLocality.CountryId = cachedCountry!.Id;
                     dbLocality.SupplierLocalityCodes = new Dictionary<Suppliers, string>
@@ -238,7 +238,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     SupplierLocalityZoneCodes = dz.SupplierLocalityZoneCodes,
                     Names = MultiLanguageHelpers.Merge(nz.Names, dz.Names),
                     Modified = utcDate,
-                    IsActive = true 
+                    IsActive = true
                 }).ToList();
 
             var newLocalityZones = normalizedLocalityZones
@@ -353,7 +353,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         join c in _context.Countries on l.CountryId equals c.Id
                         select new
                             KeyValuePair<(string CountryCode, string LocalityName), LocalityZone>(
-                                ValueTuple.Create(c.Code, l.Names.En),z))
+                                ValueTuple.Create(c.Code, l.Names.En), z))
                     .Skip(skip).Take(_batchSize).ToListAsync();
 
                 skip += localityZones.Count();

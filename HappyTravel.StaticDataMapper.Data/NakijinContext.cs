@@ -177,7 +177,6 @@ namespace HappyTravel.StaticDataMapper.Data
         public virtual DbSet<RichAccommodationDetails> Accommodations { get; set; }
         public virtual DbSet<RawAccommodation> RawAccommodations { get; set; }
         public virtual DbSet<AccommodationUncertainMatches> AccommodationUncertainMatches { get; set; }
-
         public virtual DbSet<StaticData> StaticDatas { get; set; }
     }
 }

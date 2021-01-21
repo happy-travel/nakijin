@@ -37,7 +37,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        public async Task Preload(List<Suppliers> suppliers, DateTime? modificationDate = null, CancellationToken cancellationToken = default)
+        public async Task Preload(List<Suppliers> suppliers, DateTime? modificationDate = null,
+            CancellationToken cancellationToken = default)
         {
             modificationDate ??= DateTime.MinValue;
 
@@ -67,7 +68,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                             var str = JsonConvert.SerializeObject(accommodation);
                             var json = JsonDocument.Parse(str);
 
-                            var defaultCountryName = accommodation.Location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
+                            var defaultCountryName =
+                                accommodation.Location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
                             var normalizedCountryCode =
                                 _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName,
                                     accommodation.Location.CountryCode);
@@ -90,7 +92,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                             {
                                 entity.Id = existedId;
                                 existedAccommodations.Add(entity);
-                                
+
                                 return;
                             }
 
@@ -115,8 +117,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
 
 
-            async Task<List<MultilingualAccommodation>> GetAccommodations(Suppliers supplier, DateTime modDate, int skip,
-                int take)
+            async Task<List<MultilingualAccommodation>> GetAccommodations(Suppliers supplier, DateTime modDate,
+                int skip, int take)
             {
                 var url = _suppliersOptions.SuppliersUrls[supplier] +
                     $"{AccommodationUrl}?skip={skip}&top={take}&modification-date={modDate}";

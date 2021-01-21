@@ -40,7 +40,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                     supplierAccommodation.Value);
 
             var utcDate = DateTime.UtcNow;
-            
+
             firstAccommodation.IsCalculated = false;
             firstAccommodation.Modified = utcDate;
 

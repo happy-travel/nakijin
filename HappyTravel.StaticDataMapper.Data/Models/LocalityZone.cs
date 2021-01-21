@@ -12,6 +12,6 @@ namespace HappyTravel.StaticDataMapper.Data.Models
         public Dictionary<Suppliers, string> SupplierLocalityZoneCodes { get; set; }
         public bool IsActive { get; set; }
         public DateTime Created { get; set; }
-        public  DateTime Modified { get; set; }
+        public DateTime Modified { get; set; }
     }
 }

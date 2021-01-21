@@ -82,23 +82,24 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         public async Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation)
         {
             var supplierAccommodations = await (from ac in _context.RawAccommodations
-                                                where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
-                                                select new
-                                                {
-                                                    Supplier = ac.Supplier,
-                                                    SupplierAccommodationId = ac.SupplierAccommodationId,
-                                                    AccommodationDetails = ac.Accommodation
-                                                }).ToListAsync();
+                where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
+                select new
+                {
+                    Supplier = ac.Supplier,
+                    SupplierAccommodationId = ac.SupplierAccommodationId,
+                    AccommodationDetails = ac.Accommodation
+                }).ToListAsync();
 
             // Checking match of supplier and accommodation
             supplierAccommodations = (from sa in supplierAccommodations
-                                      join acs in accommodation.SupplierAccommodationCodes
-                                          on new { Supplier = sa.Supplier, SupplierAccommodationId = sa.SupplierAccommodationId }
-                                          equals new { Supplier = acs.Key, SupplierAccommodationId = acs.Value }
-                                      select sa).ToList();
+                join acs in accommodation.SupplierAccommodationCodes
+                    on new {Supplier = sa.Supplier, SupplierAccommodationId = sa.SupplierAccommodationId}
+                    equals new {Supplier = acs.Key, SupplierAccommodationId = acs.Value}
+                select sa).ToList();
 
             var supplierAccommodationDetails = supplierAccommodations.ToDictionary(d => d.Supplier,
-                d => JsonConvert.DeserializeObject<MultilingualAccommodation>(d.AccommodationDetails.RootElement.ToString()));
+                d => JsonConvert.DeserializeObject<MultilingualAccommodation>(d.AccommodationDetails.RootElement
+                    .ToString()));
 
             var suppliersPriority = accommodation.SuppliersPriority.Any()
                 ? accommodation.SuppliersPriority
@@ -177,7 +178,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.Address),
                 accommodationWithManualCorrection.Location.Address, string.IsNullOrEmpty);
-            
+
             // TODO: Get country, locality, localityZone from db 
             var country = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
@@ -353,10 +354,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             var result = new MultiLanguage<T>();
             foreach (var language in Enum.GetValues(typeof(Languages)))
             {
-                if ((Languages)language == Languages.Unknown)
+                if ((Languages) language == Languages.Unknown)
                     continue;
 
-                var languageCode = LanguagesHelper.GetLanguageCode((Languages)language);
+                var languageCode = LanguagesHelper.GetLanguageCode((Languages) language);
                 var selectedLanguageData = suppliersData.ToDictionary(d => d.Key,
                     d => d.Value.GetValueOrDefault(languageCode));
 

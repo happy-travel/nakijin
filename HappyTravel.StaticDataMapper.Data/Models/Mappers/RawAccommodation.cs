@@ -21,8 +21,8 @@ namespace HappyTravel.StaticDataMapper.Data.Models.Mappers
 
         public Suppliers Supplier { get; set; }
         public string SupplierAccommodationId { get; set; }
-        
+
         public DateTime Created { get; set; }
-        public  DateTime Modified { get; set; }
+        public DateTime Modified { get; set; }
     }
 }
