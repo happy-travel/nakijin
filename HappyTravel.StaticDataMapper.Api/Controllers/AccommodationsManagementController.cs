@@ -33,7 +33,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
 
         [HttpPost("preload")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult Preload([FromBody]List<Suppliers> suppliers, [FromQuery(Name = "modification-date")]
+        public IActionResult Preload([FromBody] List<Suppliers> suppliers, [FromQuery(Name = "modification-date")]
             DateTime? modificationDate, CancellationToken cancellationToken = default)
         {
             // Prevent situation when done more than one Preload requests.
