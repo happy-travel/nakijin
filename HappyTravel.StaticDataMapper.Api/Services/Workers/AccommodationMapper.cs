@@ -42,7 +42,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public class AccommodationMapper : IAccommodationMapper
     {
         public AccommodationMapper(NakijinContext context, IAccommodationsTreesCache treesCache,
-            ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options, ILocationNameNormalizer locationNameNormalizer,
+            ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
+            ILocationNameNormalizer locationNameNormalizer,
             ICountriesCache countriesCache, ILocalitiesCache localitiesCache, ILocalityZonesCache localityZonesCache,
             ILocationMapper locationMapper)
         {
@@ -100,6 +101,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         {
             var accommodationsToAdd = new List<RichAccommodationDetails>();
             var accommodationsToUpdate = new List<RichAccommodationDetails>();
+            var utcDate = DateTime.UtcNow;
 
             foreach (var accommodation in accommodations)
 
@@ -139,6 +141,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 dbAccommodation.CountryCode = accommodation.Location.CountryCode;
                 dbAccommodation.CalculatedAccommodation = accommodation;
                 dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.SupplierCode);
+                dbAccommodation.Created = utcDate;
+                dbAccommodation.Modified = utcDate;
                 dbAccommodation.IsCalculated = true;
 
 
@@ -173,6 +177,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 var dbAccommodation = new RichAccommodationDetails
                 {
                     Id = matchedAccommodation.HtId,
+                    Modified = utcDate,
                     SupplierAccommodationCodes = matchedAccommodation.SupplierAccommodationCodes
                 };
                 if (matchedAccommodation.SupplierAccommodationCodes.All(s => s.Key != supplier))
@@ -373,9 +378,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             CancellationToken cancellationToken)
         {
             var dbAccommodation = new RichAccommodationDetails();
+            var utcDate = DateTime.UtcNow;
             dbAccommodation.CountryCode = accommodation.Location.CountryCode;
             dbAccommodation.CalculatedAccommodation = accommodation;
             dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.SupplierCode);
+            dbAccommodation.Created = utcDate;
+            dbAccommodation.Modified = utcDate;
             dbAccommodation.IsCalculated = true;
 
             _context.Accommodations.Add(dbAccommodation);
@@ -390,11 +398,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             int existingHtId, float score, CancellationToken cancellationToken)
         {
             var newHtId = await Add(accommodation, supplier, cancellationToken);
+            var utcDate = DateTime.UtcNow;
             _context.AccommodationUncertainMatches.Add(new AccommodationUncertainMatches
             {
                 Score = score,
                 ExistingHtId = existingHtId,
                 NewHtId = newHtId,
+                Created = utcDate,
+                Modified = utcDate,
                 IsActive = true
             });
 

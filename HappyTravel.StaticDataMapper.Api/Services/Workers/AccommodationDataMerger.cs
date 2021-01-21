@@ -55,9 +55,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         dbAccommodation.Id = ac.Id;
                         dbAccommodation.IsCalculated = true;
                         dbAccommodation.CalculatedAccommodation = calculatedData;
+                        dbAccommodation.Modified = DateTime.UtcNow;
                         _context.Accommodations.Attach(dbAccommodation);
                         _context.Entry(dbAccommodation).Property(p => p.CalculatedAccommodation).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.IsCalculated).IsModified = true;
+                        _context.Entry(dbAccommodation).Property(p => p.Modified).IsModified = true;
                     }
 
                     await _context.SaveChangesAsync(cancellationToken);
