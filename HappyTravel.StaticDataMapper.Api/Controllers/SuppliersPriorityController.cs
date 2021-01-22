@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using HappyTravel.StaticDataMapper.Api.Filters.Authorization;
 using HappyTravel.StaticDataMapper.Data.Models;
 using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
 using HappyTravel.StaticDataMapper.Api.Services;
@@ -12,6 +13,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
     [ApiVersion("1.0")]
     [Route("api/{v:apiVersion}/[controller]")]
     [Produces("application/json")]
+    [Permissions(MapperPermissions.Edit)]
     public class SuppliersPriorityController : StaticDataControllerBase
     {
         public SuppliersPriorityController(ISuppliersPriorityService suppliersPriorityService)

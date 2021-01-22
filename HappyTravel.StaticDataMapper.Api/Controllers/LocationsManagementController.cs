@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using HappyTravel.StaticDataMapper.Api.Filters.Authorization;
 using HappyTravel.StaticDataMapper.Api.Services.Workers;
 using HappyTravel.StaticDataMapper.Data.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +14,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
     [ApiVersion("1.0")]
     [Route("api/{v:apiVersion}")]
     [Produces("application/json")]
+    [Permissions(MapperPermissions.Edit)]
     public class LocationsManagementController : StaticDataControllerBase
     {
         public LocationsManagementController(IServiceProvider serviceProvider)
