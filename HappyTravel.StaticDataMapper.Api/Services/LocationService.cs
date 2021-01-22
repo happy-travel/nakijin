@@ -16,12 +16,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services
 
         public async Task<List<Contracts.Country>> GetCountries(string languageCode)
         {
-            var countries = await _context.Countries.Select(c => new
-            {
-                Code = c.Code,
-                Names = c.Names,
-                Modified = c.Modified
-            }).ToListAsync();
+            var countries = await _context.Countries
+                .Where(c => c.IsActive)
+                .Select(c => new
+                {
+                    Code = c.Code,
+                    Names = c.Names,
+                    Modified = c.Modified
+                }).ToListAsync();
 
             return countries.Select(c
                     => new Contracts.Country(c.Code, c.Names.GetValueOrDefault(languageCode), c.Modified))

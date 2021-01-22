@@ -47,6 +47,23 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             return Result.Success(MapToAccommodation(accommodationId, accommodation, languageCode));
         }
 
+        public async Task<List<Accommodation>> Get(int skip, int top, string languageCode)
+        {
+            var accommodations = await _context.Accommodations
+                .Where(ac => ac.IsActive)
+                .OrderBy(ac => ac.Id)
+                .Skip(skip)
+                .Take(top)
+                .Select(ac => new
+                {
+                    HtId = ac.Id,
+                    Data = ac.CalculatedAccommodation
+                })
+                .ToListAsync();
+
+            return accommodations.Select(ac => MapToAccommodation(ac.HtId, ac.Data, languageCode)).ToList();
+        }
+
         private Accommodation MapToAccommodation(int htId, MultilingualAccommodation accommodation, string language)
         {
             var name = accommodation.Name.GetValueOrDefault(language);
@@ -54,9 +71,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             var additionalInfo = accommodation.AdditionalInfo.GetValueOrDefault(language);
             var category = accommodation.Category.GetValueOrDefault(language);
             var address = accommodation.Location.Address.GetValueOrDefault(language);
-            var localityName = accommodation.Location.Locality.GetValueOrDefault(language);
+            var localityName = accommodation.Location.Locality?.GetValueOrDefault(language);
             var countryName = accommodation.Location.Country.GetValueOrDefault(language);
-            var localityZoneName = accommodation.Location.LocalityZone.GetValueOrDefault(language);
+            var localityZoneName = accommodation.Location.LocalityZone?.GetValueOrDefault(language);
             var textualDescriptions = new List<TextualDescription>();
 
             foreach (var descriptions in accommodation.TextualDescriptions)
