@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using HappyTravel.StaticDataMapper.Data.Models;
@@ -10,7 +11,10 @@ using HappyTravel.StaticDataMapper.Api.Services;
 using HappyTravel.StaticDataMapper.Api.Services.Workers;
 using IdentityModel;
 using LocationNameNormalizer.Extensions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Localization.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,10 +39,13 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             services.AddTransient<IAccommodationMapper, AccommodationMapper>();
             services.AddTransient<IAccommodationsDataMerger, AccommodationDataMerger>();
             services.AddTransient<ILocationMapper, LocationMapper>();
-            services.AddTransient<IAccommodationService, AccommodationService>();
+            services.AddTransient<IAccommodationManagementService, AccommodationManagementService>();
             services.AddTransient<ISuppliersPriorityService, SuppliersPriorityService>();
             services.AddTransient<IConnectorClient, ConnectorClient>();
             services.AddSingleton<ISecurityTokenManager, SecurityTokenManager>();
+
+            services.AddTransient<IAccommodationService, AccommodationService>();
+            services.AddTransient<ILocationService, LocationService>();
 
             services.AddNameNormalizationServices();
 
@@ -107,6 +114,20 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
                 var suppliers = EnvironmentVariableHelper.Get("Nakijin:Preloader:Suppliers", configuration);
                 var batchSize = EnvironmentVariableHelper.Get("Nakijin:Preloader:BatchSize", configuration);
                 o.BatchSize = string.IsNullOrEmpty(batchSize) ? 1000 : int.Parse(batchSize);
+            });
+
+            services.Configure<RequestLocalizationOptions>(o =>
+            {
+                o.DefaultRequestCulture = new RequestCulture("en");
+                o.SupportedCultures = new[]
+                {
+                    new CultureInfo("en"),
+                    new CultureInfo("ar"),
+                    new CultureInfo("ru")
+                    //TODO: add others if needed
+                };
+
+                o.RequestCultureProviders.Insert(0, new RouteDataRequestCultureProvider { Options = o });
             });
 
             var suppliersOptions = vaultClient.Get(configuration["Nakijin:Suppliers:Options"]).GetAwaiter().GetResult();
