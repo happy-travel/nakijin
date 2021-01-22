@@ -19,6 +19,46 @@
             <param name="accommodationId">Accommodation Id</param>
             <returns>Accommodation details</returns>
         </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.CancelAccommodationPreloading">
+            <summary>
+            Cancels preloading
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.CancelAccommodationMapping">
+            <summary>
+            Cancels accommodation mapping
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.CancelAccommodationDataMerge">
+            <summary>
+            Cancels accommodation merging 
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.Preload(System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers},System.Nullable{System.DateTime},System.Threading.CancellationToken)">
+            <summary>
+            Loads raw accommodation data 
+            </summary>
+            <param name="suppliers"></param>
+            <param name="modificationDate"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.MapAccommodations(HappyTravel.StaticDataMapper.Data.Models.Suppliers)">
+            <summary>
+            Maps accommodations 
+            </summary>
+            <param name="supplier"></param>
+            <returns></returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.MergeAccommodationsData">
+            <summary>
+            Merges accommodations
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.RecalculateData(System.Int32)">
             <summary>
             Calculates accommodation final data
@@ -42,6 +82,13 @@
             <param name="accommodation"></param>
             <returns></returns>
         </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.MatchUncertain(System.Int32)">
+            <summary>
+            Matches uncertain matches
+            </summary>
+            <param name="uncertainMatchId"></param>
+            <returns></returns>
+        </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsController.GetCountries">
             <summary>
             Gets all available countries list
@@ -54,6 +101,11 @@
             </summary>
             <param name="suppliersPriority"></param>
             <returns></returns>
+        </member>
+        <member name="T:HappyTravel.StaticDataMapper.Api.Infrastructure.ForbidUnauthenticatedPolicyEvaluator">
+            <summary>
+                Prevents authorization policies execution for not authenticated clients
+            </summary>
         </member>
     </members>
 </doc>

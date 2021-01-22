@@ -1,10 +1,9 @@
-using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.StaticDataMapper.Api.Filters.Authorization;
 using HappyTravel.StaticDataMapper.Data.Models;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
 using HappyTravel.StaticDataMapper.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +13,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
     [ApiVersion("1.0")]
     [Route("api/{v:apiVersion}")]
     [Produces("application/json")]
+    [Permissions(MapperPermissions.Read)]
     public class AccommodationsController : StaticDataControllerBase
     {
         public AccommodationsController(IAccommodationService accommodationService)
@@ -57,8 +57,6 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
 
             return Ok(result);
         }
-
-
 
 
         private readonly IAccommodationService _accommodationService;
