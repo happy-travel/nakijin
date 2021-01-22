@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -103,7 +104,7 @@ namespace HappyTravel.StaticDataMapper.Api
         }
 
 
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, IOptions<RequestLocalizationOptions> localizationOptions)
         {
             var logger = _loggerFactory.CreateLogger<Startup>();
             app.UseProblemDetailsExceptionHandler(_environment, logger);
@@ -111,6 +112,7 @@ namespace HappyTravel.StaticDataMapper.Api
                 options => options.IgnoredPaths = new HashSet<string> {"/health"}
             );
 
+            app.UseRequestLocalization(localizationOptions.Value);
             app.UseSwagger()
                 .UseSwaggerUI(options =>
                 {

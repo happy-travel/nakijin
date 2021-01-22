@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using CSharpFunctionalExtensions;
+using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.StaticDataMapper.Api.Services;
 using HappyTravel.StaticDataMapper.Data.Models;
 using HappyTravel.StaticDataMapper.Api.Services.Workers;
+using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,12 +20,18 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
     [Produces("application/json")]
     public class AccommodationsManagementController : StaticDataControllerBase
     {
-        public AccommodationsManagementController(IServiceProvider serviceProvider)
+        public AccommodationsManagementController(IServiceProvider serviceProvider,
+            IAccommodationManagementService accommodationManagementService)
         {
             _serviceProvider = serviceProvider;
+            _accommodationManagementService = accommodationManagementService;
         }
 
 
+        /// <summary>
+        /// Cancels preloading
+        /// </summary>
+        /// <returns></returns>
         [HttpPost("preload/cancel")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         public IActionResult CancelAccommodationPreloading()
@@ -31,6 +41,39 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         }
 
 
+        /// <summary>
+        /// Cancels accommodation mapping
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("map/cancel")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        public IActionResult CancelAccommodationMapping()
+        {
+            _accommodationMappingTokenSource.Cancel();
+            return Ok();
+        }
+
+
+        /// <summary>
+        /// Cancels accommodation merging 
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("merge/cancel")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        public IActionResult CancelAccommodationDataMerge()
+        {
+            _accommodationDataMergeTokenSource.Cancel();
+            return Ok();
+        }
+
+
+        /// <summary>
+        /// Loads raw accommodation data 
+        /// </summary>
+        /// <param name="suppliers"></param>
+        /// <param name="modificationDate"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [HttpPost("preload")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult Preload([FromBody] List<Suppliers> suppliers, [FromQuery(Name = "modification-date")]
@@ -53,24 +96,11 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         }
 
 
-        [HttpPost("map/cancel")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
-        public IActionResult CancelAccommodationMapping()
-        {
-            _accommodationMappingTokenSource.Cancel();
-            return Ok();
-        }
-
-
-        [HttpPost("merge/cancel")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
-        public IActionResult CancelAccommodationDataMerge()
-        {
-            _accommodationDataMergeTokenSource.Cancel();
-            return Ok();
-        }
-
-
+        /// <summary>
+        /// Maps accommodations 
+        /// </summary>
+        /// <param name="supplier"></param>
+        /// <returns></returns>
         [HttpPost("map/suppliers/{supplier}")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MapAccommodations(Suppliers supplier)
@@ -93,6 +123,10 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         }
 
 
+        /// <summary>
+        /// Merges accommodations
+        /// </summary>
+        /// <returns></returns>
         [HttpPost("merge")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MergeAccommodationsData()
@@ -115,6 +149,86 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         }
 
 
+        /// <summary>
+        /// Calculates accommodation final data
+        /// </summary>
+        /// <param name="id">Accommodation id</param>
+        /// <returns></returns>
+        [HttpPost("accommodations/{id}/recalculate")]
+        [ProducesResponseType((int) HttpStatusCode.NoContent)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> RecalculateData(int id)
+        {
+            var (_, isFailure, error) = await _accommodationManagementService.RecalculateData(id);
+            if (isFailure)
+                return BadRequest(error);
+
+            return NoContent();
+        }
+
+
+        /// <summary>
+        /// Adds suppliers priority to accommodation
+        /// </summary>
+        /// <param name="accommodationId"></param>
+        /// <param name="suppliersPriorities"></param>
+        /// <returns></returns>
+        [HttpPost("accommodations/{accommodationId}/add-priorities")]
+        [ProducesResponseType((int) HttpStatusCode.NoContent)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> AddSuppliersPriority(int accommodationId,
+            [FromBody] Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriorities)
+        {
+            var (_, isFailure, error) =
+                await _accommodationManagementService.AddSuppliersPriority(accommodationId, suppliersPriorities);
+
+            if (isFailure)
+                return BadRequest(error);
+
+            return NoContent();
+        }
+
+
+        /// <summary>
+        ///  Adds manual correction to accommodation
+        /// </summary>
+        /// <param name="accommodationId"></param>
+        /// <param name="accommodation"></param>
+        /// <returns></returns>
+        [HttpPost("accommodations/{accommodationId}/manual-correction")]
+        [ProducesResponseType((int) HttpStatusCode.NoContent)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> AddManualCorrectionToAccommodation(int accommodationId,
+            MultilingualAccommodation accommodation)
+        {
+            var (_, isFailure, error) =
+                await _accommodationManagementService.AddManualCorrection(accommodationId, accommodation);
+
+            if (isFailure)
+                return BadRequest(error);
+
+            return NoContent();
+        }
+
+
+        /// <summary>
+        /// Matches uncertain matches
+        /// </summary>
+        /// <param name="uncertainMatchId"></param>
+        /// <returns></returns>
+        [HttpPost("accommodations/uncertain֊matches/{uncertainMatchId}/match")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> MatchUncertain(int uncertainMatchId)
+        {
+            var (_, isFailure, error) = await _accommodationManagementService.MatchUncertain(uncertainMatchId);
+            if (isFailure)
+                return BadRequest(error);
+
+            return Ok();
+        }
+
+
         private static CancellationTokenSource _accommodationDataMergeTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));
 
@@ -124,6 +238,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         private static CancellationTokenSource _accommodationPreloaderTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));
 
+        private readonly IAccommodationManagementService _accommodationManagementService;
         private readonly IServiceProvider _serviceProvider;
     }
 }
