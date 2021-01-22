@@ -17,6 +17,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             _context = context;
         }
 
+        
         public async Task<Result<Accommodation>> Get(Suppliers supplier, string supplierAccommodationCode,
             string languageCode)
         {
@@ -47,6 +48,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             return Result.Success(MapToAccommodation(accommodationId, accommodation, languageCode));
         }
 
+        
         public async Task<List<Accommodation>> Get(int skip, int top, string languageCode)
         {
             var accommodations = await _context.Accommodations
@@ -63,6 +65,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
 
             return accommodations.Select(ac => MapToAccommodation(ac.HtId, ac.Data, languageCode)).ToList();
         }
+
 
         private Accommodation MapToAccommodation(int htId, MultilingualAccommodation accommodation, string language)
         {
