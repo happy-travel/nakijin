@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text.Json;
 using HappyTravel.MultiLanguage;
 
 namespace HappyTravel.StaticDataMapper.Data.Models.Mappers
@@ -20,5 +21,8 @@ namespace HappyTravel.StaticDataMapper.Data.Models.Mappers
 
         public Suppliers Supplier { get; set; }
         public string SupplierAccommodationId { get; set; }
+
+        public DateTime Created { get; set; }
+        public DateTime Modified { get; set; }
     }
 }

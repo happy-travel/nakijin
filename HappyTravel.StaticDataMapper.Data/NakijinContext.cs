@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.StaticDataMapper.Data.Models;
 using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
@@ -44,6 +45,14 @@ namespace HappyTravel.StaticDataMapper.Data
                     .IsRequired();
                 a.Property(p => p.SupplierAccommodationId)
                     .IsRequired();
+
+                a.Property(p => p.Created)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
+
+                a.Property(p => p.Modified)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
             });
 
             builder.Entity<RichAccommodationDetails>(a =>
@@ -73,6 +82,13 @@ namespace HappyTravel.StaticDataMapper.Data
                     .IsRequired();
                 a.Property(p => p.IsCalculated).IsRequired().HasDefaultValue(true);
                 a.Property(p => p.IsActive).IsRequired().HasDefaultValue(true);
+                a.Property(p => p.Created)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
+
+                a.Property(p => p.Modified)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
             });
 
             builder.Entity<AccommodationUncertainMatches>(m =>
@@ -81,6 +97,13 @@ namespace HappyTravel.StaticDataMapper.Data
                 m.Property(p => p.ExistingHtId).IsRequired();
                 m.Property(p => p.NewHtId).IsRequired();
                 m.Property(p => p.IsActive).HasDefaultValue(true).IsRequired();
+                m.Property(p => p.Created)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
+
+                m.Property(p => p.Modified)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
             });
 
             builder.Entity<StaticData>(m =>
@@ -101,6 +124,13 @@ namespace HappyTravel.StaticDataMapper.Data
                         p => JsonConvert.DeserializeObject<Dictionary<Suppliers, string>>(p))
                     .IsRequired();
                 c.Property(p => p.IsActive).IsRequired().HasDefaultValue(true);
+                c.Property(p => p.Created)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
+
+                c.Property(p => p.Modified)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
             });
 
             builder.Entity<Locality>(l =>
@@ -112,6 +142,13 @@ namespace HappyTravel.StaticDataMapper.Data
                     .HasConversion(p => JsonConvert.SerializeObject(p),
                         p => JsonConvert.DeserializeObject<Dictionary<Suppliers, string>>(p));
                 l.Property(p => p.IsActive).IsRequired().HasDefaultValue(true);
+                l.Property(p => p.Created)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
+
+                l.Property(p => p.Modified)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
             });
 
             builder.Entity<LocalityZone>(lz =>
@@ -123,6 +160,13 @@ namespace HappyTravel.StaticDataMapper.Data
                     .HasConversion(p => JsonConvert.SerializeObject(p),
                         p => JsonConvert.DeserializeObject<Dictionary<Suppliers, string>>(p));
                 lz.Property(p => p.IsActive).IsRequired();
+                lz.Property(p => p.Created)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
+
+                lz.Property(p => p.Modified)
+                    .IsRequired()
+                    .HasDefaultValueSql("now() at time zone 'utc'");
             });
         }
 
@@ -133,7 +177,6 @@ namespace HappyTravel.StaticDataMapper.Data
         public virtual DbSet<RichAccommodationDetails> Accommodations { get; set; }
         public virtual DbSet<RawAccommodation> RawAccommodations { get; set; }
         public virtual DbSet<AccommodationUncertainMatches> AccommodationUncertainMatches { get; set; }
-
         public virtual DbSet<StaticData> StaticDatas { get; set; }
     }
 }

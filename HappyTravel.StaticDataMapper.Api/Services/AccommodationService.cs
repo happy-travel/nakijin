@@ -39,9 +39,16 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 firstAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key,
                     supplierAccommodation.Value);
 
+            var utcDate = DateTime.UtcNow;
+
             firstAccommodation.IsCalculated = false;
+            firstAccommodation.Modified = utcDate;
+
             secondAccommodation.IsActive = false;
+            secondAccommodation.Modified = utcDate;
+
             uncertainMatch.IsActive = false;
+            uncertainMatch.Modified = utcDate;
 
             _context.Update(firstAccommodation);
             _context.Update(secondAccommodation);
@@ -93,6 +100,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 return Result.Failure($"Accommodation with {nameof(id)} {id} does not exist.");
 
             accommodation.SuppliersPriority = suppliersPriority;
+            accommodation.Modified = DateTime.UtcNow;
             accommodation.IsCalculated = false;
 
             _context.Update(accommodation);
@@ -109,6 +117,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 return Result.Failure($"Accommodation with {nameof(id)} {id} does not exist.");
 
             accommodation.AccommodationWithManualCorrections = manualCorrectedAccommodation;
+            accommodation.Modified = DateTime.UtcNow;
             accommodation.IsCalculated = false;
 
             _context.Update(accommodation);
@@ -127,6 +136,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             var calculatedData = await _accommodationsDataMerger.Merge(accommodation);
 
             accommodation.CalculatedAccommodation = calculatedData;
+            accommodation.Modified = DateTime.UtcNow;
             accommodation.IsCalculated = true;
 
             _context.Update(accommodation);
@@ -139,7 +149,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         {
             var name = accommodation.Name.GetValueOrDefault(language);
             var accommodationAmenities = accommodation.AccommodationAmenities.GetValueOrDefault(language);
-            var additionalInfo =accommodation.AdditionalInfo.GetValueOrDefault(language);
+            var additionalInfo = accommodation.AdditionalInfo.GetValueOrDefault(language);
             var category = accommodation.Category.GetValueOrDefault(language);
             var address = accommodation.Location.Address.GetValueOrDefault(language);
             var localityName = accommodation.Location.Locality.GetValueOrDefault(language);

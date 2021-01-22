@@ -69,6 +69,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             var existingCountries = new List<Country>();
             var newCountries = new List<Country>();
 
+            var utcDate = DateTime.UtcNow;
             foreach (var country in countries)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -79,7 +80,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 {
                     Code = code,
                     Names = NormalizeCountryMultiLingualNames(country.Names),
-                    IsActive = true
+                    IsActive = true,
+                    Modified = utcDate
                 };
 
                 // Maybe after testing we will change to get data from db
@@ -97,6 +99,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 else
                 {
                     dbCountry.SupplierCountryCodes = new Dictionary<Suppliers, string> {{supplier, code}};
+                    dbCountry.Created = utcDate;
                     newCountries.Add(dbCountry);
                 }
             }
@@ -128,6 +131,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 .Distinct().ToListAsync(cancellationToken);
             var existingLocalities = new List<Locality>();
             var newLocalities = new List<Locality>();
+            var utcDate = DateTime.UtcNow;
+
             foreach (var locality in localities)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -145,7 +150,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 var dbLocality = new Locality
                 {
                     Names = NormalizeLocalityMultilingualNames(defaultCountryName, locality.LocalityNames),
-                    IsActive = true
+                    IsActive = true,
+                    Modified = utcDate
                 };
                 if (cached != default)
                 {
@@ -159,6 +165,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 }
                 else
                 {
+                    dbLocality.Created = utcDate;
                     var cachedCountry = await _countriesCache.Get(countryCode);
                     dbLocality.CountryId = cachedCountry!.Id;
                     dbLocality.SupplierLocalityCodes = new Dictionary<Suppliers, string>
@@ -219,6 +226,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 .Where(lz => normalizedKeyNames.Contains(lz.Names.En + lz.LocalityId))
                 .ToListAsync();
 
+            var utcDate = DateTime.UtcNow;
             var localityZonesToUpdate = (from nz in normalizedLocalityZones
                 join dz in existingDbZones
                     on nz.LocalityId + nz.DefaultName equals dz.LocalityId + dz.Names.En
@@ -229,7 +237,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     LocalityId = dz.LocalityId,
                     SupplierLocalityZoneCodes = dz.SupplierLocalityZoneCodes,
                     Names = MultiLanguageHelpers.Merge(nz.Names, dz.Names),
-                    IsActive = true 
+                    Modified = utcDate,
+                    IsActive = true
                 }).ToList();
 
             var newLocalityZones = normalizedLocalityZones
@@ -241,6 +250,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     LocalityId = nz.LocalityId,
                     Names = nz.Names,
                     SupplierLocalityZoneCodes = new Dictionary<Suppliers, string> {{supplier, nz.Code}},
+                    Created = utcDate,
                     IsActive = true,
                 });
 
@@ -343,7 +353,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         join c in _context.Countries on l.CountryId equals c.Id
                         select new
                             KeyValuePair<(string CountryCode, string LocalityName), LocalityZone>(
-                                ValueTuple.Create(c.Code, l.Names.En),z))
+                                ValueTuple.Create(c.Code, l.Names.En), z))
                     .Skip(skip).Take(_batchSize).ToListAsync();
 
                 skip += localityZones.Count();
