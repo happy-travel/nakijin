@@ -28,6 +28,10 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         }
 
 
+        /// <summary>
+        /// Cancels preloading
+        /// </summary>
+        /// <returns></returns>
         [HttpPost("preload/cancel")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         public IActionResult CancelAccommodationPreloading()
@@ -37,6 +41,39 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         }
 
 
+        /// <summary>
+        /// Cancels accommodation mapping
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("map/cancel")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        public IActionResult CancelAccommodationMapping()
+        {
+            _accommodationMappingTokenSource.Cancel();
+            return Ok();
+        }
+
+
+        /// <summary>
+        /// Cancels accommodation merging 
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("merge/cancel")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        public IActionResult CancelAccommodationDataMerge()
+        {
+            _accommodationDataMergeTokenSource.Cancel();
+            return Ok();
+        }
+
+
+        /// <summary>
+        /// Loads raw accommodation data 
+        /// </summary>
+        /// <param name="suppliers"></param>
+        /// <param name="modificationDate"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         [HttpPost("preload")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult Preload([FromBody] List<Suppliers> suppliers, [FromQuery(Name = "modification-date")]
@@ -59,24 +96,11 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         }
 
 
-        [HttpPost("map/cancel")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
-        public IActionResult CancelAccommodationMapping()
-        {
-            _accommodationMappingTokenSource.Cancel();
-            return Ok();
-        }
-
-
-        [HttpPost("merge/cancel")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
-        public IActionResult CancelAccommodationDataMerge()
-        {
-            _accommodationDataMergeTokenSource.Cancel();
-            return Ok();
-        }
-
-
+        /// <summary>
+        /// Maps accommodations 
+        /// </summary>
+        /// <param name="supplier"></param>
+        /// <returns></returns>
         [HttpPost("map/suppliers/{supplier}")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MapAccommodations(Suppliers supplier)
@@ -99,6 +123,10 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         }
 
 
+        /// <summary>
+        /// Merges accommodations
+        /// </summary>
+        /// <returns></returns>
         [HttpPost("merge")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MergeAccommodationsData()
@@ -183,6 +211,11 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         }
 
 
+        /// <summary>
+        /// Matches uncertain matches
+        /// </summary>
+        /// <param name="uncertainMatchId"></param>
+        /// <returns></returns>
         [HttpPost("accommodations/uncertain֊matches/{uncertainMatchId}/match")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
