@@ -9,5 +9,10 @@ The project contains API methods to get and manage locations to be used by other
 * Jaeger instance _(optional)_
 
 ### Project Dependencies
-The project relies on [Edo.Contracts](https://github.com/happy-travel/edo-contracts) library, that _must_ be in sync with other services.
+Libraries that project relies on:
+* [Edo.Contracts](https://github.com/happy-travel/edo-contracts)
+* [Multilanguage](https://github.com/happy-travel/multi-language) 
+* [LocationNameNormalizer](https://github.com/happy-travel/location-name-normalizer)
+
+Libraries' versions _must_ be in sync with other services.
 Also you might need NetTopologySuite and enabled GIS services on the DB side.
