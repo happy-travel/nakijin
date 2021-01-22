@@ -4,13 +4,18 @@ using System.IO;
 using System.Reflection;
 using FloxDc.CacheFlow.Extensions;
 using HappyTravel.ErrorHandling.Extensions;
+using HappyTravel.StaticDataMapper.Api.Filters.Authorization;
 using HappyTravel.StaticDataMapper.Api.Infrastructure;
+using HappyTravel.StaticDataMapper.Api.Infrastructure.Conventions;
 using HappyTravel.StaticDataMapper.Api.Infrastructure.Environments;
 using HappyTravel.StdOutLogger.Extensions;
 using HappyTravel.VaultClient;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -95,12 +100,25 @@ namespace HappyTravel.StaticDataMapper.Api
                 }
             });
 
-            services.AddMvcCore()
+            services.AddMvcCore(o =>
+                {
+                    o.Conventions.Add(new AuthorizeControllerModelConvention());
+                })
                 .AddFormatterMappings()
                 .AddNewtonsoftJson()
                 .AddApiExplorer()
                 .AddCacheTagHelper()
-                .AddControllersAsServices();
+                .AddControllersAsServices()
+                .AddAuthorization();
+            
+            services.AddSingleton<IAuthorizationPolicyProvider, CustomAuthorizationPolicyProvider>();
+            services.AddTransient<IAuthorizationHandler, PermissionsAuthorizationHandler>();
+            // Default behaviour allows not authenticated requests to be checked by authorization policies.
+            // Special wrapper returns Forbid result for them.
+            // More information: https://github.com/dotnet/aspnetcore/issues/4656
+            services.AddTransient<IPolicyEvaluator, ForbidUnauthenticatedPolicyEvaluator>();
+            // Default policy evaluator needs to be registered as dependency of ForbidUnauthenticatedPolicyEvaluator.
+            services.AddTransient<PolicyEvaluator>();
         }
 
 
@@ -127,6 +145,8 @@ namespace HappyTravel.StaticDataMapper.Api
                     .AllowAnyMethod())
                 .UseHttpsRedirection()
                 .UseRouting()
+                .UseAuthentication()
+                .UseAuthorization()
                 .UseEndpoints(endpoints =>
                 {
                     endpoints.MapHealthChecks("/health");

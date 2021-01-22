@@ -10,6 +10,7 @@ using HappyTravel.StaticDataMapper.Api.Infrastructure.Environments;
 using HappyTravel.StaticDataMapper.Api.Services;
 using HappyTravel.StaticDataMapper.Api.Services.Workers;
 using IdentityModel;
+using IdentityServer4.AccessTokenValidation;
 using LocationNameNormalizer.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -78,7 +79,6 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
                         options.AgentHost = agentHost;
                         options.AgentPort = agentPort;
                     })
-                    .AddRequestInstrumentation()
                     .AddDependencyInstrumentation()
                     .SetResource(Resources.CreateServiceResource(serviceName))
                     .SetSampler(new AlwaysOnSampler());
@@ -141,9 +141,10 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
 
             var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
             var authorityOptions = vaultClient.Get(configuration["Nakijin:Authority:Options"]).GetAwaiter().GetResult();
+            var authorityUrl = authorityOptions["authorityUrl"];
+            
             services.Configure<TokenRequestOptions>(options =>
             {
-                var authorityUrl = authorityOptions["authorityUrl"];
                 var uri = new Uri(new Uri(authorityUrl), "/connect/token");
                 options.Address = uri.ToString();
                 options.ClientId = clientOptions["clientId"];
@@ -151,6 +152,16 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
                 options.Scope = clientOptions["scope"];
                 options.GrantType = OidcConstants.GrantTypes.ClientCredentials;
             });
+            
+            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                .AddIdentityServerAuthentication(options =>
+                {
+                    options.Authority = authorityUrl;
+                    options.ApiName = authorityOptions["apiName"];
+                    options.RequireHttpsMetadata = true;
+                    options.SupportedTokens = SupportedTokens.Jwt;
+                });
+
 
             return services;
         }

@@ -55,5 +55,10 @@
             <param name="suppliersPriority"></param>
             <returns></returns>
         </member>
+        <member name="T:HappyTravel.StaticDataMapper.Api.Infrastructure.ForbidUnauthenticatedPolicyEvaluator">
+            <summary>
+                Prevents authorization policies execution for not authenticated clients
+            </summary>
+        </member>
     </members>
 </doc>
