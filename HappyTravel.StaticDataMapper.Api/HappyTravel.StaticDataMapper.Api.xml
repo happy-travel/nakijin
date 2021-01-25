@@ -19,6 +19,14 @@
             <param name="accommodationId">Accommodation Id</param>
             <returns>Accommodation details</returns>
         </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.Int32,System.Int32)">
+            <summary>
+             Returns a list of accommodation details
+            </summary>
+            <param name="skip"></param>
+            <param name="top"></param>
+            <returns></returns>
+        </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.CancelAccommodationPreloading">
             <summary>
             Cancels preloading

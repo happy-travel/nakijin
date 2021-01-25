@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
@@ -33,7 +34,8 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> Get(Suppliers supplier, string supplierAccommodationCode)
         {
-            var (_, isFailure, result, error) = await _accommodationService.Get(supplier, supplierAccommodationCode, LanguageCode);
+            var (_, isFailure, result, error) =
+                await _accommodationService.Get(supplier, supplierAccommodationCode, LanguageCode);
             if (isFailure)
                 return BadRequest(error);
 
@@ -56,6 +58,21 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
                 return BadRequest(error);
 
             return Ok(result);
+        }
+
+
+        /// <summary>
+        ///  Returns a list of accommodation details
+        /// </summary>
+        /// <param name="skip"></param>
+        /// <param name="top"></param>
+        /// <returns></returns>
+        [HttpGet("accommodations")]
+        [ProducesResponseType(typeof(List<Accommodation>), (int) HttpStatusCode.OK)]
+        public async Task<IActionResult> Get(int skip, int top)
+        {
+            var accommodations = await _accommodationService.Get(skip, top, LanguageCode);
+            return Ok(accommodations);
         }
 
 

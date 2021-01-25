@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
@@ -10,5 +11,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         Task<Result<Accommodation>> Get(Suppliers supplier, string supplierAccommodationCode, string languageCode);
 
         Task<Result<Accommodation>> Get(int accommodationId, string languageCode);
+        Task<List<Accommodation>> Get(int skip, int top, string languageCode);
     }
 }
