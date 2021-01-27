@@ -8,6 +8,7 @@ using HappyTravel.StaticDataMapper.Api.Filters.Authorization;
 using HappyTravel.StaticDataMapper.Api.Infrastructure;
 using HappyTravel.StaticDataMapper.Api.Infrastructure.Conventions;
 using HappyTravel.StaticDataMapper.Api.Infrastructure.Environments;
+using HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo;
 using HappyTravel.StdOutLogger.Extensions;
 using HappyTravel.VaultClient;
 using Microsoft.AspNetCore.Authorization;
@@ -110,6 +111,8 @@ namespace HappyTravel.StaticDataMapper.Api
                 .AddCacheTagHelper()
                 .AddControllersAsServices()
                 .AddAuthorization();
+
+            services.AddTransient<ILocationMappingInfoService, LocationMappingInfoService>();
             
             services.AddSingleton<IAuthorizationPolicyProvider, CustomAuthorizationPolicyProvider>();
             services.AddTransient<IAuthorizationHandler, PermissionsAuthorizationHandler>();

@@ -97,6 +97,12 @@
             <param name="uncertainMatchId"></param>
             <returns></returns>
         </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationMappingsController.GetMapping(System.String)">
+            <summary>
+            Gets location mapping info by given htId
+            </summary>
+            <returns></returns>
+        </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsController.GetCountries">
             <summary>
             Gets all available countries list
