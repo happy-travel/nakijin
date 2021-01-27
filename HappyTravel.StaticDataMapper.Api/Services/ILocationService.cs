@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Api.Models.Locations;
+using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
 using Contracts = HappyTravel.EdoContracts.StaticData;
 
 namespace HappyTravel.StaticDataMapper.Api.Services

@@ -22,6 +22,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
             _serviceProvider = serviceProvider;
         }
 
+        
         [HttpPost("locations/map/suppliers/{supplier}")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MapLocations([FromRoute] Suppliers supplier)
@@ -40,6 +41,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
 
             return Accepted();
         }
+        
         
         private static CancellationTokenSource _locationsMapperTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));

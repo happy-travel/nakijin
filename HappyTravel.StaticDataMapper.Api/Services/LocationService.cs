@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.GeoData.Enums;
 using HappyTravel.Geography;
-using HappyTravel.StaticDataMapper.Api.Models.Locations;
+using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
 using HappyTravel.StaticDataMapper.Data;
 using Microsoft.EntityFrameworkCore;
 using Contracts = HappyTravel.EdoContracts.StaticData;

@@ -1,13 +1,13 @@
 ﻿using HappyTravel.EdoContracts.GeoData.Enums;
 using HappyTravel.Geography;
 
-namespace HappyTravel.StaticDataMapper.Api.Models.Locations
+namespace HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo
 {
     public readonly struct Location
     {
-        public Location(string id, string name, string locality, string country, string countryCode, GeoPoint coordinates, double distanceInMeters, PredictionSources source, AccommodationMapperLocationTypes locationType, LocationTypes type)
+        public Location(string htId, string name, string locality, string country, string countryCode, GeoPoint coordinates, double distanceInMeters, PredictionSources source, AccommodationMapperLocationTypes locationType, LocationTypes type)
         {
-            Id = id;
+            HtId = htId;
             Name = name;
             Locality = locality;
             Country = country;
@@ -19,7 +19,7 @@ namespace HappyTravel.StaticDataMapper.Api.Models.Locations
             Type = type;
         }
 
-        public string Id { get; }
+        public string HtId { get; }
         public string Name { get; }
         public string Locality { get; }
         public string Country { get; }

@@ -109,17 +109,6 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsController.GetLocations(HappyTravel.StaticDataMapper.Api.Models.Locations.AccommodationMapperLocationTypes,System.DateTime,System.Int32,System.Int32,System.Threading.CancellationToken)">
-            <summary>
-            Retrieves locations by a location type 
-            </summary>
-            <param name="locationType"></param>
-            <param name="modified"></param>
-            <param name="skip"></param>
-            <param name="top"></param>
-            <param name="cancellationToken"></param>
-            <returns>List of locations</returns>
-        </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.SuppliersPriorityController.AddOrUpdateDefaultPriority(System.Collections.Generic.Dictionary{HappyTravel.StaticDataMapper.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers}})">
             <summary>
             Sets or updates default priority

@@ -1,4 +1,4 @@
-﻿namespace HappyTravel.StaticDataMapper.Api.Models.Locations
+﻿namespace HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo
 {
     public enum AccommodationMapperLocationTypes
     {
