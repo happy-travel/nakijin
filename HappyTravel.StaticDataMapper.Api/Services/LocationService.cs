@@ -14,6 +14,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             _context = context;
         }
 
+        
         public async Task<List<Contracts.Country>> GetCountries(string languageCode)
         {
             var countries = await _context.Countries
@@ -30,6 +31,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 .ToList();
         }
 
+        
         private readonly NakijinContext _context;
     }
 }

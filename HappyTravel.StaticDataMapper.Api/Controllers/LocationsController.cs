@@ -19,7 +19,8 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         {
             _locationService = locationService;
         }
-
+        
+        
         /// <summary>
         /// Gets all available countries list
         /// </summary>
@@ -31,8 +32,8 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
             var countries = await _locationService.GetCountries(LanguageCode);
             return Ok(countries);
         }
-
+        
+        
         private readonly ILocationService _locationService;
-
     }
 }

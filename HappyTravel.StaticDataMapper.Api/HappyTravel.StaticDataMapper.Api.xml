@@ -103,6 +103,17 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationMappingsController.GetLocations(HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo.AccommodationMapperLocationTypes,System.DateTime,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Retrieves locations by a location type
+            </summary>
+            <param name="locationType"></param>
+            <param name="modified"></param>
+            <param name="skip"></param>
+            <param name="top"></param>
+            <param name="cancellationToken"></param>
+            <returns>List of locations</returns>
+        </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsController.GetCountries">
             <summary>
             Gets all available countries list
