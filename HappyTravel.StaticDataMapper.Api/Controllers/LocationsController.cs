@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using HappyTravel.StaticDataMapper.Api.Filters.Authorization;
 using HappyTravel.StaticDataMapper.Api.Models.Locations;
 using HappyTravel.StaticDataMapper.Api.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Country = LocationNameNormalizer.Models.Country;
 
@@ -42,15 +41,15 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         /// Retrieves locations by a location type 
         /// </summary>
         /// <param name="locationType"></param>
-        /// <param name="modifiedFrom"></param>
+        /// <param name="modified"></param>
         /// <param name="skip"></param>
         /// <param name="top"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>List of locations</returns>
         [HttpGet]
         [ProducesResponseType(typeof(List<Location>), (int) HttpStatusCode.OK)]
-        public async Task<IActionResult> GetLocations([FromQuery] AccommodationMapperLocationTypes locationType, [FromQuery] DateTime modifiedFrom = default, [FromQuery] int skip = 0, [Range(0, 50000)][FromQuery] int top = 50000, CancellationToken cancellationToken = default)
-            => Ok(await _locationService.Get(locationType, LanguageCode, modifiedFrom, skip, top, cancellationToken));
+        public async Task<IActionResult> GetLocations([FromQuery] AccommodationMapperLocationTypes locationType, [FromQuery] DateTime modified = default, [FromQuery] int skip = 0, [Range(0, 50000)][FromQuery] int top = 50000, CancellationToken cancellationToken = default)
+            => Ok(await _locationService.Get(locationType, LanguageCode, modified, skip, top, cancellationToken));
         
         
         private readonly ILocationService _locationService;

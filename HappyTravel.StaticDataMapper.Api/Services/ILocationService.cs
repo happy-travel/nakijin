@@ -12,6 +12,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         Task<List<Contracts.Country>> GetCountries(string languageCode);
 
         Task<List<Location>> Get(AccommodationMapperLocationTypes locationType, string languageCode,
-            DateTime modifiedFrom, int skip = 0, int top = 50000, CancellationToken cancellationToken = default);
+            DateTime modified, int skip = 0, int top = 50000, CancellationToken cancellationToken = default);
     }
 }

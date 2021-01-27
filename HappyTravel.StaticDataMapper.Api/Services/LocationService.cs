@@ -36,17 +36,17 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         }
 
 
-        public Task<List<Location>> Get(AccommodationMapperLocationTypes locationType, string languageCode, DateTime modifiedFrom, int skip, int top, CancellationToken cancellationToken = default)
+        public Task<List<Location>> Get(AccommodationMapperLocationTypes locationType, string languageCode, DateTime modified, int skip, int top, CancellationToken cancellationToken = default)
         {
             return locationType switch
             {
-                AccommodationMapperLocationTypes.Country => BuildCountries(languageCode, skip, top, modifiedFrom,
+                AccommodationMapperLocationTypes.Country => BuildCountries(languageCode, skip, top, modified,
                     cancellationToken),
-                AccommodationMapperLocationTypes.Locality => BuildLocalities(languageCode, skip, top, modifiedFrom,
+                AccommodationMapperLocationTypes.Locality => BuildLocalities(languageCode, skip, top, modified,
                     cancellationToken),
-                AccommodationMapperLocationTypes.LocalityZone => BuildLocalityZones(languageCode, skip, top, modifiedFrom,
+                AccommodationMapperLocationTypes.LocalityZone => BuildLocalityZones(languageCode, skip, top, modified,
                     cancellationToken),
-                AccommodationMapperLocationTypes.Accommodation => BuildAccommodations(languageCode, skip, top, modifiedFrom,
+                AccommodationMapperLocationTypes.Accommodation => BuildAccommodations(languageCode, skip, top, modified,
                     cancellationToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(locationType), locationType, null)
             };
@@ -74,8 +74,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                     0,
                     PredictionSources.Interior,
                     AccommodationMapperLocationTypes.Country,
-                    LocationTypes.Location,
-                    c.SupplierCountryCodes.Keys.ToList());
+                    LocationTypes.Location);
             }).ToList();
         }
         
@@ -104,8 +103,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                     0,
                     PredictionSources.Interior,
                     AccommodationMapperLocationTypes.Locality,
-                    LocationTypes.Location,
-                    localityAndCountry.locality.SupplierLocalityCodes.Keys.ToList());
+                    LocationTypes.Location);
             }).ToList();
         }
         
@@ -138,8 +136,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                     0, 
                     PredictionSources.Interior, 
                     AccommodationMapperLocationTypes.LocalityZone, 
-                    LocationTypes.Location, 
-                    zlc.zone.SupplierLocalityZoneCodes.Keys.ToList());
+                    LocationTypes.Location);
             }).ToList();
         }
 
@@ -173,9 +170,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                     0,
                     PredictionSources.Interior,
                     AccommodationMapperLocationTypes.Accommodation,
-                    LocationTypes.Accommodation,
-                    alc.accommodation.SupplierAccommodationCodes.Keys.ToList()
-                );
+                    LocationTypes.Accommodation);
             }).ToList();
         }
 

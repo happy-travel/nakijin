@@ -108,7 +108,7 @@
             Retrieves locations by a location type 
             </summary>
             <param name="locationType"></param>
-            <param name="modifiedFrom"></param>
+            <param name="modified"></param>
             <param name="skip"></param>
             <param name="top"></param>
             <param name="cancellationToken"></param>
