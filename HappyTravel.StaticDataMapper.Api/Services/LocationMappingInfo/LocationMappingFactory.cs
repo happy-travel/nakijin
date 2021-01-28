@@ -28,7 +28,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                     SupplierCodes = accommodation.SupplierAccommodationCodes
                 }).ToListAsync();
 
-            if (accommodationsInfo is null || !accommodationsInfo.Any())
+            if (!accommodationsInfo.Any())
             {
                 return new LocationMapping
                 {
@@ -68,7 +68,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                     SupplierCodes = accommodation.SupplierAccommodationCodes
                 }).ToListAsync();
 
-            if (accommodationsInfo is null || !accommodationsInfo.Any())
+            if (!accommodationsInfo.Any())
             {
                 return new LocationMapping
                 {
@@ -110,7 +110,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                     SupplierCodes = accommodation.SupplierAccommodationCodes
                 }).ToListAsync();
 
-            if (accommodationsInfo is null || !accommodationsInfo.Any())
+            if (!accommodationsInfo.Any())
             {
                 return new LocationMapping
                 {
