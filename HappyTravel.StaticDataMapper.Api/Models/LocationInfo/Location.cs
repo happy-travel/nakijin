@@ -6,7 +6,7 @@ namespace HappyTravel.StaticDataMapper.Api.Models.LocationInfo
     {
         public GeoPoint Coordinates { get; init; }
         public string Country { get; init;}
-        public string Locality { get; init;}
+        public string? Locality { get; init;}
         public string Name { get; init;}
     }
 }
