@@ -1,5 +1,9 @@
-﻿namespace HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo
 {
+    [JsonConverter(typeof (StringEnumConverter))]
     public enum AccommodationMapperLocationTypes
     {
         Country = 1,
