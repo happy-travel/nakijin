@@ -16,16 +16,27 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
 {
     public class LocationMappingInfoService : ILocationMappingInfoService
     {
-        public LocationMappingInfoService(NakijinContext context)
+        public LocationMappingInfoService(NakijinContext context, ILocationMappingFactory locationMappingFactory)
         {
             _context = context;
+            _locationMappingFactory = locationMappingFactory;
         }
 
         
-        public async Task<Result<LocationMapping>> Get(string htId)
+        public async Task<Result<LocationMapping>> Get(string htId, string languageCode)
         {
-            // TODO add htId parsing + getting location info
-            return new LocationMapping();
+            var (_, isFailure, (type, id), error) = HtId.Parse(htId);
+            if (isFailure)
+                return Result.Failure<LocationMapping>(error);
+
+            return type switch
+            {
+                AccommodationMapperLocationTypes.Country => await _locationMappingFactory.GetForCountry(id, languageCode),
+                AccommodationMapperLocationTypes.Locality => await _locationMappingFactory.GetForLocality(id, languageCode),
+                AccommodationMapperLocationTypes.LocalityZone => await _locationMappingFactory.GetForLocalityZone(id, languageCode),
+                AccommodationMapperLocationTypes.Accommodation => await _locationMappingFactory.GetForAccommodation(id, languageCode),
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         
@@ -55,8 +66,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
             return countries.Select(c =>
                 {
                     var country = c.Names.GetValueOrDefault(languageCode);
+                    var htId = HtId.Create(AccommodationMapperLocationTypes.Country,
+                        c.Id);
 
-                    return new Location(c.Id.ToString(), country, string.Empty, country, c.Code, EmptyGeoPoint, 0,
+                    return new Location(htId, country, string.Empty, country, c.Code, EmptyGeoPoint, 0,
                         PredictionSources.Interior, AccommodationMapperLocationTypes.Country, LocationTypes.Location);
                 })
                 .ToList();
@@ -78,8 +91,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 {
                     var locality = localityAndCountry.locality.Names.GetValueOrDefault(languageCode);
                     var country = localityAndCountry.country.Names.GetValueOrDefault(languageCode);
-
-                    return new Location(localityAndCountry.locality.Id.ToString(), locality, locality, country,
+                    var htId = HtId.Create(AccommodationMapperLocationTypes.Locality,
+                        localityAndCountry.locality.Id);
+                    
+                    return new Location(htId, locality, locality, country,
                         localityAndCountry.country.Code, EmptyGeoPoint, 0, PredictionSources.Interior,
                         AccommodationMapperLocationTypes.Locality, LocationTypes.Location);
                 })
@@ -106,8 +121,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                     var zone = zlc.zone.Names.GetValueOrDefault(languageCode);
                     var locality = zlc.locality.Names.GetValueOrDefault(languageCode);
                     var country = zlc.country.Names.GetValueOrDefault(languageCode);
+                    var htId = HtId.Create(AccommodationMapperLocationTypes.LocalityZone,
+                        zlc.zone.Id);
 
-                    return new Location(zlc.zone.Id.ToString(), zone, locality, country, zlc.country.Code,
+                    return new Location(htId, zone, locality, country, zlc.country.Code,
                         EmptyGeoPoint, 0,
                         PredictionSources.Interior, AccommodationMapperLocationTypes.LocalityZone,
                         LocationTypes.Location);
@@ -137,8 +154,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                     var accommodation = alc.accommodation.CalculatedAccommodation.Name.GetValueOrDefault(languageCode);
                     var locality = alc.locality.Names.GetValueOrDefault(languageCode);
                     var country = alc.country.Names.GetValueOrDefault(languageCode);
+                    var htId = HtId.Create(AccommodationMapperLocationTypes.Accommodation,
+                        alc.accommodation.Id);
 
-                    return new Location(alc.accommodation.Id.ToString(), accommodation, locality, country,
+                    return new Location(htId, accommodation, locality, country,
                         alc.country.Code,
                         alc.accommodation.AccommodationWithManualCorrections.Location.Coordinates, 0,
                         PredictionSources.Interior, AccommodationMapperLocationTypes.Accommodation,
@@ -150,5 +169,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         
         private static readonly GeoPoint EmptyGeoPoint = new(0, 0);
         private readonly NakijinContext _context;
+        private readonly ILocationMappingFactory _locationMappingFactory;
     }
 }
