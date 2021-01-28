@@ -35,7 +35,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         [ProducesResponseType(typeof(LocationMapping), (int) HttpStatusCode.OK)]
         public async Task<IActionResult> GetMapping([FromRoute] string htId)
         {
-            var (_, isFailure, locationMappingInfo, error) = await _locationMappingInfoService.Get(htId);
+            var (_, isFailure, locationMappingInfo, error) = await _locationMappingInfoService.Get(htId, LanguageCode);
 
             if (isFailure)
                 return BadRequest(error);

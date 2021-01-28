@@ -113,6 +113,7 @@ namespace HappyTravel.StaticDataMapper.Api
                 .AddAuthorization();
 
             services.AddTransient<ILocationMappingInfoService, LocationMappingInfoService>();
+            services.AddTransient<ILocationMappingFactory, LocationMappingFactory>();
             
             services.AddSingleton<IAuthorizationPolicyProvider, CustomAuthorizationPolicyProvider>();
             services.AddTransient<IAuthorizationHandler, PermissionsAuthorizationHandler>();
