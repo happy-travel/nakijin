@@ -47,10 +47,10 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         /// <summary>
         /// Retrieves locations by a location type
         /// </summary>
-        /// <param name="locationType"></param>
-        /// <param name="modified"></param>
-        /// <param name="skip"></param>
-        /// <param name="top"></param>
+        /// <param name="locationType">Type of location</param>
+        /// <param name="modified">Since which date locations will be retrieved</param>
+        /// <param name="skip">Skip locations</param>
+        /// <param name="top">Take locations</param>
         /// <param name="cancellationToken"></param>
         /// <returns>List of locations</returns>
         [HttpGet("locations")]
