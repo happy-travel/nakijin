@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using HappyTravel.StaticDataMapper.Api.Models.LocationInfo;
 using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
 using HappyTravel.StaticDataMapper.Data;
-using LocationNameNormalizer.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
@@ -106,6 +105,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 {
                     CountryNames = country.Names,
                     LocalityNames = locality.Names,
+                    LocalityZoneNames = localityZone.Names,
                     AccommodationId = accommodation.Id,
                     SupplierCodes = accommodation.SupplierAccommodationCodes
                 }).ToListAsync();
@@ -126,7 +126,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 {
                     Country = firstAccommodationInfo.CountryNames.GetValueOrDefault(languageCode),
                     Locality = firstAccommodationInfo.LocalityNames.GetValueOrDefault(languageCode),
-                    Name = firstAccommodationInfo.LocalityNames.GetValueOrDefault(languageCode)
+                    Name = firstAccommodationInfo.LocalityZoneNames.GetValueOrDefault(languageCode)
                 },
                 AccommodationMappings = accommodationsInfo.Select(a => new AccommodationMapping
                 {
@@ -141,15 +141,15 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         {
             var accommodationInfo = await (from accommodation in _context.Accommodations
                 join country in _context.Countries on accommodation.CountryId equals country.Id
-                join locality in _context.Localities.DefaultIfEmpty() on accommodation.LocalityId equals locality.Id
-                where accommodation.Id == id
+                from locality in _context.Localities.Where(l => l.Id == accommodation.LocalityId).DefaultIfEmpty()
+                where accommodation.Id == id && country.Id == accommodation.CountryId
                 select new
                 {
                     CountryNames = country.Names,
-                    LocalityNames = locality?.Names,
-                    AccommodationNames = accommodation.AccommodationWithManualCorrections.Name,
+                    LocalityNames = locality.Names,
+                    CalculatedAccommodation = accommodation.CalculatedAccommodation,
                     AccommodationId = accommodation.Id,
-                    SupplierCodes = accommodation.SupplierAccommodationCodes
+                    SupplierCodes = accommodation.SupplierAccommodationCodes,
                 }).SingleOrDefaultAsync();
 
             if (accommodationInfo is null)
@@ -167,7 +167,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 {
                     Country = accommodationInfo.CountryNames.GetValueOrDefault(languageCode),
                     Locality = accommodationInfo.LocalityNames?.GetValueOrDefault(languageCode),
-                    Name = accommodationInfo.AccommodationNames.GetValueOrDefault(languageCode)
+                    Name = accommodationInfo.CalculatedAccommodation.Name.GetValueOrDefault(languageCode),
+                    Coordinates = accommodationInfo.CalculatedAccommodation.Location.Coordinates
                 },
                 AccommodationMappings = new List<AccommodationMapping>
                 {
