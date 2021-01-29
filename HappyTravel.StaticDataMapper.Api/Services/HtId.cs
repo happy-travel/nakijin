@@ -10,7 +10,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             => $"{type}{Delimiter}{id}";
 
         
-        public static Result<(AccommodationMapperLocationTypes type, int id)> Parse(string htId)
+        public static Result<(AccommodationMapperLocationTypes Type, int Id)> Parse(string htId)
         {
             var idParts = htId.Split(Delimiter);
             if (idParts.Length != 2)

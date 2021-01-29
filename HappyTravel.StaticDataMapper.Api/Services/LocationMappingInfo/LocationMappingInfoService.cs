@@ -35,11 +35,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 return Result.Failure<List<LocationMapping>>("Some ids was not parsed");
 
             var parsedCodeGroups = parsedCodes
-                .GroupBy(c => c.type)
+                .GroupBy(c => c.Type)
                 .Select(g => new
                 {
                     Type = g.Key,
-                    Ids = g.Select(g => g.id).ToArray()
+                    Ids = g.Select(g => g.Id).ToArray()
                 });
 
             var mappings = new List<LocationMapping>();
