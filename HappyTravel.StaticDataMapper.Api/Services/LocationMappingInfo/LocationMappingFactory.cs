@@ -16,52 +16,54 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         }
 
 
-        public async Task<LocationMapping> GetForCountry(int id, string languageCode)
+        public async Task<List<LocationMapping>> GetForCountry(List<int> countryIds, string languageCode)
         {
             var accommodationsInfo = await (from country in _context.Countries
                 join accommodation in _context.Accommodations on country.Id equals accommodation.CountryId
-                where country.Id == id
+                where countryIds.Contains(country.Id)
                 select new
                 {
+                    CountryId = country.Id,
                     CountryNames = country.Names,
                     AccommodationId = accommodation.Id,
                     SupplierCodes = accommodation.SupplierAccommodationCodes
                 }).ToListAsync();
 
             if (!accommodationsInfo.Any())
-            {
-                return new LocationMapping
-                {
-                    Location = new Models.LocationInfo.Location(),
-                    AccommodationMappings = new List<AccommodationMapping>()
-                };
-            }
+                return new List<LocationMapping>();
 
-            return new LocationMapping
-            {
-                Location = new Models.LocationInfo.Location
+            return accommodationsInfo
+                .GroupBy(a => a.CountryId)
+                .Select(g =>
                 {
-                    Country = accommodationsInfo
-                        .Select(a => a.CountryNames.GetValueOrDefault(languageCode))
-                        .FirstOrDefault() ?? string.Empty
-                },
-                AccommodationMappings = accommodationsInfo.Select(a => new AccommodationMapping
-                {
-                    HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, a.AccommodationId),
-                    SupplierCodes = a.SupplierCodes
-                }).ToList()
-            };
+                    return new LocationMapping
+                    {
+                        Location = new Models.LocationInfo.Location
+                        {
+                            Country = g
+                                .Select(a => a.CountryNames.GetValueOrDefault(languageCode))
+                                .FirstOrDefault() ?? string.Empty
+                        },
+                        AccommodationMappings = g.Select(a => new AccommodationMapping
+                        {
+                            HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, a.AccommodationId),
+                            SupplierCodes = a.SupplierCodes
+                        }).ToList()
+                    };
+                })
+                .ToList();
         }
 
 
-        public async Task<LocationMapping> GetForLocality(int id, string languageCode)
+        public async Task<List<LocationMapping>> GetForLocality(List<int> localityIds, string languageCode)
         {
             var accommodationsInfo = await (from country in _context.Countries
                 join locality in _context.Localities on country.Id equals locality.CountryId
                 join accommodation in _context.Accommodations on locality.Id equals accommodation.LocalityId
-                where locality.Id == id
+                where localityIds.Contains(locality.Id)
                 select new
                 {
+                    LocalityId = locality.Id,
                     CountryNames = country.Names,
                     LocalityNames = locality.Names,
                     AccommodationId = accommodation.Id,
@@ -69,40 +71,40 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 }).ToListAsync();
 
             if (!accommodationsInfo.Any())
-            {
-                return new LocationMapping
-                {
-                    Location = new Models.LocationInfo.Location(),
-                    AccommodationMappings = new List<AccommodationMapping>()
-                };
-            }
+                return new List<LocationMapping>();
 
-            var firstAccommodationInfo = accommodationsInfo.First();
-            return new LocationMapping
-            {
-                Location = new Models.LocationInfo.Location
+            return accommodationsInfo.GroupBy(a => a.LocalityId)
+                .Select(g =>
                 {
-                    Country = firstAccommodationInfo.CountryNames.GetValueOrDefault(languageCode),
-                    Locality = firstAccommodationInfo.LocalityNames.GetValueOrDefault(languageCode)
-                },
-                AccommodationMappings = accommodationsInfo.Select(a => new AccommodationMapping
-                {
-                    HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, a.AccommodationId),
-                    SupplierCodes = a.SupplierCodes
-                }).ToList()
-            };
+                    var firstAccommodationInfo = g.First();
+                    return new LocationMapping
+                    {
+                        Location = new Models.LocationInfo.Location
+                        {
+                            Country = firstAccommodationInfo.CountryNames.GetValueOrDefault(languageCode),
+                            Locality = firstAccommodationInfo.LocalityNames.GetValueOrDefault(languageCode)
+                        },
+                        AccommodationMappings = g.Select(a => new AccommodationMapping
+                        {
+                            HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, a.AccommodationId),
+                            SupplierCodes = a.SupplierCodes
+                        }).ToList()
+                    };
+                })
+                .ToList();
         }
 
 
-        public async Task<LocationMapping> GetForLocalityZone(int id, string languageCode)
+        public async Task<List<LocationMapping>> GetForLocalityZone(List<int> localityZoneIds, string languageCode)
         {
             var accommodationsInfo = await (from country in _context.Countries
                 join locality in _context.Localities on country.Id equals locality.CountryId
                 join localityZone in _context.LocalityZones on locality.Id equals localityZone.LocalityId
                 join accommodation in _context.Accommodations on localityZone.Id equals accommodation.LocalityZoneId
-                where localityZone.Id == id
+                where localityZoneIds.Contains(localityZone.Id)
                 select new
                 {
+                    LocalityZoneId = localityZone.Id,
                     CountryNames = country.Names,
                     LocalityNames = locality.Names,
                     LocalityZoneNames = localityZone.Names,
@@ -111,38 +113,38 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 }).ToListAsync();
 
             if (!accommodationsInfo.Any())
-            {
-                return new LocationMapping
-                {
-                    Location = new Models.LocationInfo.Location(),
-                    AccommodationMappings = new List<AccommodationMapping>()
-                };
-            }
+                return new List<LocationMapping>();
 
-            var firstAccommodationInfo = accommodationsInfo.First();
-            return new LocationMapping
-            {
-                Location = new Models.LocationInfo.Location
+            return accommodationsInfo.GroupBy(a => a.LocalityZoneId)
+                .Select(g =>
                 {
-                    Country = firstAccommodationInfo.CountryNames.GetValueOrDefault(languageCode),
-                    Locality = firstAccommodationInfo.LocalityNames.GetValueOrDefault(languageCode),
-                    Name = firstAccommodationInfo.LocalityZoneNames.GetValueOrDefault(languageCode)
-                },
-                AccommodationMappings = accommodationsInfo.Select(a => new AccommodationMapping
-                {
-                    HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, a.AccommodationId),
-                    SupplierCodes = a.SupplierCodes
-                }).ToList()
-            };
+                    var firstAccommodationInfo = g.First();
+                    return new LocationMapping
+                    {
+                        Location = new Models.LocationInfo.Location
+                        {
+                            Country = firstAccommodationInfo.CountryNames.GetValueOrDefault(languageCode),
+                            Locality = firstAccommodationInfo.LocalityNames.GetValueOrDefault(languageCode),
+                            Name = firstAccommodationInfo.LocalityZoneNames.GetValueOrDefault(languageCode)
+                        },
+                        AccommodationMappings = g.Select(a => new AccommodationMapping
+                        {
+                            HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, a.AccommodationId),
+                            SupplierCodes = a.SupplierCodes
+                        }).ToList()
+                    };
+                })
+                .ToList();
         }
 
 
-        public async Task<LocationMapping> GetForAccommodation(int id, string languageCode)
+        public async Task<List<LocationMapping>> GetForAccommodation(List<int> accommodationIds, string languageCode)
         {
-            var accommodationInfo = await (from accommodation in _context.Accommodations
+            var accommodationsInfo = await (from accommodation in _context.Accommodations
                 join country in _context.Countries on accommodation.CountryId equals country.Id
-                from locality in _context.Localities.Where(l => l.Id == accommodation.LocalityId).DefaultIfEmpty()
-                where accommodation.Id == id && country.Id == accommodation.CountryId
+                join optionalLocality in _context.Localities on accommodation.LocalityId equals optionalLocality.Id into localities
+                from locality in localities.DefaultIfEmpty() 
+                where accommodationIds.Contains(accommodation.Id) && country.Id == accommodation.CountryId
                 select new
                 {
                     CountryNames = country.Names,
@@ -150,36 +152,35 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                     CalculatedAccommodation = accommodation.CalculatedAccommodation,
                     AccommodationId = accommodation.Id,
                     SupplierCodes = accommodation.SupplierAccommodationCodes,
-                }).SingleOrDefaultAsync();
+                }).ToListAsync();
 
-            if (accommodationInfo is null)
+            if (!accommodationsInfo.Any())
+                return new List<LocationMapping>();
+
+            return accommodationsInfo.Select(a =>
             {
                 return new LocationMapping
                 {
-                    Location = new Models.LocationInfo.Location(),
-                    AccommodationMappings = new List<AccommodationMapping>()
-                };
-            }
-
-            return new LocationMapping
-            {
-                Location = new Models.LocationInfo.Location
-                {
-                    Country = accommodationInfo.CountryNames.GetValueOrDefault(languageCode),
-                    Locality = accommodationInfo.LocalityNames?.GetValueOrDefault(languageCode),
-                    Name = accommodationInfo.CalculatedAccommodation.Name.GetValueOrDefault(languageCode),
-                    Coordinates = accommodationInfo.CalculatedAccommodation.Location.Coordinates
-                },
-                AccommodationMappings = new List<AccommodationMapping>
-                {
-                    new()
+                    Location = new Models.LocationInfo.Location
                     {
-                        HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation,
-                            accommodationInfo.AccommodationId),
-                        SupplierCodes = accommodationInfo.SupplierCodes
+                        Country = a.CountryNames.GetValueOrDefault(languageCode),
+                        Locality = a.LocalityNames?.GetValueOrDefault(languageCode),
+                        Name = a.CalculatedAccommodation.Name.GetValueOrDefault(languageCode),
+                        Coordinates = a.CalculatedAccommodation.Location.Coordinates
+                    },
+                    AccommodationMappings = new List<AccommodationMapping>
+                    {
+                        new()
+                        {
+                            HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation,
+                                a.AccommodationId),
+                            SupplierCodes = a.SupplierCodes
+                        }
                     }
-                }
-            };
+                };
+            })
+                .ToList();
+            
         }
 
 

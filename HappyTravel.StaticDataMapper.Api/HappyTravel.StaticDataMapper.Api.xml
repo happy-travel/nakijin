@@ -97,11 +97,22 @@
             <param name="uncertainMatchId"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationMappingsController.GetMapping(System.String)">
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationMappingsController.GetMapping(System.Collections.Generic.List{System.String})">
             <summary>
-            Gets location mapping info by given htId
+            Gets location mapping list info by given htId list
             </summary>
             <returns></returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationMappingsController.GetLocations(HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo.AccommodationMapperLocationTypes,System.DateTime,System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Retrieves locations by a location type
+            </summary>
+            <param name="locationType">Type of location</param>
+            <param name="modified">Since which date locations will be retrieved</param>
+            <param name="skip">Skip locations</param>
+            <param name="top">Take locations</param>
+            <param name="cancellationToken"></param>
+            <returns>List of locations</returns>
         </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsController.GetCountries">
             <summary>
