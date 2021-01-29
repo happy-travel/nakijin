@@ -39,7 +39,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 .Select(g => new
                 {
                     Type = g.Key,
-                    Ids = g.Select(g => g.Id).ToArray()
+                    Ids = g.Select(g => g.Id).ToList()
                 });
 
             var mappings = new List<LocationMapping>();

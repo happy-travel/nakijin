@@ -16,11 +16,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         }
 
 
-        public async Task<List<LocationMapping>> GetForCountry(int[] ids, string languageCode)
+        public async Task<List<LocationMapping>> GetForCountry(List<int> countryIds, string languageCode)
         {
             var accommodationsInfo = await (from country in _context.Countries
                 join accommodation in _context.Accommodations on country.Id equals accommodation.CountryId
-                where ids.Contains(country.Id)
+                where countryIds.Contains(country.Id)
                 select new
                 {
                     CountryId = country.Id,
@@ -55,12 +55,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         }
 
 
-        public async Task<List<LocationMapping>> GetForLocality(int[] ids, string languageCode)
+        public async Task<List<LocationMapping>> GetForLocality(List<int> localityIds, string languageCode)
         {
             var accommodationsInfo = await (from country in _context.Countries
                 join locality in _context.Localities on country.Id equals locality.CountryId
                 join accommodation in _context.Accommodations on locality.Id equals accommodation.LocalityId
-                where ids.Contains(locality.Id)
+                where localityIds.Contains(locality.Id)
                 select new
                 {
                     LocalityId = locality.Id,
@@ -95,13 +95,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         }
 
 
-        public async Task<List<LocationMapping>> GetForLocalityZone(int[] ids, string languageCode)
+        public async Task<List<LocationMapping>> GetForLocalityZone(List<int> localityZoneIds, string languageCode)
         {
             var accommodationsInfo = await (from country in _context.Countries
                 join locality in _context.Localities on country.Id equals locality.CountryId
                 join localityZone in _context.LocalityZones on locality.Id equals localityZone.LocalityId
                 join accommodation in _context.Accommodations on localityZone.Id equals accommodation.LocalityZoneId
-                where ids.Contains(localityZone.Id)
+                where localityZoneIds.Contains(localityZone.Id)
                 select new
                 {
                     LocalityZoneId = localityZone.Id,
@@ -138,13 +138,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         }
 
 
-        public async Task<List<LocationMapping>> GetForAccommodation(int[] ids, string languageCode)
+        public async Task<List<LocationMapping>> GetForAccommodation(List<int> accommodationIds, string languageCode)
         {
             var accommodationsInfo = await (from accommodation in _context.Accommodations
                 join country in _context.Countries on accommodation.CountryId equals country.Id
                 join optionalLocality in _context.Localities on accommodation.LocalityId equals optionalLocality.Id into localities
                 from locality in localities.DefaultIfEmpty() 
-                where ids.Contains(accommodation.Id) && country.Id == accommodation.CountryId
+                where accommodationIds.Contains(accommodation.Id) && country.Id == accommodation.CountryId
                 select new
                 {
                     CountryNames = country.Names,
