@@ -23,7 +23,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         }
 
         
-        public async Task<Result<List<LocationMapping>>> Get(string[] htIds, string languageCode)
+        public async Task<Result<List<LocationMapping>>> Get(List<string> htIds, string languageCode)
         {
             var parsedCodes = htIds
                 .Select(HtId.Parse)
@@ -31,7 +31,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 .Select(c => c.Value)
                 .ToList();
 
-            if (parsedCodes.Count != htIds.Length)
+            if (parsedCodes.Count != htIds.Count)
                 return Result.Failure<List<LocationMapping>>("Some ids was not parsed");
 
             var parsedCodeGroups = parsedCodes

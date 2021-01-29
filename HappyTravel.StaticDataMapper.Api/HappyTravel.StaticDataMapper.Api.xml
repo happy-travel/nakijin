@@ -97,7 +97,7 @@
             <param name="uncertainMatchId"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationMappingsController.GetMapping(System.String[])">
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationMappingsController.GetMapping(System.Collections.Generic.List{System.String})">
             <summary>
             Gets location mapping list info by given htId list
             </summary>

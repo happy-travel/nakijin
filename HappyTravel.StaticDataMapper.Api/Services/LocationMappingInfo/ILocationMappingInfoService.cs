@@ -11,7 +11,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
 {
     public interface ILocationMappingInfoService
     {
-        Task<Result<List<LocationMapping>>> Get(string[] htIds, string languageCode);
+        Task<Result<List<LocationMapping>>> Get(List<string> htIds, string languageCode);
         
         Task<List<Location>> Get(AccommodationMapperLocationTypes locationType, string languageCode, DateTime modified,
             int skip, int top, CancellationToken cancellationToken = default);
