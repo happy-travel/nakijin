@@ -23,20 +23,40 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         }
 
         
-        public async Task<Result<LocationMapping>> Get(string htId, string languageCode)
+        public async Task<Result<List<LocationMapping>>> Get(string[] htIds, string languageCode)
         {
-            var (_, isFailure, (type, id), error) = HtId.Parse(htId);
-            if (isFailure)
-                return Result.Failure<LocationMapping>(error);
+            var parsedCodes = htIds
+                .Select(HtId.Parse)
+                .Where(c => c.IsSuccess)
+                .Select(c => c.Value)
+                .ToList();
 
-            return type switch
+            if (parsedCodes.Count != htIds.Length)
+                return Result.Failure<List<LocationMapping>>("Some ids was not parsed");
+
+            var parsedCodeGroups = parsedCodes
+                .GroupBy(c => c.type)
+                .Select(g => new
+                {
+                    Type = g.Key,
+                    Ids = g.Select(g => g.id).ToArray()
+                });
+
+            var mappings = new List<LocationMapping>();
+            foreach (var parsedCodeGroup in parsedCodeGroups)
             {
-                AccommodationMapperLocationTypes.Country => await _locationMappingFactory.GetForCountry(id, languageCode),
-                AccommodationMapperLocationTypes.Locality => await _locationMappingFactory.GetForLocality(id, languageCode),
-                AccommodationMapperLocationTypes.LocalityZone => await _locationMappingFactory.GetForLocalityZone(id, languageCode),
-                AccommodationMapperLocationTypes.Accommodation => await _locationMappingFactory.GetForAccommodation(id, languageCode),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+                var ids = parsedCodeGroup.Ids;
+                mappings.AddRange(parsedCodeGroup.Type switch
+                {
+                    AccommodationMapperLocationTypes.Country => await _locationMappingFactory.GetForCountry(ids, languageCode),
+                    AccommodationMapperLocationTypes.Locality => await _locationMappingFactory.GetForLocality(ids, languageCode),
+                    AccommodationMapperLocationTypes.LocalityZone => await _locationMappingFactory.GetForLocalityZone(ids, languageCode),
+                    AccommodationMapperLocationTypes.Accommodation => await _locationMappingFactory.GetForAccommodation(ids, languageCode),
+                    _ => throw new ArgumentOutOfRangeException()
+                });
+            }
+
+            return mappings;
         }
 
         

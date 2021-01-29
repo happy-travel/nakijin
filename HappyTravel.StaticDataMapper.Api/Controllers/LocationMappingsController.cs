@@ -28,19 +28,19 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         
         
         /// <summary>
-        /// Gets location mapping info by given htId
+        /// Gets location mapping list info by given htId list
         /// </summary>
         /// <returns></returns>
-        [HttpGet("{htId}")]
-        [ProducesResponseType(typeof(LocationMapping), (int) HttpStatusCode.OK)]
-        public async Task<IActionResult> GetMapping([FromRoute] string htId)
+        [HttpGet]
+        [ProducesResponseType(typeof(List<LocationMapping>), (int) HttpStatusCode.OK)]
+        public async Task<IActionResult> GetMapping([FromQuery] string[] htIds)
         {
-            var (_, isFailure, locationMappingInfo, error) = await _locationMappingInfoService.Get(htId, LanguageCode);
+            var (_, isFailure, locationMappings, error) = await _locationMappingInfoService.Get(htIds, LanguageCode);
 
             if (isFailure)
                 return BadRequest(error);
 
-            return Ok(locationMappingInfo);
+            return Ok(locationMappings);
         }
         
 
