@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,21 +18,29 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             _context = context;
         }
 
-        
+
         public async Task<Result<Accommodation>> Get(Suppliers supplier, string supplierAccommodationCode,
             string languageCode)
         {
             var searchJson = "{" + $"\"{supplier.ToString().ToLower()}\":\"{supplierAccommodationCode}\"" + "}";
-            var accommodationWithId = await _context.Accommodations
+            var accommodation = await _context.Accommodations
                 .Where(ac => EF.Functions.JsonContains(ac.SupplierAccommodationCodes, searchJson))
-                .Select(ac => new {ac.CalculatedAccommodation, ac.Id})
+                .Select(ac => new
+                {
+                    HtId = ac.Id,
+                    CountryId = ac.CountryId,
+                    LocalityId = ac.LocalityId,
+                    LocalityZoneId = ac.LocalityZoneId,
+                    Data = ac.CalculatedAccommodation
+                })
                 .SingleOrDefaultAsync();
 
-            if (accommodationWithId == null)
+            if (accommodation == null)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
-            return Result.Success(MapToAccommodation(accommodationWithId.Id,
-                accommodationWithId.CalculatedAccommodation, languageCode));
+            return Result.Success(MapToAccommodation(accommodation.HtId, accommodation.CountryId,
+                accommodation.LocalityId, accommodation.LocalityZoneId,
+                accommodation.Data, languageCode));
         }
 
 
@@ -39,16 +48,27 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         {
             var accommodation = await _context.Accommodations
                 .Where(ac => ac.Id == accommodationId)
-                .Select(ac => ac.CalculatedAccommodation)
+                .Select(ac => new
+                {
+                    HtId = ac.Id,
+                    CountryId = ac.CountryId,
+                    LocalityId = ac.LocalityId,
+                    LocalityZoneId = ac.LocalityZoneId,
+                    Data = ac.CalculatedAccommodation
+                })
                 .SingleOrDefaultAsync();
 
-            if (accommodation.Equals(default(MultilingualAccommodation)))
+            if (accommodation == null)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
-            return Result.Success(MapToAccommodation(accommodationId, accommodation, languageCode));
+            return Result.Success(MapToAccommodation(accommodation.HtId, accommodation.CountryId,
+                accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.Data, languageCode));
         }
 
-        
+        public Task<DateTime> GetLastModifiedDate()
+            => _context.Accommodations.OrderByDescending(d => d.Modified).Select(l => l.Modified).FirstOrDefaultAsync();
+
+
         public async Task<List<Accommodation>> Get(int skip, int top, string languageCode)
         {
             var accommodations = await _context.Accommodations
@@ -59,15 +79,22 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 .Select(ac => new
                 {
                     HtId = ac.Id,
+                    CountryId = ac.CountryId,
+                    LocalityId = ac.LocalityId,
+                    LocalityZoneId = ac.LocalityZoneId,
                     Data = ac.CalculatedAccommodation
                 })
                 .ToListAsync();
 
-            return accommodations.Select(ac => MapToAccommodation(ac.HtId, ac.Data, languageCode)).ToList();
+            return accommodations.Select(ac
+                    => MapToAccommodation(ac.HtId, ac.CountryId, ac.LocalityId, ac.LocalityZoneId, ac.Data,
+                        languageCode))
+                .ToList();
         }
 
 
-        private Accommodation MapToAccommodation(int htId, MultilingualAccommodation accommodation, string language)
+        private Accommodation MapToAccommodation(int htId, int htCountryId, int? htLocalityId, int? htLocalityZoneId,
+            MultilingualAccommodation accommodation, string language)
         {
             var name = accommodation.Name.GetValueOrDefault(language);
             var accommodationAmenities = accommodation.AccommodationAmenities.GetValueOrDefault(language);
@@ -94,8 +121,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 accommodation.Contacts,
                 new LocationInfo(
                     accommodation.Location.CountryCode,
+                    htCountryId.ToString(),
                     countryName,
+                    htLocalityId?.ToString(),
                     localityName,
+                    htLocalityZoneId?.ToString(),
                     localityZoneName,
                     accommodation.Location.Coordinates,
                     address,

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
@@ -31,6 +32,19 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         {
             var countries = await _locationService.GetCountries(LanguageCode);
             return Ok(countries);
+        }
+        
+        /// <summary>
+        ///  Gets date of last modified location.
+        /// </summary>
+        /// <returns>Last changed location modified date</returns>
+        [ProducesResponseType(typeof(DateTime), (int) HttpStatusCode.OK)]
+        [HttpGet("last-modified-date")]
+        public async Task<IActionResult> GetLastModifiedDate()
+        {
+            var lastModifiedDate = await _locationService.GetLastModifiedDate();
+
+            return Ok(lastModifiedDate);
         }
         
         
