@@ -24,7 +24,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         {
             var searchJson = "{" + $"\"{supplier.ToString().ToLower()}\":\"{supplierAccommodationCode}\"" + "}";
             var accommodation = await _context.Accommodations
-                .Where(ac => EF.Functions.JsonContains(ac.SupplierAccommodationCodes, searchJson))
+                .Where(ac => ac.IsActive && EF.Functions.JsonContains(ac.SupplierAccommodationCodes, searchJson))
                 .Select(ac => new
                 {
                     Id = ac.Id,
@@ -47,7 +47,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         public async Task<Result<Accommodation>> Get(int accommodationId, string languageCode)
         {
             var accommodation = await _context.Accommodations
-                .Where(ac => ac.Id == accommodationId)
+                .Where(ac => ac.IsActive && ac.Id == accommodationId)
                 .Select(ac => new
                 {
                     Id = ac.Id,
