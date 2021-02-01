@@ -27,7 +27,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 .Where(ac => EF.Functions.JsonContains(ac.SupplierAccommodationCodes, searchJson))
                 .Select(ac => new
                 {
-                    HtId = ac.Id,
+                    Id = ac.Id,
                     CountryId = ac.CountryId,
                     LocalityId = ac.LocalityId,
                     LocalityZoneId = ac.LocalityZoneId,
@@ -38,7 +38,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             if (accommodation == null)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
-            return Result.Success(MapToAccommodation(accommodation.HtId, accommodation.CountryId,
+            return Result.Success(MapToAccommodation(accommodation.Id, accommodation.CountryId,
                 accommodation.LocalityId, accommodation.LocalityZoneId,
                 accommodation.Data, languageCode));
         }
@@ -50,7 +50,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 .Where(ac => ac.Id == accommodationId)
                 .Select(ac => new
                 {
-                    HtId = ac.Id,
+                    Id = ac.Id,
                     CountryId = ac.CountryId,
                     LocalityId = ac.LocalityId,
                     LocalityZoneId = ac.LocalityZoneId,
@@ -61,7 +61,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             if (accommodation == null)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
-            return Result.Success(MapToAccommodation(accommodation.HtId, accommodation.CountryId,
+            return Result.Success(MapToAccommodation(accommodation.Id, accommodation.CountryId,
                 accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.Data, languageCode));
         }
 
@@ -78,7 +78,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 .Take(top)
                 .Select(ac => new
                 {
-                    HtId = ac.Id,
+                    Id = ac.Id,
                     CountryId = ac.CountryId,
                     LocalityId = ac.LocalityId,
                     LocalityZoneId = ac.LocalityZoneId,
@@ -87,7 +87,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 .ToListAsync();
 
             return accommodations.Select(ac
-                    => MapToAccommodation(ac.HtId, ac.CountryId, ac.LocalityId, ac.LocalityZoneId, ac.Data,
+                    => MapToAccommodation(ac.Id, ac.CountryId, ac.LocalityId, ac.LocalityZoneId, ac.Data,
                         languageCode))
                 .ToList();
         }
