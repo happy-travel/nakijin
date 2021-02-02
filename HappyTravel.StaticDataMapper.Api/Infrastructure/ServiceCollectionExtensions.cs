@@ -111,7 +111,6 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
 
             services.Configure<StaticDataLoadingOptions>(o =>
             {
-                var suppliers = EnvironmentVariableHelper.Get("Nakijin:Preloader:Suppliers", configuration);
                 var batchSize = EnvironmentVariableHelper.Get("Nakijin:Preloader:BatchSize", configuration);
                 o.BatchSize = string.IsNullOrEmpty(batchSize) ? 1000 : int.Parse(batchSize);
             });
