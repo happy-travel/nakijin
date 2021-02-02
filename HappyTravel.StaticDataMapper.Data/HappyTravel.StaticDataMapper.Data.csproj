@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HappyTravel.EdoContracts" Version="1.5.1" />
+    <PackageReference Include="HappyTravel.EdoContracts" Version="1.6.3" />
     <PackageReference Include="HappyTravel.MultiLanguage" Version="1.0.2" />
     <PackageReference Include="HappyTravel.VaultClient" Version="1.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.0" />
@@ -15,8 +15,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="5.0.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.2" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="5.0.2" />
   </ItemGroup>
 
   <ItemGroup>

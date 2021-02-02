@@ -27,6 +27,12 @@
             <param name="top"></param>
             <returns></returns>
         </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.GetLastModifiedDate">
+            <summary>
+              Gets date of last modified accommodation.
+            </summary>
+            <returns>Last changed location modified date</returns>
+        </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.CancelAccommodationPreloading">
             <summary>
             Cancels preloading
@@ -119,6 +125,12 @@
             Gets all available countries list
             </summary>
             <returns></returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsController.GetLastModifiedDate">
+            <summary>
+             Gets date of last modified location.
+            </summary>
+            <returns>Last changed location modified date</returns>
         </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.SuppliersPriorityController.AddOrUpdateDefaultPriority(System.Collections.Generic.Dictionary{HappyTravel.StaticDataMapper.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers}})">
             <summary>

@@ -265,7 +265,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             return new Contracts.MultilingualAccommodation
             (
                 accommodation.SupplierCode,
-                NormalizeMultilingualName(accommodation.Name),
+                NormalizeMultilingualName(accommodation.Name)!,
                 accommodation.AccommodationAmenities,
                 accommodation.AdditionalInfo,
                 accommodation.Category,
@@ -273,14 +273,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 new MultilingualLocationInfo(
                     accommodation.Location.CountryCode,
                     NormalizeMultilingualCountry(accommodation.Location),
-                    accommodation.Location.SupplierLocalityCode,
-                    NormalizeMultilingualLocality(accommodation.Location),
-                    accommodation.Location.SupplierLocalityZoneCode,
-                    NormalizeMultilingualName(accommodation.Location.LocalityZone),
                     accommodation.Location.Coordinates,
                     accommodation.Location.Address,
                     accommodation.Location.LocationDescriptionCode,
-                    accommodation.Location.PointsOfInterests
+                    accommodation.Location.PointsOfInterests,
+                    accommodation.Location.SupplierLocalityCode,
+                    NormalizeMultilingualLocality(accommodation.Location),
+                    accommodation.Location.SupplierLocalityZoneCode,
+                    NormalizeMultilingualName(accommodation.Location.LocalityZone)
                 ),
                 accommodation.Photos,
                 accommodation.Rating,
@@ -301,7 +301,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
 
 
-            MultiLanguage<string> NormalizeMultilingualLocality(in MultilingualLocationInfo location)
+            MultiLanguage<string>? NormalizeMultilingualLocality(in MultilingualLocationInfo location)
             {
                 // TODO: make Locality nullable in contracts
                 if (location.Locality == null)
@@ -318,7 +318,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
 
 
-            MultiLanguage<string> NormalizeMultilingualName(in MultiLanguage<string> name)
+            MultiLanguage<string>? NormalizeMultilingualName(in MultiLanguage<string>? name)
             {
                 // TODO: make LocalityZone nullable in contracts
                 if (name == null)
