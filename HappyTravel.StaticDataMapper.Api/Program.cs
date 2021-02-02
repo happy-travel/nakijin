@@ -41,7 +41,11 @@ namespace HappyTravel.StaticDataMapper.Api
                                 options.RequestIdHeader = Constants.DefaultRequestIdHeader;
                                 options.UseUtcTimestamp = true;
                             })
-                            .AddSentry(options => { options.Dsn = EnvironmentVariableHelper.Get("Logging:Sentry:Endpoint", hostingContext.Configuration); });
+                            .AddSentry(options =>
+                            {
+                                options.Dsn = EnvironmentVariableHelper.Get("Logging:Sentry:Endpoint", hostingContext.Configuration);
+                                options.Environment = env.EnvironmentName;
+                            });
                 })
                 .UseSetting(WebHostDefaults.SuppressStatusMessagesKey, "true");
     }
