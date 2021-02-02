@@ -87,7 +87,7 @@ namespace HappyTravel.StaticDataMapper.Api
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1.0",
-                    new OpenApiInfo {Title = "HappyTravel.com Property Management System API", Version = "v1.0"});
+                    new OpenApiInfo { Title = "HappyTravel.com Property Management System API", Version = "v1.0" });
 
                 var apiXmlCommentsFilePath = Path.Combine(AppContext.BaseDirectory,
                     $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
@@ -99,7 +99,33 @@ namespace HappyTravel.StaticDataMapper.Api
                     if (File.Exists(path))
                         options.IncludeXmlComments(path);
                 }
+
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey
+                });
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement()
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            },
+                            Scheme = "oauth2",
+                            Name = "Bearer",
+                            In = ParameterLocation.Header,
+                        },
+                        Array.Empty<string>()
+                    }
+                });
             });
+            //  services.AddSwaggerGenNewtonsoftSupport();
 
             services.AddMvcCore(o =>
                 {
@@ -114,7 +140,7 @@ namespace HappyTravel.StaticDataMapper.Api
 
             services.AddTransient<ILocationMappingInfoService, LocationMappingInfoService>();
             services.AddTransient<ILocationMappingFactory, LocationMappingFactory>();
-            
+
             services.AddSingleton<IAuthorizationPolicyProvider, CustomAuthorizationPolicyProvider>();
             services.AddTransient<IAuthorizationHandler, PermissionsAuthorizationHandler>();
             // Default behaviour allows not authenticated requests to be checked by authorization policies.
@@ -131,14 +157,14 @@ namespace HappyTravel.StaticDataMapper.Api
             var logger = _loggerFactory.CreateLogger<Startup>();
             app.UseProblemDetailsExceptionHandler(_environment, logger);
             app.UseHttpContextLogging(
-                options => options.IgnoredPaths = new HashSet<string> {"/health"}
+                options => options.IgnoredPaths = new HashSet<string> { "/health" }
             );
 
             app.UseRequestLocalization(localizationOptions.Value);
             app.UseSwagger()
                 .UseSwaggerUI(options =>
                 {
-                    options.SwaggerEndpoint("/swagger/v1.0/swagger.json", "HappyTravel.com ServiceName API");
+                    options.SwaggerEndpoint("/swagger/v1.0/swagger.json", "HappyTravel.com StaticDataMapper API");
                     options.RoutePrefix = string.Empty;
                 });
 
