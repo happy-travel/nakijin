@@ -116,50 +116,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             return Result.Success();
         }
 
-        private Accommodation MapToAccommodation(int htId, MultilingualAccommodation accommodation, string language)
-        {
-            var name = accommodation.Name.GetValueOrDefault(language);
-            var accommodationAmenities = accommodation.AccommodationAmenities.GetValueOrDefault(language);
-            var additionalInfo = accommodation.AdditionalInfo.GetValueOrDefault(language);
-            var category = accommodation.Category.GetValueOrDefault(language);
-            var address = accommodation.Location.Address.GetValueOrDefault(language);
-            var localityName = accommodation.Location.Locality.GetValueOrDefault(language);
-            var countryName = accommodation.Location.Country.GetValueOrDefault(language);
-            var localityZoneName = accommodation.Location.LocalityZone.GetValueOrDefault(language);
-            var textualDescriptions = new List<TextualDescription>();
-
-            foreach (var descriptions in accommodation.TextualDescriptions)
-            {
-                var description = descriptions.Description.GetValueOrDefault(language);
-                textualDescriptions.Add(new TextualDescription(descriptions.Type, description));
-            }
-
-            return new Accommodation(
-                htId.ToString(),
-                name,
-                accommodationAmenities,
-                additionalInfo,
-                category,
-                accommodation.Contacts,
-                new LocationInfo(
-                    accommodation.Location.CountryCode,
-                    countryName,
-                    localityName,
-                    localityZoneName,
-                    accommodation.Location.Coordinates,
-                    address,
-                    accommodation.Location.LocationDescriptionCode,
-                    accommodation.Location.PointsOfInterests,
-                    accommodation.Location.IsHistoricalBuilding
-                ),
-                accommodation.Photos,
-                accommodation.Rating,
-                accommodation.Schedule,
-                textualDescriptions,
-                accommodation.Type
-            );
-        }
-
+        
 
         private readonly IAccommodationsDataMerger _accommodationsDataMerger;
         private readonly NakijinContext _context;
