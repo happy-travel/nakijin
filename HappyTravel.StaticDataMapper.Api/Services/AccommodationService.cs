@@ -38,9 +38,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             if (accommodation == null)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
-            return Result.Success(MapToAccommodation(accommodation.Id, accommodation.CountryId,
+            return MapToAccommodation(accommodation.Id, accommodation.CountryId,
                 accommodation.LocalityId, accommodation.LocalityZoneId,
-                accommodation.Data, languageCode));
+                accommodation.Data, languageCode);
         }
 
 
@@ -61,8 +61,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             if (accommodation == null)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
-            return Result.Success(MapToAccommodation(accommodation.Id, accommodation.CountryId,
-                accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.Data, languageCode));
+            return MapToAccommodation(accommodation.Id, accommodation.CountryId,
+                accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.Data, languageCode);
         }
 
         public Task<DateTime> GetLastModifiedDate()
