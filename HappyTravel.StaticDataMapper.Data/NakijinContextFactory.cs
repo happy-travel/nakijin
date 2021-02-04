@@ -15,7 +15,7 @@ namespace HappyTravel.StaticDataMapper.Data
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location))
-                .AddJsonFile("appsettings.json", false, true)
+                .AddJsonFile("contextSettings.json", false, true)
                 .Build();
 
             var dbOptions = GetDbOptions(configuration);
