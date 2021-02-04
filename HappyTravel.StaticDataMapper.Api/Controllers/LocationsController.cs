@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Api.Filters.Authorization;
 using HappyTravel.StaticDataMapper.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Country = LocationNameNormalizer.Models.Country;
 
@@ -13,7 +13,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
     [ApiVersion("1.0")]
     [Route("api/{v:apiVersion}/[controller]")]
     [Produces("application/json")]
-    [Permissions(MapperPermissions.Read)]
+    [Authorize]
     public class LocationsController : StaticDataControllerBase
     {
         public LocationsController(ILocationService locationService)
