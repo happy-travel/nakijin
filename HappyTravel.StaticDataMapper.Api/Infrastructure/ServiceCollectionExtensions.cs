@@ -21,9 +21,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using OpenTelemetry.Trace.Samplers;
 using Polly;
 using Polly.Extensions.Http;
+using StackExchange.Redis;
 
 namespace HappyTravel.StaticDataMapper.Api.Infrastructure
 {
@@ -70,19 +70,24 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
                 agentPort = int.Parse(EnvironmentVariableHelper.Get("Jaeger:AgentPort", configuration));
             }
 
+            var connection = ConnectionMultiplexer.Connect(EnvironmentVariableHelper.Get("Redis:Endpoint", configuration));
             var serviceName = $"{nameof(StaticDataMapper)}-{environment.EnvironmentName}";
-            services.AddOpenTelemetry(builder =>
+            
+            services.AddOpenTelemetryTracing(builder =>
             {
-                builder.UseJaegerExporter(options =>
+                builder
+                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddRedisInstrumentation(connection)
+                    .AddJaegerExporter(options =>
                     {
-                        options.ServiceName = serviceName;
                         options.AgentHost = agentHost;
                         options.AgentPort = agentPort;
                     })
-                    .AddDependencyInstrumentation()
-                    .SetResource(Resources.CreateServiceResource(serviceName))
                     .SetSampler(new AlwaysOnSampler());
             });
+
 
             return services;
         }
