@@ -31,7 +31,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                     CountryId = ac.CountryId,
                     LocalityId = ac.LocalityId,
                     LocalityZoneId = ac.LocalityZoneId,
-                    Data = ac.CalculatedAccommodation
+                    Data = ac.CalculatedAccommodation,
+                    Modified = ac.Modified
                 })
                 .SingleOrDefaultAsync();
 
@@ -40,7 +41,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
 
             return MapToAccommodation(accommodation.Id, accommodation.CountryId,
                 accommodation.LocalityId, accommodation.LocalityZoneId,
-                accommodation.Data, languageCode);
+                accommodation.Data, languageCode, accommodation.Modified);
         }
 
 
@@ -54,7 +55,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                     CountryId = ac.CountryId,
                     LocalityId = ac.LocalityId,
                     LocalityZoneId = ac.LocalityZoneId,
-                    Data = ac.CalculatedAccommodation
+                    Data = ac.CalculatedAccommodation,
+                    Modified = ac.Modified
                 })
                 .SingleOrDefaultAsync();
 
@@ -62,7 +64,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
             return MapToAccommodation(accommodation.Id, accommodation.CountryId,
-                accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.Data, languageCode);
+                accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.Data, languageCode,
+                accommodation.Modified);
         }
 
         public Task<DateTime> GetLastModifiedDate()
@@ -94,7 +97,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
 
 
         private Accommodation MapToAccommodation(int htId, int htCountryId, int? htLocalityId, int? htLocalityZoneId,
-            MultilingualAccommodation accommodation, string language)
+            MultilingualAccommodation accommodation, string language, DateTime? modified = null)
         {
             var name = accommodation.Name.GetValueOrDefault(language);
             var accommodationAmenities = accommodation.AccommodationAmenities.GetValueOrDefault(language);
@@ -137,7 +140,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 accommodation.Rating,
                 accommodation.Schedule,
                 textualDescriptions,
-                accommodation.Type
+                accommodation.Type,
+                modified: modified
             );
         }
 
