@@ -170,7 +170,7 @@ namespace HappyTravel.StaticDataMapper.Api
                 .UseAuthorization()
                 .UseEndpoints(endpoints =>
                 {
-                    endpoints.MapHealthChecks("/health");
+                    endpoints.MapHealthChecks("/health").WithMetadata(new AllowAnonymousAttribute());
                     endpoints.MapControllers();
                 });
         }
