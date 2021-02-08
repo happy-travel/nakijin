@@ -28,6 +28,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             _localitiesCache = localitiesCache;
             _localityZonesCache = localityZonesCache;
             _batchSize = options.Value.BatchSize;
+            _dbCommandTimeOut = options.Value.DbCommandTimeOut;
             _locationNameNormalizer = locationNameNormalizer;
             _logger = loggerFactory.CreateLogger<LocationMapper>();
         }
@@ -37,6 +38,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         {
             try
             {
+                // Only here needed large timeout
+                _context.Database.SetCommandTimeout(_dbCommandTimeOut);
+
                 await MapCountries(supplier, cancellationToken);
                 await MapLocalities(supplier, cancellationToken);
                 await MapLocalityZones(supplier, cancellationToken);
@@ -117,67 +121,82 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             await ConstructCountriesCache();
             await ConstructLocalitiesCache();
 
-            // After testing of all connectors maybe will be changed to batches 
-            var localities = await _context.RawAccommodations
-                .Where(ac => ac.Supplier == supplier && ac.LocalityNames != null)
-                .Select(ac
-                    => new
-                    {
-                        CountryCode = ac.CountryCode,
-                        CountryNames = ac.CountryNames,
-                        LocalityCode = ac.SupplierLocalityCode,
-                        LocalityNames = ac.LocalityNames
-                    })
-                .Distinct().ToListAsync(cancellationToken);
-            var existingLocalities = new List<Locality>();
-            var newLocalities = new List<Locality>();
-            var utcDate = DateTime.UtcNow;
-
-            foreach (var locality in localities)
+            var skip = 0;
+            while (true)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                var localities = await _context.RawAccommodations
+                    .Where(ac => ac.Supplier == supplier && ac.LocalityNames != null)
+                    .Select(ac
+                        => new
+                        {
+                            CountryCode = ac.CountryCode,
+                            CountryNames = ac.CountryNames,
+                            LocalityCode = ac.SupplierLocalityCode,
+                            LocalityNames = ac.LocalityNames
+                        })
+                    .Distinct().Skip(skip).Take(_batchSize).ToListAsync(cancellationToken);
 
-                var defaultCountryName = locality.CountryNames.GetValueOrDefault(DefaultLanguageCode);
-                // TODO: review and remove 
-                var countryCode =
-                    _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName, locality.CountryCode);
-                var defaultLocalityName = locality.LocalityNames.GetValueOrDefault(DefaultLanguageCode);
-                var normalizedLocalityName =
-                    _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
+                if (localities.Count == 0)
+                    break;
 
-                var cached = await _localitiesCache.Get(countryCode, normalizedLocalityName);
+                skip += localities.Count;
 
-                var dbLocality = new Locality
+                var existingLocalities = new List<Locality>();
+                var newLocalities = new List<Locality>();
+                var utcDate = DateTime.UtcNow;
+
+                foreach (var locality in localities)
                 {
-                    Names = NormalizeLocalityMultilingualNames(defaultCountryName, locality.LocalityNames),
-                    IsActive = true,
-                    Modified = utcDate
-                };
-                if (cached != default)
-                {
-                    dbLocality.Id = cached.Id;
-                    dbLocality.CountryId = cached.CountryId;
-                    dbLocality.Names = MultiLanguageHelpers.Merge(dbLocality.Names, cached.Names);
-                    dbLocality.SupplierLocalityCodes =
-                        new Dictionary<Suppliers, string>(cached.SupplierLocalityCodes);
-                    dbLocality.SupplierLocalityCodes.TryAdd(supplier, locality.LocalityCode);
-                    existingLocalities.Add(dbLocality);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var defaultCountryName = locality.CountryNames.GetValueOrDefault(DefaultLanguageCode);
+                    // TODO: review and remove 
+                    var countryCode =
+                        _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName, locality.CountryCode);
+                    var defaultLocalityName = locality.LocalityNames.GetValueOrDefault(DefaultLanguageCode);
+                    var normalizedLocalityName =
+                        _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
+
+                    var cached = await _localitiesCache.Get(countryCode, normalizedLocalityName);
+
+                    var dbLocality = new Locality
+                    {
+                        Names = NormalizeLocalityMultilingualNames(defaultCountryName, locality.LocalityNames),
+                        IsActive = true,
+                        Modified = utcDate
+                    };
+                    if (cached != default)
+                    {
+                        dbLocality.Id = cached.Id;
+                        dbLocality.CountryId = cached.CountryId;
+                        dbLocality.Names = MultiLanguageHelpers.Merge(dbLocality.Names, cached.Names);
+                        dbLocality.SupplierLocalityCodes =
+                            new Dictionary<Suppliers, string>(cached.SupplierLocalityCodes);
+                        dbLocality.SupplierLocalityCodes.TryAdd(supplier, locality.LocalityCode);
+                        existingLocalities.Add(dbLocality);
+                    }
+                    else
+                    {
+                        dbLocality.Created = utcDate;
+                        var cachedCountry = await _countriesCache.Get(countryCode);
+                        dbLocality.CountryId = cachedCountry!.Id;
+                        dbLocality.SupplierLocalityCodes = new Dictionary<Suppliers, string>
+                            {{supplier, locality.LocalityCode}};
+                        newLocalities.Add(dbLocality);
+                    }
                 }
-                else
-                {
-                    dbLocality.Created = utcDate;
-                    var cachedCountry = await _countriesCache.Get(countryCode);
-                    dbLocality.CountryId = cachedCountry!.Id;
-                    dbLocality.SupplierLocalityCodes = new Dictionary<Suppliers, string>
-                        {{supplier, locality.LocalityCode}};
-                    newLocalities.Add(dbLocality);
-                }
+
+                // TODO: Remove Distinct 
+                _context.UpdateRange(existingLocalities.Distinct(new LocalityComparer()));
+                _context.AddRange(newLocalities.Distinct(new LocalityComparer()));
+                await _context.SaveChangesAsync();
+
+                _context.ChangeTracker.Entries()
+                    .Where(e => e.Entity != null)
+                    .Where(e => e.State != EntityState.Detached)
+                    .ToList()
+                    .ForEach(e => e.State = EntityState.Detached);
             }
-
-            // TODO: Remove Distinct 
-            _context.UpdateRange(existingLocalities.Distinct(new LocalityComparer()));
-            _context.AddRange(newLocalities.Distinct(new LocalityComparer()));
-            await _context.SaveChangesAsync();
         }
 
         private async Task MapLocalityZones(Suppliers supplier, CancellationToken cancellationToken)
@@ -375,5 +394,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         private readonly ILocationNameNormalizer _locationNameNormalizer;
         private readonly ILogger<LocationMapper> _logger;
         private readonly int _batchSize;
+        private readonly int _dbCommandTimeOut;
     }
 }
