@@ -5,10 +5,10 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
-using HappyTravel.StaticDataMapper.Api.Filters.Authorization;
 using HappyTravel.StaticDataMapper.Api.Models.LocationInfo;
 using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
 using HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Location = HappyTravel.StaticDataMapper.Api.Models.LocationInfo.Location;
 
@@ -18,7 +18,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
     [ApiVersion("1.0")]
     [Route("api/{v:apiVersion}/location-mappings")]
     [Produces("application/json")]
-    [Permissions(MapperPermissions.Read)]
+    [Authorize]
     public class LocationMappingsController : StaticDataControllerBase
     {
         public LocationMappingsController(ILocationMappingInfoService locationMappingInfoService)
