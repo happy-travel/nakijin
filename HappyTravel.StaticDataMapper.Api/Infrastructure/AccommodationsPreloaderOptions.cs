@@ -7,6 +7,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
     public class StaticDataLoadingOptions
     {
         public int BatchSize { get; set; }
+        public int DbCommandTimeOut { get; set; }
     }
 #nullable restore
 }

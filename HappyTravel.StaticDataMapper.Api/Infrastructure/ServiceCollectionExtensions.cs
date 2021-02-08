@@ -116,8 +116,10 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
 
             services.Configure<StaticDataLoadingOptions>(o =>
             {
-                var batchSize = EnvironmentVariableHelper.Get("Nakijin:Preloader:BatchSize", configuration);
+                var batchSize = EnvironmentVariableHelper.Get("Nakijin:StaticDataLoader:BatchSize", configuration);
+                var dbCommandTimOut = EnvironmentVariableHelper.Get("Nakijin:StaticDataLoader:DbCommandTimeOut", configuration);
                 o.BatchSize = string.IsNullOrEmpty(batchSize) ? 1000 : int.Parse(batchSize);
+                o.DbCommandTimeOut =  string.IsNullOrEmpty(dbCommandTimOut) ? 300 : int.Parse(dbCommandTimOut);
             });
 
             services.Configure<RequestLocalizationOptions>(o =>
