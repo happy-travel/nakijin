@@ -116,31 +116,32 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             }
 
             return new Accommodation(
-                htId.ToString(),
-                name,
-                accommodationAmenities,
-                additionalInfo,
-                category,
-                accommodation.Contacts,
-                new LocationInfo(
-                    accommodation.Location.CountryCode,
-                    htCountryId.ToString(),
-                    countryName,
-                    htLocalityId?.ToString(),
-                    localityName,
-                    htLocalityZoneId?.ToString(),
-                    localityZoneName,
-                    accommodation.Location.Coordinates,
-                    address,
-                    accommodation.Location.LocationDescriptionCode,
-                    accommodation.Location.PointsOfInterests,
-                    accommodation.Location.IsHistoricalBuilding
-                ),
-                accommodation.Photos,
-                accommodation.Rating,
-                accommodation.Schedule,
-                textualDescriptions,
-                accommodation.Type,
+                    htId.ToString(),
+                    name,
+                    accommodationAmenities,
+                    additionalInfo,
+                    category,
+                    accommodation.Contacts,
+                    new LocationInfo(
+                        accommodation.Location.CountryCode,
+                        htCountryId.ToString(),
+                        countryName,
+                        htLocalityId?.ToString(),
+                        localityName,
+                        htLocalityZoneId?.ToString(),
+                        localityZoneName,
+                        accommodation.Location.Coordinates,
+                        address,
+                        accommodation.Location.LocationDescriptionCode,
+                        accommodation.Location.PointsOfInterests,
+                        accommodation.Location.IsHistoricalBuilding
+                    ),
+                    accommodation.Photos,
+                    accommodation.Rating,
+                    accommodation.Schedule,
+                    textualDescriptions,
+                    accommodation.Type, 
+                $"Accommodation_{htId}",
                 modified: modified
             );
         }

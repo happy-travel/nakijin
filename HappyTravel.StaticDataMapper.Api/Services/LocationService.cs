@@ -49,9 +49,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 group c by new {c.CountryId, c.CountryCode, c.CountryNames}
                 into gr
                 select new
-                    Contracts.Country(gr.Key.CountryCode, gr.Key.CountryId.ToString(),
+                    Contracts.Country(gr.Key.CountryCode, $"Country_{gr.Key.CountryId}",
                         gr.Key.CountryNames.GetValueOrDefault(languageCode),
-                        gr.Select(l => new Contracts.Locality(l.LocalityId.ToString(),
+                        gr.Select(l => new Contracts.Locality($"Locality_{l.LocalityId}",
                             l.LocalityNams.GetValueOrDefault(languageCode))).ToList())).ToList();
         }
 
