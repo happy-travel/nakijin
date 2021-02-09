@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.EdoContracts.Accommodations.Internals;
+using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
 using HappyTravel.StaticDataMapper.Data;
 using HappyTravel.StaticDataMapper.Data.Models;
 using Microsoft.EntityFrameworkCore;
@@ -141,7 +142,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                     accommodation.Schedule,
                     textualDescriptions,
                     accommodation.Type, 
-                $"Accommodation_{htId}",
+                    HtId.Create(AccommodationMapperLocationTypes.Accommodation, htId),
                 modified: modified
             );
         }

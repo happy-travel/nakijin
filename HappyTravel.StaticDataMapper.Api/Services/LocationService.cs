@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
 using HappyTravel.StaticDataMapper.Data;
 using LocationNameNormalizer.Models;
 using Microsoft.EntityFrameworkCore;
@@ -49,9 +50,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 group c by new {c.CountryId, c.CountryCode, c.CountryNames}
                 into gr
                 select new
-                    Contracts.Country(gr.Key.CountryCode, $"Country_{gr.Key.CountryId}",
+                    Contracts.Country(gr.Key.CountryCode, HtId.Create(AccommodationMapperLocationTypes.Country, gr.Key.CountryId),
                         gr.Key.CountryNames.GetValueOrDefault(languageCode),
-                        gr.Select(l => new Contracts.Locality($"Locality_{l.LocalityId}",
+                        gr.Select(l => new Contracts.Locality(HtId.Create(AccommodationMapperLocationTypes.Locality, l.LocalityId),
                             l.LocalityNams.GetValueOrDefault(languageCode))).ToList())).ToList();
         }
 
