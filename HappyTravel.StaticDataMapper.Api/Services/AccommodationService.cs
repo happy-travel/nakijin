@@ -46,10 +46,17 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         }
 
 
-        public async Task<Result<Accommodation>> Get(int accommodationId, string languageCode)
+        public async Task<Result<Accommodation>> Get(string htId, string languageCode)
         {
+            var (_, isFailure, (type, id), error) = HtId.Parse(htId);
+            if (isFailure)
+                return Result.Failure<Accommodation>(error);
+
+            if (type != AccommodationMapperLocationTypes.Accommodation)
+                return Result.Failure<Accommodation>($"{type} is not supported");
+            
             var accommodation = await _context.Accommodations
-                .Where(ac => ac.IsActive && ac.Id == accommodationId)
+                .Where(ac => ac.IsActive && ac.Id == id)
                 .Select(ac => new
                 {
                     Id = ac.Id,
@@ -67,19 +74,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             return MapToAccommodation(accommodation.Id, accommodation.CountryId,
                 accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.Data, languageCode,
                 accommodation.Modified);
-        }
-
-
-        public Task<Result<Accommodation>> Get(string htId, string languageCode)
-        {
-            var (_, isFailure, (type, id), error) = HtId.Parse(htId);
-            if (isFailure)
-                return Task.FromResult(Result.Failure<Accommodation>(error));
-
-            if (type != AccommodationMapperLocationTypes.Accommodation)
-                return Task.FromResult(Result.Failure<Accommodation>($"{type} is not supported"));
-
-            return Get(id, languageCode);
         }
         
 

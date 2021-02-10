@@ -42,35 +42,17 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
 
             return Ok(result);
         }
-
-
+        
+        
         /// <summary>
         /// Gets accommodation
         /// </summary>
-        /// <param name="accommodationId">Accommodation Id</param>
-        /// <returns>Accommodation details</returns>
-        [HttpGet("accommodations/{accommodationId}")]
-        [ProducesResponseType(typeof(Accommodation), (int) HttpStatusCode.OK)]
-        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> Get(int accommodationId)
-        {
-            var (_, isFailure, result, error) = await _accommodationService.Get(accommodationId, LanguageCode);
-            if (isFailure)
-                return BadRequest(error);
-
-            return Ok(result);
-        }
-        
-        
-        /// <summary>
-        /// Gets accommodation by HtId
-        /// </summary>
         /// <param name="accommodationHtId">Accommodation HtId</param>
         /// <returns>Accommodation details</returns>
-        [HttpGet("accommodations/htid/{accommodationHtId}")]
+        [HttpGet("accommodations/{accommodationHtId}")]
         [ProducesResponseType(typeof(Accommodation), (int) HttpStatusCode.OK)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> GetByHtId(string accommodationHtId)
+        public async Task<IActionResult> Get(string accommodationHtId)
         {
             var (_, isFailure, result, error) = await _accommodationService.Get(accommodationHtId, LanguageCode);
             if (isFailure)
