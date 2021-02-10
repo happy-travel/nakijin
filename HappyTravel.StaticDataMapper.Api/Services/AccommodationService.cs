@@ -69,6 +69,20 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 accommodation.Modified);
         }
 
+
+        public Task<Result<Accommodation>> Get(string htId, string languageCode)
+        {
+            var (_, isParseFailure, (type, id), parseError) = HtId.Parse(htId);
+            if (isParseFailure)
+                return Task.FromResult(Result.Failure<Accommodation>(parseError));
+
+            if (type != AccommodationMapperLocationTypes.Accommodation)
+                return Task.FromResult(Result.Failure<Accommodation>($"{type} is not supported"));
+
+            return Get(id, languageCode);
+        }
+        
+
         public Task<DateTime> GetLastModifiedDate()
             => _context.Accommodations.OrderByDescending(d => d.Modified).Select(l => l.Modified).FirstOrDefaultAsync();
 

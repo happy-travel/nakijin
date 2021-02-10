@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
 using HappyTravel.StaticDataMapper.Data.Models;
 using HappyTravel.StaticDataMapper.Api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -55,6 +56,24 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         public async Task<IActionResult> Get(int accommodationId)
         {
             var (_, isFailure, result, error) = await _accommodationService.Get(accommodationId, LanguageCode);
+            if (isFailure)
+                return BadRequest(error);
+
+            return Ok(result);
+        }
+        
+        
+        /// <summary>
+        /// Gets accommodation by HtId
+        /// </summary>
+        /// <param name="accommodationHtId">Accommodation HtId</param>
+        /// <returns>Accommodation details</returns>
+        [HttpGet("accommodations/htid/{accommodationHtId}")]
+        [ProducesResponseType(typeof(Accommodation), (int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> GetByHtId(string accommodationHtId)
+        {
+            var (_, isFailure, result, error) = await _accommodationService.Get(accommodationHtId, LanguageCode);
             if (isFailure)
                 return BadRequest(error);
 
