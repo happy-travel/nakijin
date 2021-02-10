@@ -109,6 +109,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             var countryName = accommodation.Location.Country.GetValueOrDefault(language);
             var localityZoneName = accommodation.Location.LocalityZone?.GetValueOrDefault(language);
             var textualDescriptions = new List<TextualDescription>();
+            var accommodationHtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, htId);
+            var countryHtId = HtId.Create(AccommodationMapperLocationTypes.Country, htCountryId);
+            var localityHtId = htLocalityId is not null
+                ? HtId.Create(AccommodationMapperLocationTypes.Locality, htLocalityId.Value)
+                : string.Empty;
+            var localityZoneHtId = htLocalityZoneId is not null
+                ? HtId.Create(AccommodationMapperLocationTypes.LocalityZone, htLocalityZoneId.Value)
+                : string.Empty;
 
             foreach (var descriptions in accommodation.TextualDescriptions)
             {
@@ -117,32 +125,32 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             }
 
             return new Accommodation(
-                    htId.ToString(),
-                    name,
-                    accommodationAmenities,
-                    additionalInfo,
-                    category,
-                    accommodation.Contacts,
-                    new LocationInfo(
-                        accommodation.Location.CountryCode,
-                        htCountryId.ToString(),
-                        countryName,
-                        htLocalityId?.ToString(),
-                        localityName,
-                        htLocalityZoneId?.ToString(),
-                        localityZoneName,
-                        accommodation.Location.Coordinates,
-                        address,
-                        accommodation.Location.LocationDescriptionCode,
-                        accommodation.Location.PointsOfInterests,
-                        accommodation.Location.IsHistoricalBuilding
-                    ),
-                    accommodation.Photos,
-                    accommodation.Rating,
-                    accommodation.Schedule,
-                    textualDescriptions,
-                    accommodation.Type, 
-                    HtId.Create(AccommodationMapperLocationTypes.Accommodation, htId),
+                htId.ToString(),
+                name,
+                accommodationAmenities,
+                additionalInfo,
+                category,
+                accommodation.Contacts,
+                new LocationInfo(
+                    accommodation.Location.CountryCode,
+                    countryHtId,
+                    countryName,
+                    localityHtId,
+                    localityName,
+                    localityZoneHtId,
+                    localityZoneName,
+                    accommodation.Location.Coordinates,
+                    address,
+                    accommodation.Location.LocationDescriptionCode,
+                    accommodation.Location.PointsOfInterests,
+                    accommodation.Location.IsHistoricalBuilding
+                ),
+                accommodation.Photos,
+                accommodation.Rating,
+                accommodation.Schedule,
+                textualDescriptions,
+                accommodation.Type, 
+                accommodationHtId,
                 modified: modified
             );
         }
