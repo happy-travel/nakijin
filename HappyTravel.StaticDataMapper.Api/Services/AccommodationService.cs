@@ -72,9 +72,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services
 
         public Task<Result<Accommodation>> Get(string htId, string languageCode)
         {
-            var (_, isParseFailure, (type, id), parseError) = HtId.Parse(htId);
-            if (isParseFailure)
-                return Task.FromResult(Result.Failure<Accommodation>(parseError));
+            var (_, isFailure, (type, id), error) = HtId.Parse(htId);
+            if (isFailure)
+                return Task.FromResult(Result.Failure<Accommodation>(error));
 
             if (type != AccommodationMapperLocationTypes.Accommodation)
                 return Task.FromResult(Result.Failure<Accommodation>($"{type} is not supported"));
