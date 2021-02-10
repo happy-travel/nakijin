@@ -42,19 +42,19 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
 
             return Ok(result);
         }
-
-
+        
+        
         /// <summary>
         /// Gets accommodation
         /// </summary>
-        /// <param name="accommodationId">Accommodation Id</param>
+        /// <param name="accommodationHtId">Accommodation HtId</param>
         /// <returns>Accommodation details</returns>
-        [HttpGet("accommodations/{accommodationId}")]
+        [HttpGet("accommodations/{accommodationHtId}")]
         [ProducesResponseType(typeof(Accommodation), (int) HttpStatusCode.OK)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> Get(int accommodationId)
+        public async Task<IActionResult> Get(string accommodationHtId)
         {
-            var (_, isFailure, result, error) = await _accommodationService.Get(accommodationId, LanguageCode);
+            var (_, isFailure, result, error) = await _accommodationService.Get(accommodationHtId, LanguageCode);
             if (isFailure)
                 return BadRequest(error);
 
