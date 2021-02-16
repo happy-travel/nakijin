@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using HappyTravel.StaticDataMapper.Data.Models;
 
 namespace HappyTravel.StaticDataMapper.Api.Infrastructure
 {
-    public static class ArrayStringExtensions
+    public static class ListStringExtensions
     {
-        public static List<Suppliers> ToSuppliersList(this string[]? suppliers)
+        public static List<Suppliers> ToSuppliersList(this List<string> suppliers)
         {
-            if (suppliers == null) return null;
+            if (suppliers.Any()) return new List<Suppliers>();
 
             var result = new List<Suppliers>();
 

@@ -8,7 +8,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
 {
     public interface ILocationService
     {
-        Task<List<Contracts.Country>> GetCountries(string languageCode, List<Suppliers>? suppliersFilter);
+        Task<List<Contracts.Country>> GetCountries(string languageCode, IEnumerable<Suppliers> suppliersFilter);
         Task<DateTime> GetLastModifiedDate();
     }
 }

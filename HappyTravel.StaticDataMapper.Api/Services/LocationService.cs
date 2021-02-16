@@ -33,13 +33,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         }
 
 
-        public async Task<List<Contracts.Country>> GetCountries(string languageCode, List<Suppliers>? suppliersFilter = null)
+        public async Task<List<Contracts.Country>> GetCountries(string languageCode, IEnumerable<Suppliers> suppliersFilter)
         {
-            var suppliersKeys = suppliersFilter?.Select(s => s.ToString().ToLower()).ToArray();
+            var suppliersKeys = suppliersFilter.Select(s => s.ToString().ToLower()).ToArray();
             var countriesQuery = _context.Countries.Where(c => c.IsActive);
             var localitiesQuery = _context.Localities.Where(l => l.IsActive);
 
-            if (suppliersKeys is not null)
+            if (suppliersKeys.Any())
             {
                 countriesQuery = countriesQuery.Where(c => EF.Functions.JsonExistAny(c.SupplierCountryCodes, suppliersKeys));
                 localitiesQuery = localitiesQuery.Where(l => EF.Functions.JsonExistAny(l.SupplierLocalityCodes, suppliersKeys));
