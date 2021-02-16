@@ -46,7 +46,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         }
 
 
-        public async Task<Result<Accommodation>> Get(string htId, string languageCode)
+        public async Task<Result<Accommodation>> Get(string htId, string languageCode, List<Suppliers>? suppliersFilter)
         {
             var (_, isFailure, (type, id), error) = HtId.Parse(htId);
             if (isFailure)
@@ -55,8 +55,16 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             if (type != AccommodationMapperLocationTypes.Accommodation)
                 return Result.Failure<Accommodation>($"{type} is not supported");
             
-            var accommodation = await _context.Accommodations
-                .Where(ac => ac.IsActive && ac.Id == id)
+            var suppliersKeys = suppliersFilter?.Select(s => s.ToString().ToLower()).ToArray();
+            var accommodationsTable = _context.Accommodations
+                .Where(ac => ac.IsActive && ac.Id == id);
+            
+            if (suppliersKeys is not null)
+            {
+                accommodationsTable = accommodationsTable.Where(ac => EF.Functions.JsonExistAny(ac.SupplierAccommodationCodes, suppliersKeys));
+            }
+            
+            var accommodation = await accommodationsTable
                 .Select(ac => new
                 {
                     Id = ac.Id,
@@ -81,13 +89,21 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             => _context.Accommodations.OrderByDescending(d => d.Modified).Select(l => l.Modified).FirstOrDefaultAsync();
 
 
-        public async Task<List<Accommodation>> Get(int skip, int top, string languageCode)
+        public async Task<List<Accommodation>> Get(int skip, int top, string languageCode, List<Suppliers>? suppliersFilter)
         {
-            var accommodations = await _context.Accommodations
+            var suppliersKeys = suppliersFilter?.Select(s => s.ToString().ToLower()).ToArray();
+            var accommodationsTable = _context.Accommodations
                 .Where(ac => ac.IsActive)
                 .OrderBy(ac => ac.Id)
                 .Skip(skip)
-                .Take(top)
+                .Take(top);
+
+            if (suppliersKeys is not null)
+            {
+                accommodationsTable = accommodationsTable.Where(ac => EF.Functions.JsonExistAny(ac.SupplierAccommodationCodes, suppliersKeys));
+            }
+            
+            var accommodations = await accommodationsTable
                 .Select(ac => new
                 {
                     Id = ac.Id,

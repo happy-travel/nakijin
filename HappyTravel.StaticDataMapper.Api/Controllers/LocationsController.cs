@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using HappyTravel.StaticDataMapper.Api.Infrastructure;
 using HappyTravel.StaticDataMapper.Api.Services;
+using HappyTravel.StaticDataMapper.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Country = LocationNameNormalizer.Models.Country;
@@ -28,9 +31,9 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         /// <returns></returns>
         [HttpGet("countries")]
         [ProducesResponseType(typeof(List<Country>), (int) HttpStatusCode.OK)]
-        public async Task<IActionResult> GetCountries()
+        public async Task<IActionResult> GetCountries([FromQuery] string[]? supplier = null)
         {
-            var countries = await _locationService.GetCountries(LanguageCode);
+            var countries = await _locationService.GetCountries(LanguageCode, supplier.ToSuppliersList());
             return Ok(countries);
         }
         
