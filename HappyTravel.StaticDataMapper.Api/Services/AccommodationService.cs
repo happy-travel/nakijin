@@ -54,7 +54,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
 
             if (type != AccommodationMapperLocationTypes.Accommodation)
                 return Result.Failure<Accommodation>($"{type} is not supported");
-            
+
             var accommodation = await _context.Accommodations
                 .Where(ac => ac.IsActive && ac.Id == id)
                 .Select(ac => new
@@ -81,13 +81,21 @@ namespace HappyTravel.StaticDataMapper.Api.Services
             => _context.Accommodations.OrderByDescending(d => d.Modified).Select(l => l.Modified).FirstOrDefaultAsync();
 
 
-        public async Task<List<Accommodation>> Get(int skip, int top, string languageCode)
+        public async Task<List<Accommodation>> Get(int skip, int top, IEnumerable<Suppliers> suppliersFilter, string languageCode)
         {
-            var accommodations = await _context.Accommodations
+            var suppliersKeys = suppliersFilter.Select(s => s.ToString().ToLower()).ToArray();
+            var accommodationsQuery = _context.Accommodations
                 .Where(ac => ac.IsActive)
                 .OrderBy(ac => ac.Id)
                 .Skip(skip)
-                .Take(top)
+                .Take(top);
+
+            if (suppliersKeys.Any())
+            {
+                accommodationsQuery = accommodationsQuery.Where(ac => EF.Functions.JsonExistAny(ac.SupplierAccommodationCodes, suppliersKeys));
+            }
+            
+            var accommodations = await accommodationsQuery
                 .Select(ac => new
                 {
                     Id = ac.Id,

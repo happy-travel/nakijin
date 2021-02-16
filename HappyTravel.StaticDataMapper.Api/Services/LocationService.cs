@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
 using HappyTravel.StaticDataMapper.Data;
+using HappyTravel.StaticDataMapper.Data.Models;
 using LocationNameNormalizer.Models;
 using Microsoft.EntityFrameworkCore;
 using Contracts = HappyTravel.EdoContracts.StaticData;
@@ -32,11 +33,20 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         }
 
 
-        public async Task<List<Contracts.Country>> GetCountries(string languageCode)
+        public async Task<List<Contracts.Country>> GetCountries(IEnumerable<Suppliers> suppliersFilter, string languageCode)
         {
-            var countries = await (from c in _context.Countries
-                join l in _context.Localities on c.Id equals l.CountryId
-                where c.IsActive && l.IsActive
+            var suppliersKeys = suppliersFilter.Select(s => s.ToString().ToLower()).ToArray();
+            var countriesQuery = _context.Countries.Where(c => c.IsActive);
+            var localitiesQuery = _context.Localities.Where(l => l.IsActive);
+
+            if (suppliersKeys.Any())
+            {
+                countriesQuery = countriesQuery.Where(c => EF.Functions.JsonExistAny(c.SupplierCountryCodes, suppliersKeys));
+                localitiesQuery = localitiesQuery.Where(l => EF.Functions.JsonExistAny(l.SupplierLocalityCodes, suppliersKeys));
+            }
+            
+            var countries = await (from c in countriesQuery
+                join l in localitiesQuery on c.Id equals l.CountryId
                 select new
                 {
                     CountryId = c.Id,
