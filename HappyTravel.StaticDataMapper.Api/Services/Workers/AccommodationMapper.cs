@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.StaticDataMapper.Data;
 using HappyTravel.StaticDataMapper.Data.Models;
 using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
@@ -13,14 +12,12 @@ using HappyTravel.StaticDataMapper.Api.Models;
 using HappyTravel.StaticDataMapper.Api.Models.Mappers;
 using HappyTravel.StaticDataMapper.Api.Models.Mappers.Enums;
 using LocationNameNormalizer;
-using LocationNameNormalizer.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Index.Strtree;
 using Newtonsoft.Json;
-using HappyTravel.MultiLanguage;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 {
@@ -43,12 +40,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     {
         public AccommodationMapper(NakijinContext context,
             ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
-            ILocationNameNormalizer locationNameNormalizer)
+            MultilingualDataNormalizer multilingualDataNormalizer)
         {
             _context = context;
             _logger = loggerFactory.CreateLogger<AccommodationMapper>();
             _batchSize = options.Value.BatchSize;
-            _locationNameNormalizer = locationNameNormalizer;
+            _multilingualDataNormalizer = multilingualDataNormalizer;
         }
 
         public async Task MapAccommodations(Suppliers supplier, CancellationToken cancellationToken)
@@ -99,7 +96,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             foreach (var accommodation in accommodations)
 
             {
-                var normalized = Normalize(accommodation);
+                var normalized = _multilingualDataNormalizer.NormalizeAccommodation(accommodation);
 
                 // TODO: Try get nearest from db 
                 var nearestAccommodations = GetNearest(normalized, countryAccommodationsTree);
@@ -270,78 +267,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             return (MatchingResults.NotMatch, maxScore, new AccommodationKeyData());
         }
-
-
-        private Contracts.MultilingualAccommodation Normalize(in Contracts.MultilingualAccommodation accommodation)
-        {
-            return new Contracts.MultilingualAccommodation
-            (
-                accommodation.SupplierCode,
-                NormalizeMultilingualName(accommodation.Name)!,
-                accommodation.AccommodationAmenities,
-                accommodation.AdditionalInfo,
-                accommodation.Category,
-                accommodation.Contacts,
-                new MultilingualLocationInfo(
-                    accommodation.Location.CountryCode,
-                    NormalizeMultilingualCountry(accommodation.Location),
-                    accommodation.Location.Coordinates,
-                    accommodation.Location.Address,
-                    accommodation.Location.LocationDescriptionCode,
-                    accommodation.Location.PointsOfInterests,
-                    accommodation.Location.SupplierLocalityCode,
-                    NormalizeMultilingualLocality(accommodation.Location),
-                    accommodation.Location.SupplierLocalityZoneCode,
-                    NormalizeMultilingualName(accommodation.Location.LocalityZone)
-                ),
-                accommodation.Photos,
-                accommodation.Rating,
-                accommodation.Schedule,
-                accommodation.TextualDescriptions,
-                accommodation.Type
-            );
-
-
-            MultiLanguage<string> NormalizeMultilingualCountry(in MultilingualLocationInfo location)
-            {
-                var result = new MultiLanguage<string>();
-                var allValues = location.Country.GetAll();
-                foreach (var item in allValues)
-                    result.TrySetValue(item.languageCode, _locationNameNormalizer.GetNormalizedCountryName(item.value));
-
-                return result;
-            }
-
-
-            MultiLanguage<string>? NormalizeMultilingualLocality(in MultilingualLocationInfo location)
-            {
-                if (location.Locality == null)
-                    return null;
-
-                var result = new MultiLanguage<string>();
-                var defaultCountry = location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
-                var allValues = location.Locality.GetAll();
-                foreach (var item in allValues)
-                    result.TrySetValue(item.languageCode,
-                        _locationNameNormalizer.GetNormalizedLocalityName(defaultCountry, item.value));
-
-                return result;
-            }
-
-
-            MultiLanguage<string>? NormalizeMultilingualName(in MultiLanguage<string>? name)
-            {
-                if (name == null)
-                    return null;
-
-                var result = new MultiLanguage<string>();
-                var allValues = name.GetAll();
-                foreach (var item in allValues)
-                    result.TrySetValue(item.languageCode, item.value.ToNormalizedName());
-
-                return result;
-            }
-        }
+        
 
         private async Task<Dictionary<string, AccommodationKeyData>> GetCountryAccommodationBySupplier(
             string countryCode, Suppliers supplier)
@@ -515,7 +441,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         private readonly int _batchSize;
         private readonly ILogger<AccommodationMapper> _logger;
         private static List<(string Code, int Id)> _countries = new List<(string Code, int Id)>(0);
-        private readonly ILocationNameNormalizer _locationNameNormalizer;
+        private readonly MultilingualDataNormalizer _multilingualDataNormalizer;
         private readonly NakijinContext _context;
     }
 }

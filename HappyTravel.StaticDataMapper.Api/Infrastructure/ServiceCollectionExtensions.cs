@@ -48,6 +48,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             services.AddTransient<ILocationService, LocationService>();
 
             services.AddNameNormalizationServices();
+            services.AddSingleton<MultilingualDataNormalizer>();
 
             return services;
         }
