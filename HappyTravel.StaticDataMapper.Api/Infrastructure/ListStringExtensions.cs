@@ -7,9 +7,9 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
 {
     public static class ListStringExtensions
     {
-        public static List<Suppliers> ToSuppliersList(this List<string> suppliers)
+        public static IEnumerable<Suppliers> ToSuppliersList(this List<string> suppliers)
         {
-            if (suppliers.Any()) return new List<Suppliers>();
+            if (!suppliers.Any()) return new List<Suppliers>();
 
             var result = new List<Suppliers>();
 
