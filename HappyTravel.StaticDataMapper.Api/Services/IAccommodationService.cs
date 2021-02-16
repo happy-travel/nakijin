@@ -10,8 +10,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services
     public interface IAccommodationService
     {
         Task<Result<Accommodation>> Get(Suppliers supplier, string supplierAccommodationCode, string languageCode);
-        Task<Result<Accommodation>> Get(string htId, string languageCode, IEnumerable<Suppliers> suppliersFilter);
-        Task<List<Accommodation>> Get(int skip, int top, string languageCode, IEnumerable<Suppliers> suppliersFilter);
+        Task<Result<Accommodation>> Get(string htId, string languageCode);
+        Task<List<Accommodation>> Get(int skip, int top, IEnumerable<Suppliers> suppliersFilter, string languageCode);
         Task<DateTime> GetLastModifiedDate();
     }
 }

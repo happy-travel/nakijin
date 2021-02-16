@@ -33,7 +33,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         }
 
 
-        public async Task<List<Contracts.Country>> GetCountries(string languageCode, IEnumerable<Suppliers> suppliersFilter)
+        public async Task<List<Contracts.Country>> GetCountries(IEnumerable<Suppliers> suppliersFilter, string languageCode)
         {
             var suppliersKeys = suppliersFilter.Select(s => s.ToString().ToLower()).ToArray();
             var countriesQuery = _context.Countries.Where(c => c.IsActive);

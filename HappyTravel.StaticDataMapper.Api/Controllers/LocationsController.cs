@@ -33,7 +33,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         [ProducesResponseType(typeof(List<Country>), (int) HttpStatusCode.OK)]
         public async Task<IActionResult> GetCountries([FromQuery] List<string> suppliers)
         {
-            var countries = await _locationService.GetCountries(LanguageCode, suppliers.ToSuppliersList());
+            var countries = await _locationService.GetCountries(suppliers.ToSuppliersList(), LanguageCode);
             return Ok(countries);
         }
         
