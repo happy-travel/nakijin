@@ -56,15 +56,15 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 return Result.Failure<Accommodation>($"{type} is not supported");
             
             var suppliersKeys = suppliersFilter?.Select(s => s.ToString().ToLower()).ToArray();
-            var accommodationsTable = _context.Accommodations
+            var accommodationsQuery = _context.Accommodations
                 .Where(ac => ac.IsActive && ac.Id == id);
             
             if (suppliersKeys is not null)
             {
-                accommodationsTable = accommodationsTable.Where(ac => EF.Functions.JsonExistAny(ac.SupplierAccommodationCodes, suppliersKeys));
+                accommodationsQuery = accommodationsQuery.Where(ac => EF.Functions.JsonExistAny(ac.SupplierAccommodationCodes, suppliersKeys));
             }
             
-            var accommodation = await accommodationsTable
+            var accommodation = await accommodationsQuery
                 .Select(ac => new
                 {
                     Id = ac.Id,
@@ -92,7 +92,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services
         public async Task<List<Accommodation>> Get(int skip, int top, string languageCode, List<Suppliers>? suppliersFilter)
         {
             var suppliersKeys = suppliersFilter?.Select(s => s.ToString().ToLower()).ToArray();
-            var accommodationsTable = _context.Accommodations
+            var accommodationsQuery = _context.Accommodations
                 .Where(ac => ac.IsActive)
                 .OrderBy(ac => ac.Id)
                 .Skip(skip)
@@ -100,10 +100,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services
 
             if (suppliersKeys is not null)
             {
-                accommodationsTable = accommodationsTable.Where(ac => EF.Functions.JsonExistAny(ac.SupplierAccommodationCodes, suppliersKeys));
+                accommodationsQuery = accommodationsQuery.Where(ac => EF.Functions.JsonExistAny(ac.SupplierAccommodationCodes, suppliersKeys));
             }
             
-            var accommodations = await accommodationsTable
+            var accommodations = await accommodationsQuery
                 .Select(ac => new
                 {
                     Id = ac.Id,
