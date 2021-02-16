@@ -5,8 +5,8 @@ namespace HappyTravel.StaticDataMapper.Data.Models
         Unknown = 0,
         Netstorming = 1,
         Illusions = 2,
-        Direct = 3,
+        DirectContracts = 3,
         Etg = 4,
-        Rakuten = 5,
+        Rakuten = 5
     }
 }
