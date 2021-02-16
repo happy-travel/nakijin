@@ -94,8 +94,8 @@ namespace HappyTravel.StaticDataMapper.Data
             builder.Entity<AccommodationUncertainMatches>(m =>
             {
                 m.HasKey(p => p.Id);
-                m.Property(p => p.ExistingHtId).IsRequired();
-                m.Property(p => p.NewHtId).IsRequired();
+                m.Property(p => p.FirstHtId).IsRequired();
+                m.Property(p => p.SecondHtId).IsRequired();
                 m.Property(p => p.IsActive).HasDefaultValue(true).IsRequired();
                 m.Property(p => p.Created)
                     .IsRequired()

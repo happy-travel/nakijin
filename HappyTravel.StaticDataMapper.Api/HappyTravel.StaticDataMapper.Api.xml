@@ -12,11 +12,11 @@
             <param name="supplierAccommodationCode">Supplier Accommodation code </param>
             <returns>Accommodation details</returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.Int32)">
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.String)">
             <summary>
             Gets accommodation
             </summary>
-            <param name="accommodationId">Accommodation Id</param>
+            <param name="accommodationHtId">Accommodation HtId</param>
             <returns>Accommodation details</returns>
         </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.Int32,System.Int32)">

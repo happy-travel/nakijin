@@ -7,6 +7,5 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public interface ILocationMapper
     {
         Task MapLocations(Suppliers supplier, CancellationToken token = default);
-        Task ConstructLocationsCache();
     }
 }

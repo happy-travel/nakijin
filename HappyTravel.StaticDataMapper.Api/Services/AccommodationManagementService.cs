@@ -31,9 +31,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services
                 return Result.Success();
 
             var firstAccommodation =
-                await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.ExistingHtId);
+                await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.FirstHtId);
             var secondAccommodation =
-                await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.NewHtId);
+                await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == uncertainMatch.SecondHtId);
 
             foreach (var supplierAccommodation in secondAccommodation.SupplierAccommodationCodes)
                 firstAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key,
