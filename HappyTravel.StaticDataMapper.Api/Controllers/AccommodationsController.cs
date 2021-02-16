@@ -49,14 +49,14 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         /// Gets accommodation
         /// </summary>
         /// <param name="accommodationHtId">Accommodation HtId</param>
-        /// <param name="supplier"></param>
+        /// <param name="suppliers"></param>
         /// <returns>Accommodation details</returns>
         [HttpGet("accommodations/{accommodationHtId}")]
         [ProducesResponseType(typeof(Accommodation), (int) HttpStatusCode.OK)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> Get(string accommodationHtId, [FromQuery] string[]? supplier = null)
+        public async Task<IActionResult> Get(string accommodationHtId, [FromQuery] string[]? suppliers = null)
         {
-            var (_, isFailure, result, error) = await _accommodationService.Get(accommodationHtId, LanguageCode, supplier.ToSuppliersList());
+            var (_, isFailure, result, error) = await _accommodationService.Get(accommodationHtId, LanguageCode, suppliers.ToSuppliersList());
             if (isFailure)
                 return BadRequest(error);
 
@@ -69,13 +69,13 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         /// </summary>
         /// <param name="skip"></param>
         /// <param name="top"></param>
-        /// <param name="supplier"></param>
+        /// <param name="suppliers"></param>
         /// <returns></returns>
         [HttpGet("accommodations")]
         [ProducesResponseType(typeof(List<Accommodation>), (int) HttpStatusCode.OK)]
-        public async Task<IActionResult> Get(int skip, int top, [FromQuery] string[]? supplier = null)
+        public async Task<IActionResult> Get(int skip, int top, [FromQuery] string[]? suppliers = null)
         {
-            var accommodations = await _accommodationService.Get(skip, top, LanguageCode, supplier.ToSuppliersList());
+            var accommodations = await _accommodationService.Get(skip, top, LanguageCode, suppliers.ToSuppliersList());
             return Ok(accommodations);
         }
 
