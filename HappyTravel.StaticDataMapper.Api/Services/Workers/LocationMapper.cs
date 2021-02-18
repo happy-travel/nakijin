@@ -216,7 +216,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
 
                     var existing = notSupplierLocalities.FirstOrDefault(l => l.Names.En == normalizedLocalityName);
-                    var existingOfSupplier = supplierLocalities.FirstOrDefault(l => l.Names.En == defaultLocalityName);
+                    var existingOfSupplier =
+                        supplierLocalities.FirstOrDefault(l => l.Names.En == normalizedLocalityName);
 
                     var dbLocality = new Locality
                     {
@@ -349,7 +350,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
 
                 localityZonesToMap = localityZonesToMap
-                    .GroupBy(lz => lz.CountryNames.En)
+                    .GroupBy(lz => new {LocalityName = lz.LocalityNames.En, LocalityZoneName = lz.LocalityZoneNames.En})
                     .Select(lz => lz.First())
                     .ToList();
 
@@ -417,9 +418,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 _context.UpdateRange(localityZonesToUpdate.Distinct(new LocalityZoneComparer()));
                 _context.AddRange(localityZonesToAdd.Distinct(new LocalityZoneComparer()));
                 await ChangeLocalityZoneDependencies(changedLocalityZonesPairs);
-             
+
                 await _context.SaveChangesAsync(cancellationToken);
-                
+
                 _context.ChangeTracker.Entries()
                     .Where(e => e.Entity != null)
                     .Where(e => e.State != EntityState.Detached)
@@ -493,7 +494,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             return normalizedLocalityZoneNames;
         }
 
-        
+
         // TODO: Maybe will be added normalization of raw data (not final data)
         private async Task<List<Country>> GetNormalizedCountries()
         {
@@ -509,6 +510,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     Id = country.Id,
                     Code = code,
                     Names = normalizedNames,
+                    SupplierCountryCodes = country.SupplierCountryCodes,
                     IsActive = country.IsActive,
                     Modified = country.Modified
                 });

@@ -27,7 +27,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 accommodation.Category,
                 accommodation.Contacts,
                 new MultilingualLocationInfo(
-                    accommodation.Location.CountryCode,
+                    _locationNameNormalizer.GetNormalizedCountryCode(accommodation.Location.Country.En,
+                        accommodation.Location.CountryCode),
                     NormalizeMultilingualCountry(accommodation.Location),
                     accommodation.Location.Coordinates,
                     accommodation.Location.Address,
