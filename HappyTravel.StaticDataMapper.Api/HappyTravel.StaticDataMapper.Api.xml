@@ -12,19 +12,21 @@
             <param name="supplierAccommodationCode">Supplier Accommodation code </param>
             <returns>Accommodation details</returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.String)">
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.String,System.Collections.Generic.List{System.String})">
             <summary>
             Gets accommodation
             </summary>
             <param name="accommodationHtId">Accommodation HtId</param>
+            <param name="suppliers"></param>
             <returns>Accommodation details</returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.Int32,System.Int32)">
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.Int32,System.Int32,System.Collections.Generic.List{System.String})">
             <summary>
              Returns a list of accommodation details
             </summary>
             <param name="skip"></param>
             <param name="top"></param>
+            <param name="suppliers"></param>
             <returns></returns>
         </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.GetLastModifiedDate">
@@ -120,7 +122,7 @@
             <param name="cancellationToken"></param>
             <returns>List of locations</returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsController.GetCountries">
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsController.GetCountries(System.Collections.Generic.List{System.String})">
             <summary>
             Gets all available countries list
             </summary>

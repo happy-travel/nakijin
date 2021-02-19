@@ -4,6 +4,7 @@ using System.Net;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.StaticDataMapper.Api.Infrastructure;
 using HappyTravel.StaticDataMapper.Data.Models;
 using HappyTravel.StaticDataMapper.Api.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -42,8 +43,8 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
 
             return Ok(result);
         }
-        
-        
+
+
         /// <summary>
         /// Gets accommodation
         /// </summary>
@@ -67,12 +68,13 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         /// </summary>
         /// <param name="skip"></param>
         /// <param name="top"></param>
+        /// <param name="suppliers"></param>
         /// <returns></returns>
         [HttpGet("accommodations")]
         [ProducesResponseType(typeof(List<Accommodation>), (int) HttpStatusCode.OK)]
-        public async Task<IActionResult> Get(int skip, int top)
+        public async Task<IActionResult> Get(int skip, int top, [FromQuery] List<string> suppliers)
         {
-            var accommodations = await _accommodationService.Get(skip, top, LanguageCode);
+            var accommodations = await _accommodationService.Get(skip, top, suppliers.ToSuppliersList(), LanguageCode);
             return Ok(accommodations);
         }
 
