@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HappyTravel.EdoContracts.Accommodations.Internals;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.StaticDataMapper.Data;
 using HappyTravel.StaticDataMapper.Data.Models;
@@ -114,7 +115,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         break;
                     case MatchingResults.Uncertain:
                         await AddUncertainMatches(normalized, supplier, matchedAccommodation.HtId, score,
-                            countryAccommodationsBySupplier, countryUncertainMatchesBySupplier, cancellationToken);
+                            countryAccommodationsBySupplier, countryUncertainMatchesBySupplier,
+                            GetLocationIds(normalized.Location), cancellationToken);
                         break;
                     case MatchingResults.Match:
                         Update(normalized, matchedAccommodation);
@@ -123,6 +125,16 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         throw new ArgumentOutOfRangeException(nameof(matchingResult));
                 }
             }
+
+
+            _context.AddRange(accommodationsToAdd);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _context.ChangeTracker.Entries()
+                .Where(e => e.Entity != null)
+                .Where(e => e.State != EntityState.Detached)
+                .ToList()
+                .ForEach(e => e.State = EntityState.Detached);
 
 
             void AddOrIgnore(Contracts.MultilingualAccommodation accommodation)
@@ -138,26 +150,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 dbAccommodation.Modified = utcDate;
                 dbAccommodation.IsCalculated = true;
 
-                dbAccommodation.CountryId = country.Id;
-
-                if (accommodation.Location.Locality != null!)
-                {
-                    var defaultLocalityName =
-                        accommodation.Location.Locality.GetValueOrDefault(Constants.DefaultLanguageCode);
-
-                    var localityId = countryLocalities[defaultLocalityName];
-                    dbAccommodation.LocalityId = localityId;
-
-                    if (accommodation.Location.LocalityZone != null!)
-                    {
-                        var defaultLocalityZoneName =
-                            accommodation.Location.LocalityZone.GetValueOrDefault(Constants.DefaultLanguageCode);
-
-                        var localityZoneId = countryLocalityZones[(localityId, defaultLocalityZoneName)];
-                        dbAccommodation.LocalityZoneId = localityZoneId;
-                    }
-                }
-
+                var locationIds = GetLocationIds(accommodation.Location);
+                dbAccommodation.CountryId = locationIds.CountryId;
+                dbAccommodation.LocalityId = locationIds.LocalityId;
+                dbAccommodation.LocalityZoneId = locationIds.LocalityZoneId;
 
                 accommodationsToAdd.Add(dbAccommodation);
             }
@@ -208,14 +204,28 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
 
 
-            _context.AddRange(accommodationsToAdd);
-            await _context.SaveChangesAsync(cancellationToken);
+            (int CountryId, int? LocalityId, int? LocalityZoneId) GetLocationIds(MultilingualLocationInfo location)
+            {
+                int? localityId = null;
+                int? localityZoneId = null;
+                if (location.Locality != null!)
+                {
+                    var defaultLocalityName =
+                        location.Locality.GetValueOrDefault(Constants.DefaultLanguageCode);
 
-            _context.ChangeTracker.Entries()
-                .Where(e => e.Entity != null)
-                .Where(e => e.State != EntityState.Detached)
-                .ToList()
-                .ForEach(e => e.State = EntityState.Detached);
+                    localityId = countryLocalities[defaultLocalityName];
+
+                    if (location.LocalityZone != null!)
+                    {
+                        var defaultLocalityZoneName =
+                            location.LocalityZone.GetValueOrDefault(Constants.DefaultLanguageCode);
+
+                        localityZoneId = countryLocalityZones[(localityId.Value, defaultLocalityZoneName)];
+                    }
+                }
+
+                return (country.Id, localityId, localityZoneId);
+            }
         }
 
 
@@ -344,14 +354,16 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             return tree;
         }
 
-
-        // TODO: find locality,country, localityZone on add
         private async Task<int> Add(Contracts.MultilingualAccommodation accommodation, Suppliers supplier,
+            (int CountryId, int? LocalityId, int? LocalityZoneId) locationIds,
             CancellationToken cancellationToken)
         {
             var dbAccommodation = new RichAccommodationDetails();
             var utcDate = DateTime.UtcNow;
             dbAccommodation.CountryCode = accommodation.Location.CountryCode;
+            dbAccommodation.CountryId = locationIds.CountryId;
+            dbAccommodation.LocalityId = locationIds.LocalityId;
+            dbAccommodation.LocalityZoneId = locationIds.LocalityZoneId;
             dbAccommodation.CalculatedAccommodation = accommodation;
             dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.SupplierCode);
             dbAccommodation.Created = utcDate;
@@ -369,6 +381,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             Suppliers supplier, int existingHtId, float score,
             Dictionary<string, AccommodationKeyData> existingCountryAccommodations,
             List<Tuple<int, int>> existingUncertainMatches,
+            (int CountryId, int? LocalityId, int? LocalityZoneId) locationIds,
             CancellationToken cancellationToken)
         {
             int firstHtId = 0;
@@ -381,7 +394,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
             else
             {
-                firstHtId = await Add(accommodation, supplier, cancellationToken);
+                firstHtId = await Add(accommodation, supplier, locationIds, cancellationToken);
             }
 
             var utcDate = DateTime.UtcNow;
