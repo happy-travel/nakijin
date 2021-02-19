@@ -11,17 +11,18 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             if (string.IsNullOrWhiteSpace(first) || string.IsNullOrWhiteSpace(second))
                 return 0;
 
-            return GetSorensenDiceCoefficient(first.ToSequence(wordsToIgnore), second.ToSequence(wordsToIgnore));
+            return GetJaccardIndex(first.ToSequence(wordsToIgnore), second.ToSequence(wordsToIgnore));
         }
 
-        private static float GetSorensenDiceCoefficient(string[] firstSequence, string[] secondSequence)
+        private static float GetJaccardIndex(string[] firstSequence, string[] secondSequence)
         {
             if (!firstSequence.Any() && !secondSequence.Any())
                 return 1;
 
             // Maybe comparison will work in another way
             var intersectedSequence = firstSequence.Intersect(secondSequence).ToArray();
-            return 2 * (float) intersectedSequence.Length / (firstSequence.Length + secondSequence.Length);
+            return (float) intersectedSequence.Length /
+                (firstSequence.Length + secondSequence.Length - intersectedSequence.Length);
         }
 
         private static string[] ToSequence(this string value, List<string> wordsToIgnore)

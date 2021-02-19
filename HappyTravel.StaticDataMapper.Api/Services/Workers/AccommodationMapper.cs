@@ -101,7 +101,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 var nearestAccommodations = GetNearest(normalized, countryAccommodationsTree);
                 if (!nearestAccommodations.Any())
                 {
-                     AddOrIgnore(normalized);
+                    AddOrIgnore(normalized);
                     continue;
                 }
 
@@ -110,7 +110,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 switch (matchingResult)
                 {
                     case MatchingResults.NotMatch:
-                         AddOrIgnore(normalized);
+                        AddOrIgnore(normalized);
                         break;
                     case MatchingResults.Uncertain:
                         await AddUncertainMatches(normalized, supplier, matchedAccommodation.HtId, score,
@@ -259,7 +259,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             var (htId, maxScore) = results.Aggregate((r1, r2) => r2.score > r1.score ? r2 : r1);
 
-            if (3 <= Math.Round(maxScore))
+            if (3 <= maxScore)
                 return (MatchingResults.Match, maxScore, htId);
 
             if (1.5 <= maxScore && maxScore < 3)
