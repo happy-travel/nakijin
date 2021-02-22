@@ -88,7 +88,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
 
         public static readonly List<string> WordsToIgnoreForHotelNamesComparison =
-            new List<string> {"hotel", "apartments"};
+            new List<string> {"hotel", "apartments", "apartment"};
 
         public static readonly List<string> WordsToIgnoreForAddressesComparison =
             new List<string> {"street", "area", "road",};

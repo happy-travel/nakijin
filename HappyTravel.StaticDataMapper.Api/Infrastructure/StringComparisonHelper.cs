@@ -14,12 +14,12 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             return GetJaccardIndex(first.ToSequence(wordsToIgnore), second.ToSequence(wordsToIgnore));
         }
 
+        // For current data was chosen this, but after testing with real data may be changed
         private static float GetJaccardIndex(string[] firstSequence, string[] secondSequence)
         {
             if (!firstSequence.Any() && !secondSequence.Any())
                 return 1;
 
-            // Maybe comparison will work in another way
             var intersectedSequence = firstSequence.Intersect(secondSequence).ToArray();
             return (float) intersectedSequence.Length /
                 (firstSequence.Length + secondSequence.Length - intersectedSequence.Length);

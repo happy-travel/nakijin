@@ -23,6 +23,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Polly;
 using Polly.Extensions.Http;
+using Sentry.Protocol;
 using StackExchange.Redis;
 
 namespace HappyTravel.StaticDataMapper.Api.Infrastructure
@@ -114,8 +115,8 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             {
                 var batchSize = EnvironmentVariableHelper.Get("Nakijin:StaticDataLoader:BatchSize", configuration);
                 var dbCommandTimeOut = EnvironmentVariableHelper.Get("Nakijin:StaticDataLoader:DbCommandTimeOut", configuration);
-                o.BatchSize = string.IsNullOrEmpty(batchSize) ? 15000 : int.Parse(batchSize);
-                o.DbCommandTimeOut = string.IsNullOrEmpty(dbCommandTimeOut) ? 300 : int.Parse(dbCommandTimeOut);
+                o.BatchSize = string.IsNullOrEmpty(batchSize) ? Models.Constants.DefaultBatchSize : int.Parse(batchSize);
+                o.DbCommandTimeOut = string.IsNullOrEmpty(dbCommandTimeOut) ? Models.Constants.DefaultDbCommandTimeOut : int.Parse(dbCommandTimeOut);
             });
 
             services.Configure<RequestLocalizationOptions>(o =>

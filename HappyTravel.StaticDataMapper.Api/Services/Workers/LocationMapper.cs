@@ -58,8 +58,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             var countries = await GetNormalizedCountries();
 
             var countryPairsChanged = new Dictionary<int, int>();
-            var notSupplierCountries = countries.Where(c => !c.SupplierCountryCodes.ContainsKey(supplier)).ToList();
-            var supplierCountries = countries.Where(c => c.SupplierCountryCodes.ContainsKey(supplier)).ToList();
+            var notSuppliersCountries = countries.Where(c => !c.SupplierCountryCodes.ContainsKey(supplier)).ToList();
+            var suppliersCountries = countries.Where(c => c.SupplierCountryCodes.ContainsKey(supplier)).ToList();
 
             var countriesToMap = await _context.RawAccommodations.Where(ac => ac.Supplier == supplier)
                 .Select(ac
@@ -89,27 +89,28 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     Modified = utcDate
                 };
 
-                var existing = notSupplierCountries.FirstOrDefault(c => c.Code == code);
-                var existingOfSupplier = supplierCountries.FirstOrDefault(c => c.Code == code);
-                if (existing != default)
+                var dbNotSuppliersCountry = notSuppliersCountries.FirstOrDefault(c => c.Code == code);
+                var dbSuppliersCountry = suppliersCountries.FirstOrDefault(c => c.Code == code);
+                if (dbNotSuppliersCountry != default)
                 {
-                    dbCountry.Id = existing.Id;
-                    dbCountry.Names = MultiLanguageHelpers.Merge(dbCountry.Names, existing.Names);
-                    dbCountry.SupplierCountryCodes = new Dictionary<Suppliers, string>(existing.SupplierCountryCodes);
+                    dbCountry.Id = dbNotSuppliersCountry.Id;
+                    dbCountry.Names = MultiLanguageHelpers.Merge(dbCountry.Names, dbNotSuppliersCountry.Names);
+                    dbCountry.SupplierCountryCodes =
+                        new Dictionary<Suppliers, string>(dbNotSuppliersCountry.SupplierCountryCodes);
                     dbCountry.SupplierCountryCodes.TryAdd(supplier, code);
 
-                    if (existingOfSupplier != default)
+                    if (dbSuppliersCountry != default)
                     {
-                        countryPairsChanged.Add(existingOfSupplier.Id, dbCountry.Id);
-                        foreach (var sup in existingOfSupplier.SupplierCountryCodes)
+                        countryPairsChanged.Add(dbSuppliersCountry.Id, dbCountry.Id);
+                        foreach (var sup in dbSuppliersCountry.SupplierCountryCodes)
                             dbCountry.SupplierCountryCodes.TryAdd(sup.Key, sup.Value);
-                        existingOfSupplier.IsActive = false;
-                        countriesToUpdate.Add(existingOfSupplier);
+                        dbSuppliersCountry.IsActive = false;
+                        countriesToUpdate.Add(dbSuppliersCountry);
                     }
 
                     countriesToUpdate.Add(dbCountry);
                 }
-                else if (existingOfSupplier == default)
+                else if (dbSuppliersCountry == default)
                 {
                     dbCountry.SupplierCountryCodes = new Dictionary<Suppliers, string> {{supplier, code}};
                     dbCountry.Created = utcDate;
@@ -182,9 +183,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             {
                 var changedLocalityPairs = new Dictionary<int, int>();
                 var dbNormalizedLocalities = await GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
-                var notSupplierLocalities = dbNormalizedLocalities
+                var notSuppliersLocalities = dbNormalizedLocalities
                     .Where(l => !l.SupplierLocalityCodes.ContainsKey(supplier)).ToList();
-                var supplierLocalities = dbNormalizedLocalities
+                var suppliersLocalities = dbNormalizedLocalities
                     .Where(l => l.SupplierLocalityCodes.ContainsKey(supplier)).ToList();
 
                 var localities = await _context.RawAccommodations
@@ -215,9 +216,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     var normalizedLocalityName =
                         _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
 
-                    var existing = notSupplierLocalities.FirstOrDefault(l => l.Names.En == normalizedLocalityName);
-                    var existingOfSupplier =
-                        supplierLocalities.FirstOrDefault(l => l.Names.En == normalizedLocalityName);
+                    var dbNotSuppliersLocality =
+                        notSuppliersLocalities.FirstOrDefault(l => l.Names.En == normalizedLocalityName);
+                    var dbSuppliersLocality =
+                        suppliersLocalities.FirstOrDefault(l => l.Names.En == normalizedLocalityName);
 
                     var dbLocality = new Locality
                     {
@@ -225,27 +227,28 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         IsActive = true,
                         Modified = utcDate
                     };
-                    if (existing != default)
+                    if (dbNotSuppliersLocality != default)
                     {
-                        dbLocality.Id = existing.Id;
-                        dbLocality.CountryId = existing.CountryId;
-                        dbLocality.Names = MultiLanguageHelpers.Merge(dbLocality.Names, existing.Names);
+                        dbLocality.Id = dbNotSuppliersLocality.Id;
+                        dbLocality.CountryId = dbNotSuppliersLocality.CountryId;
+                        dbLocality.Names = MultiLanguageHelpers.Merge(dbLocality.Names, dbNotSuppliersLocality.Names);
                         dbLocality.SupplierLocalityCodes =
-                            new Dictionary<Suppliers, string>(existing.SupplierLocalityCodes);
+                            new Dictionary<Suppliers, string>(dbNotSuppliersLocality.SupplierLocalityCodes);
                         dbLocality.SupplierLocalityCodes.TryAdd(supplier, locality.LocalityCode);
-                        if (existingOfSupplier != default)
+                        if (dbSuppliersLocality != default)
                         {
-                            changedLocalityPairs.Add(existingOfSupplier.Id, existing.Id);
+                            changedLocalityPairs.Add(dbSuppliersLocality.Id, dbNotSuppliersLocality.Id);
 
-                            foreach (var sup in existingOfSupplier.SupplierLocalityCodes)
+                            foreach (var sup in dbSuppliersLocality.SupplierLocalityCodes)
                                 dbLocality.SupplierLocalityCodes.TryAdd(sup.Key, sup.Value);
-                            existingOfSupplier.IsActive = false;
-                            localitiesToUpdate.Add(existingOfSupplier);
+                            
+                            dbSuppliersLocality.IsActive = false;
+                            localitiesToUpdate.Add(dbSuppliersLocality);
                         }
 
                         localitiesToUpdate.Add(dbLocality);
                     }
-                    else if (existingOfSupplier == default)
+                    else if (dbSuppliersLocality == default)
                     {
                         dbLocality.Created = utcDate;
                         dbLocality.CountryId = country.Id;
@@ -328,9 +331,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 var countryLocalities = await GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
                 var dbNormalizedLocalityZones =
                     await GetNormalizedLocalityZonesByCountry(country.Code, cancellationToken);
-                var notSupplierLocalityZones = dbNormalizedLocalityZones
+                var notSuppliersLocalityZones = dbNormalizedLocalityZones
                     .Where(l => !l.LocalityZone.SupplierLocalityZoneCodes.ContainsKey(supplier)).ToList();
-                var supplierLocalityZones = dbNormalizedLocalityZones
+                var suppliersLocalityZones = dbNormalizedLocalityZones
                     .Where(l => l.LocalityZone.SupplierLocalityZoneCodes.ContainsKey(supplier)).ToList();
 
 
@@ -369,10 +372,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     var defaultLocalityZone = zone.LocalityZoneNames.GetValueOrDefault(DefaultLanguageCode);
                     var normalizedLocalityZone = defaultLocalityZone.ToNormalizedName();
 
-                    var existing = notSupplierLocalityZones.FirstOrDefault(lz
+                    var dbNotSuppliersZone = notSuppliersLocalityZones.FirstOrDefault(lz
                         => lz.DefaultLocality == normalizedLocalityName
                         && lz.LocalityZone.Names.En == normalizedLocalityZone);
-                    var existingOfSupplier = supplierLocalityZones.FirstOrDefault(lz
+                    var dbSuppliersZone = suppliersLocalityZones.FirstOrDefault(lz
                         => lz.DefaultLocality == normalizedLocalityName
                         && lz.LocalityZone.Names.En == normalizedLocalityZone);
 
@@ -383,27 +386,31 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         Modified = utcDate
                     };
 
-                    if (existing != default)
+                    if (dbNotSuppliersZone != default)
                     {
-                        dbLocalityZone.Id = existing.LocalityZone.Id;
-                        dbLocalityZone.LocalityId = existing.LocalityZone.LocalityId;
+                        dbLocalityZone.Id = dbNotSuppliersZone.LocalityZone.Id;
+                        dbLocalityZone.LocalityId = dbNotSuppliersZone.LocalityZone.LocalityId;
                         dbLocalityZone.Names =
-                            MultiLanguageHelpers.Merge(dbLocalityZone.Names, existing.LocalityZone.Names);
+                            MultiLanguageHelpers.Merge(dbLocalityZone.Names, dbNotSuppliersZone.LocalityZone.Names);
                         dbLocalityZone.SupplierLocalityZoneCodes =
-                            new Dictionary<Suppliers, string>(existing.LocalityZone.SupplierLocalityZoneCodes);
+                            new Dictionary<Suppliers, string>(dbNotSuppliersZone.LocalityZone
+                                .SupplierLocalityZoneCodes);
                         dbLocalityZone.SupplierLocalityZoneCodes.TryAdd(supplier, zone.LocalityZoneCode);
-                        if (existingOfSupplier != default)
+                        if (dbSuppliersZone != default)
                         {
-                            changedLocalityZonesPairs.Add(existingOfSupplier.LocalityZone.Id, existing.LocalityZone.Id);
-                            foreach (var sup in existingOfSupplier.LocalityZone.SupplierLocalityZoneCodes)
+                            changedLocalityZonesPairs.Add(dbSuppliersZone.LocalityZone.Id,
+                                dbNotSuppliersZone.LocalityZone.Id);
+
+                            foreach (var sup in dbSuppliersZone.LocalityZone.SupplierLocalityZoneCodes)
                                 dbLocalityZone.SupplierLocalityZoneCodes.TryAdd(sup.Key, sup.Value);
-                            existingOfSupplier.LocalityZone.IsActive = false;
-                            localityZonesToUpdate.Add(existingOfSupplier.LocalityZone);
+
+                            dbSuppliersZone.LocalityZone.IsActive = false;
+                            localityZonesToUpdate.Add(dbSuppliersZone.LocalityZone);
                         }
 
                         localityZonesToUpdate.Add(dbLocalityZone);
                     }
-                    else if (existingOfSupplier == default)
+                    else if (dbSuppliersZone == default)
                     {
                         dbLocalityZone.Created = utcDate;
                         dbLocalityZone.LocalityId =
