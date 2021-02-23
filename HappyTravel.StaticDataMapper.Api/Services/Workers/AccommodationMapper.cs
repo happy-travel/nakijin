@@ -267,13 +267,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 results.Add((nearestAccommodation, score));
             }
 
-            var (htId, maxScore) = results.Aggregate((r1, r2) => r2.score > r1.score ? r2 : r1);
+            var (keyData, maxScore) = results.Aggregate((r1, r2) => r2.score > r1.score ? r2 : r1);
 
-            if (3 <= maxScore)
-                return (MatchingResults.Match, maxScore, htId);
+            if (MatchingMinimumScore <= maxScore)
+                return (MatchingResults.Match, maxScore, keyData);
 
-            if (1.5 <= maxScore && maxScore < 3)
-                return (MatchingResults.Uncertain, maxScore, htId);
+            if (UncertainMatchingMinimumScore <= maxScore && maxScore < MatchingMinimumScore)
+                return (MatchingResults.Uncertain, maxScore, keyData);
 
             return (MatchingResults.NotMatch, maxScore, new AccommodationKeyData());
         }
@@ -413,16 +413,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
         private async Task<List<(string Code, int Id)>> GetCountries(Suppliers supplier)
         {
-            if (_countries.Any())
-                return _countries;
-
-            _countries = await _context.Countries
+            var countries = await _context.Countries
                 .Where(c => c.IsActive && EF.Functions.JsonExists(c.SupplierCountryCodes,
                     supplier.ToString().ToLower()))
                 .Select(c => ValueTuple.Create(c.Code, c.Id))
                 .ToListAsync();
 
-            return _countries;
+            return countries;
         }
 
         private Task<List<Tuple<int, int>>> GetCountryUncertainMatchesBySupplier(string countryCode,
@@ -456,8 +453,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
         private readonly int _batchSize;
         private readonly ILogger<AccommodationMapper> _logger;
-        private static List<(string Code, int Id)> _countries = new List<(string Code, int Id)>(0);
         private readonly MultilingualDataNormalizer _multilingualDataNormalizer;
         private readonly NakijinContext _context;
+
+        private const float UncertainMatchingMinimumScore = 1.5f;
+        private const float MatchingMinimumScore = 3f;
     }
 }

@@ -26,13 +26,21 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
         }
 
         private static string[] ToSequence(this string value, List<string> wordsToIgnore)
-            => value.ToStringWithoutSpecialCharacters()
+            => value
+                .ToStringWithoutSpecialCharacters()
                 .ToStringWithoutMultipleWhitespaces()
-                .Split(" ")
-                .ToArrayWithoutWordsToIgnore(wordsToIgnore);
+                .ToStringWithoutWordsToIgnore(wordsToIgnore)
+                .ToStringWithoutMultipleWhitespaces()
+                .Split(" ");
 
-        private static string[] ToArrayWithoutWordsToIgnore(this string[] arr, List<string> wordsToIgnore)
-            => arr.Where(str => !wordsToIgnore.Any(w => w.Contains(str.Trim().ToLowerInvariant()))).ToArray();
+        private static string ToStringWithoutWordsToIgnore(this string value, List<string> wordsToIgnore)
+        {
+            var result = value.ToLowerInvariant();
+            foreach (var wordToIgnore in wordsToIgnore)
+                    result = result.Replace(wordToIgnore, "");
+
+            return result;
+        }
 
         private static string ToStringWithoutSpecialCharacters(this string value)
             => Regex.Replace(value, SpecialCharactersProcessingPattern, " ",
