@@ -24,7 +24,7 @@
         <PackageReference Include="HappyTravel.MultiLanguage" Version="1.0.2" />
         <PackageReference Include="HappyTravel.StdOutLogger" Version="1.0.15" />
         <PackageReference Include="HappyTravel.VaultClient" Version="1.0.5" />
-        <PackageReference Include="LocationNameNormalizer" Version="1.6.2" />
+        <PackageReference Include="LocationNameNormalizer" Version="1.6.4" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0-preview.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />

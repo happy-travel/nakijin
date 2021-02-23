@@ -23,6 +23,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Polly;
 using Polly.Extensions.Http;
+using Sentry.Protocol;
 using StackExchange.Redis;
 
 namespace HappyTravel.StaticDataMapper.Api.Infrastructure
@@ -31,11 +32,6 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
     {
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
-            services.AddSingleton<IAccommodationsTreesCache, AccommodationsTreesCache>();
-            services.AddSingleton<ILocalitiesCache, LocalitiesCache>();
-            services.AddSingleton<ICountriesCache, CountriesCache>();
-            services.AddSingleton<ILocalityZonesCache, LocalityZonesCache>();
-
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
             services.AddTransient<IAccommodationMapper, AccommodationMapper>();
             services.AddTransient<IAccommodationsDataMerger, AccommodationDataMerger>();
@@ -49,6 +45,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             services.AddTransient<ILocationService, LocationService>();
 
             services.AddNameNormalizationServices();
+            services.AddSingleton<MultilingualDataNormalizer>();
 
             return services;
         }
@@ -72,7 +69,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
 
             var connection = ConnectionMultiplexer.Connect(EnvironmentVariableHelper.Get("Redis:Endpoint", configuration));
             var serviceName = $"{nameof(StaticDataMapper)}-{environment.EnvironmentName}";
-            
+
             services.AddOpenTelemetryTracing(builder =>
             {
                 builder
@@ -118,8 +115,8 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             {
                 var batchSize = EnvironmentVariableHelper.Get("Nakijin:StaticDataLoader:BatchSize", configuration);
                 var dbCommandTimeOut = EnvironmentVariableHelper.Get("Nakijin:StaticDataLoader:DbCommandTimeOut", configuration);
-                o.BatchSize = string.IsNullOrEmpty(batchSize) ? 1000 : int.Parse(batchSize);
-                o.DbCommandTimeOut =  string.IsNullOrEmpty(dbCommandTimeOut) ? 300 : int.Parse(dbCommandTimeOut);
+                o.BatchSize = string.IsNullOrEmpty(batchSize) ? Models.Constants.DefaultBatchSize : int.Parse(batchSize);
+                o.DbCommandTimeOut = string.IsNullOrEmpty(dbCommandTimeOut) ? Models.Constants.DefaultDbCommandTimeOut : int.Parse(dbCommandTimeOut);
             });
 
             services.Configure<RequestLocalizationOptions>(o =>
@@ -148,7 +145,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
             var authorityOptions = vaultClient.Get(configuration["Nakijin:Authority:Options"]).GetAwaiter().GetResult();
             var authorityUrl = authorityOptions["authorityUrl"];
-            
+
             services.Configure<TokenRequestOptions>(options =>
             {
                 var uri = new Uri(new Uri(authorityUrl), "/connect/token");
@@ -158,7 +155,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
                 options.Scope = clientOptions["scope"];
                 options.GrantType = OidcConstants.GrantTypes.ClientCredentials;
             });
-            
+
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(options =>
                 {

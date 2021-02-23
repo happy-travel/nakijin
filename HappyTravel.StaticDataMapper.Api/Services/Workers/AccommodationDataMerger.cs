@@ -21,12 +21,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public class AccommodationDataMerger : IAccommodationsDataMerger
     {
         public AccommodationDataMerger(NakijinContext context, ISuppliersPriorityService suppliersPriorityService,
-            IOptions<StaticDataLoadingOptions> options, ILoggerFactory loggerFactory)
+            IOptions<StaticDataLoadingOptions> options, MultilingualDataNormalizer multilingualDataNormalizer,
+            ILoggerFactory loggerFactory)
         {
             _context = context;
             _suppliersPriorityService = suppliersPriorityService;
             _batchSize = options.Value.BatchSize;
             _logger = loggerFactory.CreateLogger<AccommodationDataMerger>();
+            _multilingualDataNormalizer = multilingualDataNormalizer;
         }
 
 
@@ -44,7 +46,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         .OrderBy(ac => ac.Id)
                         .Skip(skip)
                         .Take(_batchSize)
-                        .ToListAsync();
+                        .ToListAsync(cancellationToken);
                     skip += notCalculatedAccommodations.Count;
 
                     foreach (var ac in notCalculatedAccommodations)
@@ -98,8 +100,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 select sa).ToList();
 
             var supplierAccommodationDetails = supplierAccommodations.ToDictionary(d => d.Supplier,
-                d => JsonConvert.DeserializeObject<MultilingualAccommodation>(d.AccommodationDetails.RootElement
-                    .ToString()));
+                d => _multilingualDataNormalizer.NormalizeAccommodation(
+                    JsonConvert.DeserializeObject<MultilingualAccommodation>(d.AccommodationDetails.RootElement
+                        .ToString()!)));
 
             var suppliersPriority = accommodation.SuppliersPriority.Any()
                 ? accommodation.SuppliersPriority
@@ -375,6 +378,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
 
         private readonly int _batchSize;
+        private readonly MultilingualDataNormalizer _multilingualDataNormalizer;
         private readonly ISuppliersPriorityService _suppliersPriorityService;
         private readonly NakijinContext _context;
         private readonly ILogger<AccommodationDataMerger> _logger;
