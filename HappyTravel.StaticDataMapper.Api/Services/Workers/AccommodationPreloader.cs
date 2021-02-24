@@ -41,6 +41,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             CancellationToken cancellationToken = default)
         {
             modificationDate ??= DateTime.MinValue;
+            _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
 
             foreach (var supplier in suppliers)
             {
