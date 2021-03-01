@@ -193,14 +193,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         IsActive = false
                     };
 
-                    // // TODO: merge two manual corrected data 
-                    // if (!existingAccommodation.Data.Equals(default))
-                    // {
-                    //     accommodationToUpdate.AccommodationWithManualCorrections = existingAccommodation.Data;
-                    //     _context.Entry(accommodationToUpdate).Property(p => p.AccommodationWithManualCorrections)
-                    //         .IsModified = true;
-                    // }
-
+                    // TODO: merge two manual corrected data 
+                    
                     foreach (var supplierCode in existingAccommodation.SupplierAccommodationCodes)
                         accommodationToUpdate.SupplierAccommodationCodes.TryAdd(supplierCode.Key, supplierCode.Value);
 
