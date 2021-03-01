@@ -4,12 +4,13 @@ using HappyTravel.MultiLanguage;
 using LocationNameNormalizer.Extensions;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.StaticDataMapper.Api.Models;
+using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 {
-    public class MultilingualDataNormalizer
+    public class MultilingualDataHelper
     {
-        public MultilingualDataNormalizer(ILocationNameNormalizer locationNameNormalizer)
+        public MultilingualDataHelper(ILocationNameNormalizer locationNameNormalizer)
         {
             _locationNameNormalizer = locationNameNormalizer;
         }
@@ -88,6 +89,19 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 return result;
             }
         }
+        
+        public  AccommodationMappingData GetAccommodationDataForMapping(Contracts.MultilingualAccommodation accommodation)
+            => new AccommodationMappingData
+            {
+                DefaultName = accommodation.Name.En,
+                DefaultCountryName = accommodation.Location.Country.En,
+                DefaultLocalityName = accommodation.Location.Locality?.En,
+                DefaultLocalityZoneName = accommodation.Location.LocalityZone?.En,
+                Address = accommodation.Location.Address.En,
+                Rating = accommodation.Rating,
+                ContactInfo = accommodation.Contacts,
+                Coordinates = accommodation.Location.Coordinates
+            };
 
         private readonly ILocationNameNormalizer _locationNameNormalizer;
     }

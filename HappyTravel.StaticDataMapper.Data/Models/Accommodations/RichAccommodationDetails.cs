@@ -11,6 +11,7 @@ namespace HappyTravel.StaticDataMapper.Data.Models.Accommodations
         public int? LocalityId { get; set; }
         public int? LocalityZoneId { get; set; }
         public string CountryCode { get; set; }
+        public AccommodationMappingData MappingData { get; set; }
         public MultilingualAccommodation CalculatedAccommodation { get; set; }
         public MultilingualAccommodation AccommodationWithManualCorrections { get; set; }
 
