@@ -10,7 +10,7 @@ namespace HappyTravel.StaticDataMapper.Api.Models.Mappers
     {
         public int HtId { get; set; }
         
-        public AccommodationDataForMapping DataForMapping { get; set; }
+        public AccommodationMappingData MappingData { get; set; }
         
         public Dictionary<Suppliers,string> SupplierAccommodationCodes { get; set; } = new Dictionary<Suppliers, string>();
     }

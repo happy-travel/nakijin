@@ -90,8 +90,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
         }
         
-        public  AccommodationDataForMapping GetAccommodationDataForMapping(Contracts.MultilingualAccommodation accommodation)
-            => new AccommodationDataForMapping
+        public  AccommodationMappingData GetAccommodationDataForMapping(Contracts.MultilingualAccommodation accommodation)
+            => new AccommodationMappingData
             {
                 DefaultName = accommodation.Name.En,
                 DefaultCountryName = accommodation.Location.Country.En,

@@ -157,7 +157,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 dbAccommodation.Created = utcDate;
                 dbAccommodation.Modified = utcDate;
                 dbAccommodation.IsCalculated = true;
-                dbAccommodation.DataForMapping = _multilingualDataHelper.GetAccommodationDataForMapping(accommodation);
+                dbAccommodation.MappingData = _multilingualDataHelper.GetAccommodationDataForMapping(accommodation);
 
                 var locationIds = GetLocationIds(accommodation.Location);
                 dbAccommodation.CountryId = locationIds.CountryId;
@@ -265,7 +265,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 new List<(AccommodationKeyData accommodationKeyData, float score)>(nearestAccommodations.Count);
             foreach (var nearestAccommodation in nearestAccommodations)
             {
-                var score = ComparisonScoreCalculator.Calculate(nearestAccommodation.DataForMapping,
+                var score = ComparisonScoreCalculator.Calculate(nearestAccommodation.MappingData,
                     _multilingualDataHelper.GetAccommodationDataForMapping(accommodation));
 
                 results.Add((nearestAccommodation, score));
@@ -333,7 +333,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         .Select(ac => new AccommodationKeyData
                         {
                             HtId = ac.Id,
-                            DataForMapping = ac.DataForMapping,
+                            MappingData = ac.MappingData,
                             SupplierAccommodationCodes = ac.SupplierAccommodationCodes
                         })
                         .ToListAsync();
@@ -349,8 +349,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             var tree = new STRtree<AccommodationKeyData>(countryAccommodations.Count);
             foreach (var ac in countryAccommodations)
             {
-                tree.Insert(new Point(ac.DataForMapping.Coordinates.Longitude,
-                    ac.DataForMapping.Coordinates.Latitude).EnvelopeInternal, ac);
+                tree.Insert(new Point(ac.MappingData.Coordinates.Longitude,
+                    ac.MappingData.Coordinates.Latitude).EnvelopeInternal, ac);
             }
 
             tree.Build();
@@ -372,7 +372,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             dbAccommodation.Created = utcDate;
             dbAccommodation.Modified = utcDate;
             dbAccommodation.IsCalculated = true;
-            dbAccommodation.DataForMapping = _multilingualDataHelper.GetAccommodationDataForMapping(accommodation);
+            dbAccommodation.MappingData = _multilingualDataHelper.GetAccommodationDataForMapping(accommodation);
             _context.Accommodations.Add(dbAccommodation);
             await _context.SaveChangesAsync(cancellationToken);
 

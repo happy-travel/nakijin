@@ -11,8 +11,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public static class ComparisonScoreCalculator
     {
         // Considering that accommodations always have default(En) value
-        public static float Calculate(in AccommodationDataForMapping nearestAccommodation,
-            in AccommodationDataForMapping accommodation)
+        public static float Calculate(in AccommodationMappingData nearestAccommodation,
+            in AccommodationMappingData accommodation)
         {
             float score = NameScore * GetNamesScore(nearestAccommodation, accommodation);
 
@@ -34,8 +34,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private static float GetNamesScore(in AccommodationDataForMapping nearestAccommodation,
-            in AccommodationDataForMapping accommodation)
+        private static float GetNamesScore(in AccommodationMappingData nearestAccommodation,
+            in AccommodationMappingData accommodation)
         {
             var scores = new List<float>(WordsToIgnoreSetForHotelNamesComparison.Count);
 
@@ -52,8 +52,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             return scores.Max();
         }
 
-        private static float GetAddressScore(in AccommodationDataForMapping nearestAccommodation,
-            in AccommodationDataForMapping accommodation)
+        private static float GetAddressScore(in AccommodationMappingData nearestAccommodation,
+            in AccommodationMappingData accommodation)
         {
             return AddressScore * StringComparisonHelper.GetEqualityCoefficient(
                 nearestAccommodation.Address,

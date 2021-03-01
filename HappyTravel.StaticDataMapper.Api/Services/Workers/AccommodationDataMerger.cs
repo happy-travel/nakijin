@@ -57,14 +57,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         dbAccommodation.Id = ac.Id;
                         dbAccommodation.IsCalculated = true;
                         dbAccommodation.CalculatedAccommodation = calculatedData;
-                        dbAccommodation.DataForMapping =
+                        dbAccommodation.MappingData =
                             _multilingualDataHelper.GetAccommodationDataForMapping(calculatedData);
                         dbAccommodation.Modified = DateTime.UtcNow;
                         _context.Accommodations.Attach(dbAccommodation);
                         _context.Entry(dbAccommodation).Property(p => p.CalculatedAccommodation).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.IsCalculated).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.Modified).IsModified = true;
-                        _context.Entry(dbAccommodation).Property(p => p.DataForMapping).IsModified = true;
+                        _context.Entry(dbAccommodation).Property(p => p.MappingData).IsModified = true;
                     }
 
                     await _context.SaveChangesAsync(cancellationToken);

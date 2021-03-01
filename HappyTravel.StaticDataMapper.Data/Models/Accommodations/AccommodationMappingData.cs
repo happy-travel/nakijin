@@ -4,7 +4,7 @@ using HappyTravel.Geography;
 
 namespace HappyTravel.StaticDataMapper.Data.Models.Accommodations
 {
-    public class AccommodationDataForMapping
+    public class AccommodationMappingData
     {
         public string DefaultName { get; set; }
         public GeoPoint Coordinates { get; set; }

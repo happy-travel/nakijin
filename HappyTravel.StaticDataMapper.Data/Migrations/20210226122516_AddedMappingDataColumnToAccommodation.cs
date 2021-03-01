@@ -7,7 +7,7 @@ namespace HappyTravel.StaticDataMapper.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "DataForMapping",
+                name: "MappingData",
                 table: "Accommodations",
                 type: "jsonb",
                 nullable: false,
@@ -17,7 +17,7 @@ namespace HappyTravel.StaticDataMapper.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "DataForMapping",
+                name: "MappingData",
                 table: "Accommodations");
         }
     }

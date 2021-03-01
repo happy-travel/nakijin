@@ -85,7 +85,7 @@ namespace HappyTravel.StaticDataMapper.Data.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("now() at time zone 'utc'");
 
-                    b.Property<string>("DataForMapping")
+                    b.Property<string>("MappingData")
                         .IsRequired()
                         .HasColumnType("jsonb");
 
