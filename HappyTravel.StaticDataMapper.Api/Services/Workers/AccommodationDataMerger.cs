@@ -21,14 +21,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public class AccommodationDataMerger : IAccommodationsDataMerger
     {
         public AccommodationDataMerger(NakijinContext context, ISuppliersPriorityService suppliersPriorityService,
-            IOptions<StaticDataLoadingOptions> options, MultilingualDataNormalizer multilingualDataNormalizer,
+            IOptions<StaticDataLoadingOptions> options, MultilingualDataHelper multilingualDataHelper,
             ILoggerFactory loggerFactory)
         {
             _context = context;
             _suppliersPriorityService = suppliersPriorityService;
             _batchSize = options.Value.BatchSize;
             _logger = loggerFactory.CreateLogger<AccommodationDataMerger>();
-            _multilingualDataNormalizer = multilingualDataNormalizer;
+            _multilingualDataHelper = multilingualDataHelper;
         }
 
 
@@ -57,11 +57,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         dbAccommodation.Id = ac.Id;
                         dbAccommodation.IsCalculated = true;
                         dbAccommodation.CalculatedAccommodation = calculatedData;
+                        dbAccommodation.DataForMapping =
+                            _multilingualDataHelper.GetAccommodationDataForMapping(calculatedData);
                         dbAccommodation.Modified = DateTime.UtcNow;
                         _context.Accommodations.Attach(dbAccommodation);
                         _context.Entry(dbAccommodation).Property(p => p.CalculatedAccommodation).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.IsCalculated).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.Modified).IsModified = true;
+                        _context.Entry(dbAccommodation).Property(p => p.DataForMapping).IsModified = true;
                     }
 
                     await _context.SaveChangesAsync(cancellationToken);
@@ -100,7 +103,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 select sa).ToList();
 
             var supplierAccommodationDetails = supplierAccommodations.ToDictionary(d => d.Supplier,
-                d => _multilingualDataNormalizer.NormalizeAccommodation(
+                d => _multilingualDataHelper.NormalizeAccommodation(
                     JsonConvert.DeserializeObject<MultilingualAccommodation>(d.AccommodationDetails.RootElement
                         .ToString()!)));
 
@@ -378,7 +381,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
 
         private readonly int _batchSize;
-        private readonly MultilingualDataNormalizer _multilingualDataNormalizer;
+        private readonly MultilingualDataHelper _multilingualDataHelper;
         private readonly ISuppliersPriorityService _suppliersPriorityService;
         private readonly NakijinContext _context;
         private readonly ILogger<AccommodationDataMerger> _logger;

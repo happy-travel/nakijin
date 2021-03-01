@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.StaticDataMapper.Api.Infrastructure;
+using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
 using Contracts = HappyTravel.EdoContracts.Accommodations.Internals;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
@@ -10,15 +11,15 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     public static class ComparisonScoreCalculator
     {
         // Considering that accommodations always have default(En) value
-        public static float Calculate(in MultilingualAccommodation nearestAccommodation,
-            in MultilingualAccommodation accommodation)
+        public static float Calculate(in AccommodationDataForMapping nearestAccommodation,
+            in AccommodationDataForMapping accommodation)
         {
             float score = NameScore * GetNamesScore(nearestAccommodation, accommodation);
 
             if (score == NameScore
-                && nearestAccommodation.Location.Locality != null
-                && accommodation.Location.Locality != null
-                && String.Equals(nearestAccommodation.Location.Locality.En, accommodation.Location.Locality.En,
+                && nearestAccommodation.DefaultLocalityName != null
+                && accommodation.DefaultLocalityName != null
+                && String.Equals(nearestAccommodation.DefaultLocalityName, accommodation.DefaultLocalityName,
                     StringComparison.CurrentCultureIgnoreCase))
                 return MaxScore;
 
@@ -27,41 +28,41 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             if (nearestAccommodation.Rating == accommodation.Rating)
                 score += RatingScore;
 
-            score += GetContactInfoScore(nearestAccommodation.Contacts, accommodation.Contacts);
+            score += GetContactInfoScore(nearestAccommodation.ContactInfo, accommodation.ContactInfo);
 
             return score;
         }
 
 
-        private static float GetNamesScore(in MultilingualAccommodation nearestAccommodation,
-            in MultilingualAccommodation accommodation)
+        private static float GetNamesScore(in AccommodationDataForMapping nearestAccommodation,
+            in AccommodationDataForMapping accommodation)
         {
             var scores = new List<float>(WordsToIgnoreSetForHotelNamesComparison.Count);
 
             foreach (var wordsToIgnore in WordsToIgnoreSetForHotelNamesComparison)
             {
-                scores.Add(StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.Name.En,
-                    accommodation.Name.En,
-                    GetWordsToIgnore(wordsToIgnore, nearestAccommodation.Location.Locality?.En,
-                        accommodation.Location.Locality?.En, nearestAccommodation.Location.LocalityZone?.En,
-                        accommodation.Location.LocalityZone?.En)
+                scores.Add(StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.DefaultName,
+                    accommodation.DefaultName,
+                    GetWordsToIgnore(wordsToIgnore, nearestAccommodation.DefaultLocalityName,
+                        accommodation.DefaultLocalityName, nearestAccommodation.DefaultLocalityZoneName,
+                        accommodation.DefaultLocalityZoneName)
                 ));
             }
 
             return scores.Max();
         }
 
-        private static float GetAddressScore(in MultilingualAccommodation nearestAccommodation,
-            in MultilingualAccommodation accommodation)
+        private static float GetAddressScore(in AccommodationDataForMapping nearestAccommodation,
+            in AccommodationDataForMapping accommodation)
         {
             return AddressScore * StringComparisonHelper.GetEqualityCoefficient(
-                nearestAccommodation.Location.Address.En,
-                accommodation.Location.Address.En, GetWordsToIgnore(WordsToIgnoreForAddressesComparison,
-                    accommodation.Location.Country.En,
+                nearestAccommodation.Address,
+                accommodation.Address, GetWordsToIgnore(WordsToIgnoreForAddressesComparison,
+                    accommodation.DefaultCountryName,
                     //Not all providers have localityZone
-                    accommodation.Location.Locality?.En, nearestAccommodation.Location.Locality?.En,
-                    accommodation.Location.LocalityZone?.En,
-                    nearestAccommodation.Location.LocalityZone?.En)
+                    accommodation.DefaultLocalityName, nearestAccommodation.DefaultLocalityName,
+                    accommodation.DefaultLocalityZoneName,
+                    nearestAccommodation.DefaultLocalityZoneName)
             );
         }
 
