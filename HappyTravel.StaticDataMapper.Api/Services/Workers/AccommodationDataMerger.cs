@@ -48,7 +48,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         .AsNoTracking()
                         .ToListAsync(cancellationToken);
 
-
                     var supplierAccommodationIds = notCalculatedAccommodations
                         .SelectMany(ac => ac.SupplierAccommodationCodes).Select(ac => ac.Value).ToList();
 
@@ -85,16 +84,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         _context.Entry(dbAccommodation).Property(p => p.Modified).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.MappingData).IsModified = true;
                     }
-                    
+
                     await _context.SaveChangesAsync(cancellationToken);
-                    
+
                     _context.ChangeTracker.Entries()
                         .Where(e => e.Entity != null)
                         .Where(e => e.State != EntityState.Detached)
                         .ToList()
                         .ForEach(e => e.State = EntityState.Detached);
-
-
                 } while (notCalculatedAccommodations.Count > 0);
             }
             catch (TaskCanceledException)
@@ -113,13 +110,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         public async Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation)
         {
             var supplierAccommodations = await (from ac in _context.RawAccommodations
-                where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
-                select new RawAccommodation
-                {
-                    Supplier = ac.Supplier,
-                    SupplierAccommodationId = ac.SupplierAccommodationId,
-                    Accommodation = ac.Accommodation
-                })
+                    where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
+                    select new RawAccommodation
+                    {
+                        Supplier = ac.Supplier,
+                        SupplierAccommodationId = ac.SupplierAccommodationId,
+                        Accommodation = ac.Accommodation
+                    })
                 .AsNoTracking()
                 .ToListAsync();
 
