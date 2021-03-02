@@ -36,7 +36,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         public async Task MergeAll(CancellationToken cancellationToken)
         {
             var notCalculatedAccommodations = new List<RichAccommodationDetails>();
-            var skip = 0;
             try
             {
                 do
@@ -45,23 +44,24 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     notCalculatedAccommodations = await _context.Accommodations
                         .Where(ac => !ac.IsCalculated)
                         .OrderBy(ac => ac.Id)
-                        .Skip(skip)
                         .Take(_batchSize)
+                        .AsNoTracking()
                         .ToListAsync(cancellationToken);
-                    skip += notCalculatedAccommodations.Count;
 
 
                     var supplierAccommodationIds = notCalculatedAccommodations
-                        .SelectMany(ac => ac.SupplierAccommodationCodes).Select(ac => (int) ac.Key + "_" + ac.Value).ToList();
+                        .SelectMany(ac => ac.SupplierAccommodationCodes).Select(ac => ac.Value).ToList();
 
                     var rawAccommodations = await _context.RawAccommodations.Where(ra
-                            => supplierAccommodationIds.Contains(ra.Supplier + "_" + ra.SupplierAccommodationId))
+                            => supplierAccommodationIds.Contains(ra.SupplierAccommodationId))
                         .Select(ra => new RawAccommodation
                         {
                             Accommodation = ra.Accommodation,
                             Supplier = ra.Supplier,
                             SupplierAccommodationId = ra.SupplierAccommodationId
-                        }).AsNoTracking().ToListAsync(cancellationToken);
+                        })
+                        .AsNoTracking()
+                        .ToListAsync(cancellationToken);
 
                     foreach (var ac in notCalculatedAccommodations)
                     {
@@ -85,8 +85,16 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         _context.Entry(dbAccommodation).Property(p => p.Modified).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.MappingData).IsModified = true;
                     }
-
+                    
                     await _context.SaveChangesAsync(cancellationToken);
+                    
+                    _context.ChangeTracker.Entries()
+                        .Where(e => e.Entity != null)
+                        .Where(e => e.State != EntityState.Detached)
+                        .ToList()
+                        .ForEach(e => e.State = EntityState.Detached);
+
+
                 } while (notCalculatedAccommodations.Count > 0);
             }
             catch (TaskCanceledException)
@@ -111,7 +119,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     Supplier = ac.Supplier,
                     SupplierAccommodationId = ac.SupplierAccommodationId,
                     Accommodation = ac.Accommodation
-                }).ToListAsync();
+                })
+                .AsNoTracking()
+                .ToListAsync();
 
             return await Merge(accommodation, supplierAccommodations);
         }
