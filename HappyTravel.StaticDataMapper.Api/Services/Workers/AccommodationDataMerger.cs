@@ -45,7 +45,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         .Where(ac => !ac.IsCalculated)
                         .OrderBy(ac => ac.Id)
                         .Take(_batchSize)
-                        .AsNoTracking()
                         .ToListAsync(cancellationToken);
 
                     var supplierAccommodationIds = notCalculatedAccommodations
@@ -59,7 +58,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                             Supplier = ra.Supplier,
                             SupplierAccommodationId = ra.SupplierAccommodationId
                         })
-                        .AsNoTracking()
                         .ToListAsync(cancellationToken);
 
                     foreach (var ac in notCalculatedAccommodations)
@@ -117,7 +115,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         SupplierAccommodationId = ac.SupplierAccommodationId,
                         Accommodation = ac.Accommodation
                     })
-                .AsNoTracking()
                 .ToListAsync();
 
             return await Merge(accommodation, supplierAccommodations);
