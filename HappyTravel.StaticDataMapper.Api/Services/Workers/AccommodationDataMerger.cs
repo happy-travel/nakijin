@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using HappyTravel.MultiLanguage;
+using HappyTravel.StaticDataMapper.Data.Models.Mappers;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 {
@@ -49,9 +50,27 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         .ToListAsync(cancellationToken);
                     skip += notCalculatedAccommodations.Count;
 
+
+                    var supplierAccommodationIds = notCalculatedAccommodations
+                        .SelectMany(ac => ac.SupplierAccommodationCodes).Select(ac => (int) ac.Key + "_" + ac.Value).ToList();
+
+                    var rawAccommodations = await _context.RawAccommodations.Where(ra
+                            => supplierAccommodationIds.Contains(ra.Supplier + "_" + ra.SupplierAccommodationId))
+                        .Select(ra => new RawAccommodation
+                        {
+                            Accommodation = ra.Accommodation,
+                            Supplier = ra.Supplier,
+                            SupplierAccommodationId = ra.SupplierAccommodationId
+                        }).AsNoTracking().ToListAsync(cancellationToken);
+
                     foreach (var ac in notCalculatedAccommodations)
                     {
-                        var calculatedData = await Merge(ac);
+                        var supplierAccommodations = (from ra in rawAccommodations
+                            join sa in ac.SupplierAccommodationCodes on ra.SupplierAccommodationId equals sa.Value
+                            where ra.Supplier == sa.Key
+                            select ra).ToList();
+
+                        var calculatedData = await Merge(ac, supplierAccommodations);
 
                         var dbAccommodation = new RichAccommodationDetails();
                         dbAccommodation.Id = ac.Id;
@@ -83,18 +102,24 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
         }
 
-
         public async Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation)
         {
             var supplierAccommodations = await (from ac in _context.RawAccommodations
                 where accommodation.SupplierAccommodationCodes.Values.Contains(ac.SupplierAccommodationId)
-                select new
+                select new RawAccommodation
                 {
                     Supplier = ac.Supplier,
                     SupplierAccommodationId = ac.SupplierAccommodationId,
-                    AccommodationDetails = ac.Accommodation
+                    Accommodation = ac.Accommodation
                 }).ToListAsync();
 
+            return await Merge(accommodation, supplierAccommodations);
+        }
+
+
+        private async Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation,
+            List<RawAccommodation> supplierAccommodations)
+        {
             // Checking match of supplier and accommodation
             supplierAccommodations = (from sa in supplierAccommodations
                 join acs in accommodation.SupplierAccommodationCodes
@@ -104,7 +129,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             var supplierAccommodationDetails = supplierAccommodations.ToDictionary(d => d.Supplier,
                 d => _multilingualDataHelper.NormalizeAccommodation(
-                    JsonConvert.DeserializeObject<MultilingualAccommodation>(d.AccommodationDetails.RootElement
+                    JsonConvert.DeserializeObject<MultilingualAccommodation>(d.Accommodation.RootElement
                         .ToString()!)));
 
             var suppliersPriority = accommodation.SuppliersPriority.Any()
@@ -354,7 +379,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
         private MultiLanguage<T> MergeMultilingualData<T>(List<Suppliers> suppliersPriority,
-            Dictionary<Suppliers, MultiLanguage<T>> suppliersData, MultiLanguage<T> manualCorrectedData,
+            Dictionary<Suppliers, MultiLanguage<T>?> suppliersData, MultiLanguage<T> manualCorrectedData,
             Func<T, bool> defaultChecker)
         {
             var result = new MultiLanguage<T>();
@@ -364,7 +389,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     continue;
 
                 var languageCode = LanguagesHelper.GetLanguageCode((Languages) language);
-                var selectedLanguageData = suppliersData.ToDictionary(d => d.Key,
+                var selectedLanguageData = suppliersData.Where(sd => sd.Value != null).ToDictionary(d => d.Key,
                     d => d.Value.GetValueOrDefault(languageCode));
 
                 var manualCorrectedValue = manualCorrectedData != null
