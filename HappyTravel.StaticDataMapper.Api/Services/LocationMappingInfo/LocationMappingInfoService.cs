@@ -157,13 +157,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
             CancellationToken cancellationToken)
         {
             var accommodations = await _context.Accommodations
-                .Join(_context.Localities, a => a.LocalityId, l => l.Id,
-                    (accommodation, locality) => new {accommodation, locality})
+                .GroupJoin(_context.Localities, a => a.LocalityId, l => l.Id, (accommodation, locality) => new {accommodation, locality})
+                .SelectMany(al => al.locality.DefaultIfEmpty(), (al, locality) => new {al.accommodation, locality})
                 .Join(_context.Countries, al => al.accommodation.CountryId, c => c.Id,
                     (al, country) => new {al.accommodation, al.locality, country})
-                .Where(alс =>
-                    alс.accommodation.IsActive && alс.locality.IsActive && alс.country.IsActive &&
-                    alс.accommodation.Modified >= from)
+                .Where(alc =>
+                    alc.accommodation.IsActive && alc.country.IsActive && (alc.locality != null && alc.locality.IsActive || alc.locality == null) &&
+                    alc.accommodation.Modified >= from)
                 .OrderBy(alc => alc.accommodation.Id)
                 .Skip(skip)
                 .Take(top)
@@ -172,13 +172,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
             return accommodations.Select(alc =>
                 {
                     var accommodation = alc.accommodation.CalculatedAccommodation.Name.GetValueOrDefault(languageCode);
-                    var locality = alc.locality.Names.GetValueOrDefault(languageCode);
+                    var locality = alc.locality is not null
+                        ? alc.locality.Names.GetValueOrDefault(languageCode)
+                        : string.Empty;
                     var country = alc.country.Names.GetValueOrDefault(languageCode);
-                    var htId = HtId.Create(AccommodationMapperLocationTypes.Accommodation,
-                        alc.accommodation.Id);
+                    var htId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, alc.accommodation.Id);
 
-                    return new Location(htId, accommodation, locality, country,
-                        alc.country.Code,
+                    return new Location(htId, accommodation, locality, country, alc.country.Code,
                         alc.accommodation.AccommodationWithManualCorrections.Location.Coordinates, 0,
                         PredictionSources.Interior, AccommodationMapperLocationTypes.Accommodation,
                         LocationTypes.Accommodation);
