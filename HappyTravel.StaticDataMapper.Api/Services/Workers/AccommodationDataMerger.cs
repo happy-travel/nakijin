@@ -27,7 +27,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         {
             _context = context;
             _suppliersPriorityService = suppliersPriorityService;
-            _batchSize = options.Value.BatchSize;
+            _options = options.Value;
             _logger = loggerFactory.CreateLogger<AccommodationDataMerger>();
             _multilingualDataHelper = multilingualDataHelper;
         }
@@ -35,6 +35,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
         public async Task MergeAll(CancellationToken cancellationToken)
         {
+            _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
+            
             var notCalculatedAccommodations = new List<RichAccommodationDetails>();
             try
             {
@@ -44,7 +46,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     notCalculatedAccommodations = await _context.Accommodations
                         .Where(ac => !ac.IsCalculated)
                         .OrderBy(ac => ac.Id)
-                        .Take(_batchSize)
+                        .Take(_options.BatchSize)
                         .ToListAsync(cancellationToken);
 
                     var supplierAccommodationIds = notCalculatedAccommodations
@@ -409,7 +411,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private readonly int _batchSize;
+        private readonly StaticDataLoadingOptions _options;
         private readonly MultilingualDataHelper _multilingualDataHelper;
         private readonly ISuppliersPriorityService _suppliersPriorityService;
         private readonly NakijinContext _context;
