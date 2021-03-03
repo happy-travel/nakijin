@@ -46,7 +46,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     notCalculatedAccommodations = await _context.Accommodations
                         .Where(ac => !ac.IsCalculated)
                         .OrderBy(ac => ac.Id)
-                        .Take(_options.BatchSize)
+                        .Take(_options.MergingBatchSize)
                         .ToListAsync(cancellationToken);
 
                     var supplierAccommodationIds = notCalculatedAccommodations
