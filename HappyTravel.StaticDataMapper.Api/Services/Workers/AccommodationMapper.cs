@@ -44,7 +44,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         {
             _context = context;
             _logger = loggerFactory.CreateLogger<AccommodationMapper>();
-            _batchSize = options.Value.BatchSize;
+            _batchSize = options.Value.MappingBatchSize;
             _multilingualDataHelper = multilingualDataHelper;
         }
 

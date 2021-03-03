@@ -48,7 +48,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 var skip = 0;
                 do
                 {
-                    var batch = await GetAccommodations(supplier, modificationDate.Value, skip, _options.BatchSize);
+                    var batch = await GetAccommodations(supplier, modificationDate.Value, skip, _options.PreloadingBatchSize);
                     if (!batch.Any())
                         break;
 
@@ -113,7 +113,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         .ToList()
                         .ForEach(e => e.State = EntityState.Detached);
 
-                    skip += _options.BatchSize;
+                    skip += _options.PreloadingBatchSize;
                 } while (true);
             }
 
