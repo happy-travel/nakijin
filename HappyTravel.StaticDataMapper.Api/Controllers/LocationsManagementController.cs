@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,10 +23,14 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
             _serviceProvider = serviceProvider;
         }
 
-        
-        [HttpPost("locations/map/suppliers/{supplier}")]
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="suppliers"></param>
+        /// <returns></returns>
+        [HttpPost("locations/map")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult MapLocations([FromRoute] Suppliers supplier)
+        public IActionResult MapLocations([FromBody] List<Suppliers> suppliers)
         {
             if (_locationsMapperTokenSource.Token.CanBeCanceled)
                 _locationsMapperTokenSource.Cancel();
@@ -36,13 +41,13 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
                 using var scope = _serviceProvider.CreateScope();
 
                 var locationService = scope.ServiceProvider.GetRequiredService<ILocationMapper>();
-                await locationService.MapLocations(supplier);
+                await locationService.MapLocations(suppliers);
             }, _locationsMapperTokenSource.Token);
 
             return Accepted();
         }
-        
-        
+
+
         private static CancellationTokenSource _locationsMapperTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));
 
