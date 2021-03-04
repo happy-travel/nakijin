@@ -52,7 +52,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 }
                 catch (TaskCanceledException)
                 {
-                    _logger.LogMappingLocationsFinish(
+                    _logger.LogMappingLocationsCancel(
                         $"Mapping locations of {supplier.ToString()} was canceled by client request.");
                 }
                 catch (Exception ex)
@@ -199,7 +199,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             foreach (var country in countries)
             {
-                _logger.LogMappingLocalitiesOfSpecifiedCountryFinish(
+                _logger.LogMappingLocalitiesOfSpecifiedCountryStart(
                     $"Started Mapping countries of {supplier.ToString()} of country with code {country.Code}.");
 
                 var changedLocalityPairs = new Dictionary<int, int>();

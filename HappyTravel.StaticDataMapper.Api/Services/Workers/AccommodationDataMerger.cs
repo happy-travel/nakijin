@@ -102,7 +102,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
             catch (TaskCanceledException)
             {
-                _logger.LogMergingAccommodationsDataFinish($"Merging accommodations was canceled by client request.");
+                _logger.LogMergingAccommodationsDataCancel($"Merging accommodations was canceled by client request.");
             }
             catch (Exception ex)
             {
