@@ -24,7 +24,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         }
 
         /// <summary>
-        /// 
+        /// Maps locations
         /// </summary>
         /// <param name="suppliers"></param>
         /// <returns></returns>
