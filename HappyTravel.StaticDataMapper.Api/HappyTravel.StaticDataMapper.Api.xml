@@ -61,11 +61,11 @@
             <param name="cancellationToken"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.MapAccommodations(HappyTravel.StaticDataMapper.Data.Models.Suppliers)">
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.MapAccommodations(System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers})">
             <summary>
             Maps accommodations 
             </summary>
-            <param name="supplier"></param>
+            <param name="suppliers"></param>
             <returns></returns>
         </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.MergeAccommodationsData">
@@ -132,6 +132,13 @@
              Gets date of last modified location.
             </summary>
             <returns>Last changed location modified date</returns>
+        </member>
+        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsManagementController.MapLocations(System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers})">
+            <summary>
+            
+            </summary>
+            <param name="suppliers"></param>
+            <returns></returns>
         </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.SuppliersPriorityController.AddOrUpdateDefaultPriority(System.Collections.Generic.Dictionary{HappyTravel.StaticDataMapper.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers}})">
             <summary>

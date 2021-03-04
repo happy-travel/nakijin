@@ -101,11 +101,11 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
         /// <summary>
         /// Maps accommodations 
         /// </summary>
-        /// <param name="supplier"></param>
+        /// <param name="suppliers"></param>
         /// <returns></returns>
-        [HttpPost("map/suppliers/{supplier}")]
+        [HttpPost("map")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult MapAccommodations(Suppliers supplier)
+        public IActionResult MapAccommodations([FromBody] List<Suppliers> suppliers)
         {
             // Prevent situation when done more than one Map requests.
             if (_accommodationMappingTokenSource.Token.CanBeCanceled)
@@ -118,7 +118,7 @@ namespace HappyTravel.StaticDataMapper.Api.Controllers
                 using var scope = _serviceProvider.CreateScope();
 
                 var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                await mapper.MapAccommodations(supplier, _accommodationMappingTokenSource.Token);
+                await mapper.MapAccommodations(suppliers, _accommodationMappingTokenSource.Token);
             }, _accommodationMappingTokenSource.Token);
 
             return Accepted();

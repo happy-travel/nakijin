@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using HappyTravel.MultiLanguage;
+using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
 using HappyTravel.StaticDataMapper.Data.Models.Mappers;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
@@ -36,10 +37,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         public async Task MergeAll(CancellationToken cancellationToken)
         {
             _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
-            
-            var notCalculatedAccommodations = new List<RichAccommodationDetails>();
+         
             try
             {
+                _logger.LogMergingAccommodationsDataStart($"Started merging accommodations data");
+
+                var notCalculatedAccommodations = new List<RichAccommodationDetails>();
                 do
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -93,18 +96,19 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         .ToList()
                         .ForEach(e => e.State = EntityState.Detached);
                 } while (notCalculatedAccommodations.Count > 0);
+                
+                _logger.LogMergingAccommodationsDataFinish($"Finished merging accommodations data");
+
             }
             catch (TaskCanceledException)
             {
-                // TODO: Use generated logging extension methods
-                _logger.Log(LogLevel.Information,
-                    $"Merging accommodations was canceled by client request.");
+                _logger.LogMergingAccommodationsDataCancel($"Merging accommodations was canceled by client request.");
             }
             catch (Exception ex)
             {
-                _logger.Log(LogLevel.Error,
-                    $"Merging accommodations was stopped because of {ex.Message}");
+                _logger.LogMergingAccommodationsDataError(ex);
             }
+            
         }
 
         public async Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation)

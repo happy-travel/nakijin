@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using HappyTravel.MultiLanguage;
 using HappyTravel.StaticDataMapper.Api.Comparers;
+using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
 using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
@@ -30,31 +31,42 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        public async Task MapLocations(Suppliers supplier, CancellationToken cancellationToken = default)
+        public async Task MapLocations(List<Suppliers> suppliers, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                // Only here needed large timeout
-                _context.Database.SetCommandTimeout(_dbCommandTimeOut);
+            _context.Database.SetCommandTimeout(_dbCommandTimeOut);
 
-                await MapCountries(supplier, cancellationToken);
-                await MapLocalities(supplier, cancellationToken);
-                await MapLocalityZones(supplier, cancellationToken);
-            }
-            catch (TaskCanceledException)
+            foreach (var supplier in suppliers)
             {
-                _logger.Log(LogLevel.Information,
-                    $"Mapping locations of {supplier.ToString()} was canceled by client request.");
-            }
-            catch (Exception ex)
-            {
-                _logger.Log(LogLevel.Error,
-                    $"Mapping locations of {supplier.ToString()} was stopped because of {ex.Message}");
+                try
+                {
+                    _logger.LogMappingLocationsStart(
+                        $"Started Mapping locations of {supplier.ToString()}.");
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await MapCountries(supplier, cancellationToken);
+                    await MapLocalities(supplier, cancellationToken);
+                    await MapLocalityZones(supplier, cancellationToken);
+
+                    _logger.LogMappingLocationsFinish(
+                        $"Finished Mapping locations of {supplier.ToString()}.");
+                }
+                catch (TaskCanceledException)
+                {
+                    _logger.LogMappingLocationsCancel(
+                        $"Mapping locations of {supplier.ToString()} was canceled by client request.");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogMappingLocationsError(ex);
+                }
             }
         }
 
         private async Task MapCountries(Suppliers supplier, CancellationToken cancellationToken)
         {
+            _logger.LogMappingCountriesStart(
+                $"Started Mapping countries of {supplier.ToString()}.");
+
             var countries = await GetNormalizedCountries();
 
             var countryPairsChanged = new Dictionary<int, int>();
@@ -125,6 +137,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             await _context.SaveChangesAsync(cancellationToken);
 
+            _logger.LogMappingCountriesFinish(
+                $"Finished Mapping countries of {supplier.ToString()}.");
+
 
             async Task ChangeCountryDependencies(Dictionary<int, int> countryChangedPairs)
             {
@@ -177,10 +192,16 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
         private async Task MapLocalities(Suppliers supplier, CancellationToken cancellationToken)
         {
+            _logger.LogMappingLocalitiesStart(
+                $"Started Mapping localities of {supplier.ToString()}.");
+
             var countries = await GetCountries();
 
             foreach (var country in countries)
             {
+                _logger.LogMappingLocalitiesOfSpecifiedCountryStart(
+                    $"Started Mapping countries of {supplier.ToString()} of country with code {country.Code}.");
+
                 var changedLocalityPairs = new Dictionary<int, int>();
                 var dbNormalizedLocalities = await GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
                 var notSuppliersLocalities = dbNormalizedLocalities
@@ -241,7 +262,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
                             foreach (var sup in dbSuppliersLocality.SupplierLocalityCodes)
                                 dbLocality.SupplierLocalityCodes.TryAdd(sup.Key, sup.Value);
-                            
+
                             dbSuppliersLocality.IsActive = false;
                             localitiesToUpdate.Add(dbSuppliersLocality);
                         }
@@ -270,7 +291,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     .Where(e => e.State != EntityState.Detached)
                     .ToList()
                     .ForEach(e => e.State = EntityState.Detached);
+
+                _logger.LogMappingLocalitiesOfSpecifiedCountryFinish(
+                    $"Finished Mapping localities of {supplier.ToString()} of country {country.Code}");
             }
+
+            _logger.LogMappingLocalitiesFinish(
+                $"Finished Mapping localities of {supplier.ToString()}.");
 
 
             async Task ChangeLocalityDependencies(Dictionary<int, int> localityChangedPairs)
@@ -323,10 +350,16 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
         private async Task MapLocalityZones(Suppliers supplier, CancellationToken cancellationToken)
         {
+            _logger.LogMappingLocalityZonesStart(
+                $"Started Mapping locality zones of {supplier.ToString()}.");
+
             var countries = await GetCountries();
 
             foreach (var country in countries)
             {
+                _logger.LogMappingLocalityZonesOfSpecifiedCountryStart(
+                    $"Started Mapping locality zones of {supplier.ToString()} of country with code {country.Code}.");
+
                 var changedLocalityZonesPairs = new Dictionary<int, int>();
                 var countryLocalities = await GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
                 var dbNormalizedLocalityZones =
@@ -433,7 +466,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     .Where(e => e.State != EntityState.Detached)
                     .ToList()
                     .ForEach(e => e.State = EntityState.Detached);
+
+                _logger.LogMappingLocalityZonesOfSpecifiedCountryFinish(
+                    $"Finished Mapping locality zones of {supplier.ToString()} of country with code {country.Code}.");
             }
+
+            _logger.LogMappingLocalityZonesFinish(
+                $"Finished Mapping locality zones of {supplier.ToString()}.");
 
 
             async Task ChangeLocalityZoneDependencies(Dictionary<int, int> localityZoneChangedPairs)

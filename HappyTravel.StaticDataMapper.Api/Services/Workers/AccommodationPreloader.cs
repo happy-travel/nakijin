@@ -12,6 +12,7 @@ using HappyTravel.StaticDataMapper.Data.Models;
 using HappyTravel.StaticDataMapper.Data.Models.Mappers;
 using HappyTravel.SecurityClient;
 using HappyTravel.StaticDataMapper.Api.Infrastructure;
+using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
 using HappyTravel.StaticDataMapper.Api.Models;
 using LocationNameNormalizer;
 using Microsoft.EntityFrameworkCore;
@@ -36,86 +37,110 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             _locationNameNormalizer = locationNameNormalizer;
         }
 
-
         public async Task Preload(List<Suppliers> suppliers, DateTime? modificationDate = null,
             CancellationToken cancellationToken = default)
         {
-            modificationDate ??= DateTime.MinValue;
             _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
 
+            modificationDate ??= DateTime.MinValue;
             foreach (var supplier in suppliers)
             {
-                var skip = 0;
-                do
+                try
                 {
-                    var batch = await GetAccommodations(supplier, modificationDate.Value, skip, _options.PreloadingBatchSize);
-                    if (!batch.Any())
-                        break;
-
-                    var ids = batch.Select(a => a.SupplierCode);
-                    var existedIds = await _context.RawAccommodations
-                        .Where(a => a.Supplier == supplier && ids.Contains(a.SupplierAccommodationId))
-                        .Select(a => new {a.Id, a.Supplier, SupplierId = a.SupplierAccommodationId})
-                        .ToDictionaryAsync(a => (a.SupplierId, a.Supplier), a => a.Id, cancellationToken);
-
-                    var newAccommodations = new ConcurrentBag<RawAccommodation>();
-                    var existedAccommodations = new ConcurrentBag<RawAccommodation>();
-                    var utcDate = DateTime.UtcNow;
-                    Parallel.ForEach(batch, new ParallelOptions {MaxDegreeOfParallelism = Environment.ProcessorCount},
-                        accommodation =>
-                        {
-                            // System.Text.Json don't support serialization of Double.Nan value, that is why here we use Newtonsoft serialization
-                            // TODO Change to System.Text.Json serialization
-                            var str = JsonConvert.SerializeObject(accommodation);
-                            var json = JsonDocument.Parse(str);
-
-                            var defaultCountryName =
-                                accommodation.Location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
-                            var normalizedCountryCode =
-                                _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName,
-                                    accommodation.Location.CountryCode);
-                            var entity = new RawAccommodation
-                            {
-                                Id = 0,
-                                CountryCode = normalizedCountryCode,
-                                CountryNames = accommodation.Location.Country,
-                                SupplierLocalityCode = accommodation.Location.SupplierLocalityCode,
-                                LocalityNames = accommodation.Location.Locality,
-                                SupplierLocalityZoneCode = accommodation.Location.SupplierLocalityZoneCode,
-                                LocalityZoneNames = accommodation.Location.LocalityZone,
-                                Accommodation = json,
-                                Supplier = supplier,
-                                SupplierAccommodationId = accommodation.SupplierCode,
-                                Modified = utcDate
-                            };
-
-                            if (existedIds.TryGetValue((accommodation.SupplierCode, supplier), out var existedId))
-                            {
-                                entity.Id = existedId;
-                                existedAccommodations.Add(entity);
-
-                                return;
-                            }
-
-                            entity.Created = utcDate;
-                            newAccommodations.Add(entity);
-                        });
-
-                    // ReSharper disable once MethodHasAsyncOverloadWithCancellation
-                    // Because performance
-                    _context.RawAccommodations.AddRange(newAccommodations);
-                    _context.RawAccommodations.UpdateRange(existedAccommodations);
-                    await _context.SaveChangesAsync(cancellationToken);
-
-                    _context.ChangeTracker.Entries()
-                        .Where(e => e.Entity != null)
-                        .Where(e => e.State != EntityState.Detached)
-                        .ToList()
-                        .ForEach(e => e.State = EntityState.Detached);
-
-                    skip += _options.PreloadingBatchSize;
-                } while (true);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await Preload(supplier, modificationDate.Value, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                    _logger.LogPreloadingAccommodationsCancel(
+                        $"Preloading accommodations of {supplier.ToString()} was canceled by client request.");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogPreloadingAccommodationsError(ex);
+                }
             }
+        }
+
+        private async Task Preload(Suppliers supplier, DateTime modificationDate,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogPreloadingAccommodationsStart($"Started Preloading accommodations of {supplier.ToString()}.");
+
+            var skip = 0;
+            do
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var batch = await GetAccommodations(supplier, modificationDate, skip,
+                    _options.PreloadingBatchSize);
+                if (!batch.Any())
+                    break;
+
+                var ids = batch.Select(a => a.SupplierCode);
+                var existedIds = await _context.RawAccommodations
+                    .Where(a => a.Supplier == supplier && ids.Contains(a.SupplierAccommodationId))
+                    .Select(a => new {a.Id, a.Supplier, SupplierId = a.SupplierAccommodationId})
+                    .ToDictionaryAsync(a => (a.SupplierId, a.Supplier), a => a.Id, cancellationToken);
+
+                var newAccommodations = new ConcurrentBag<RawAccommodation>();
+                var existedAccommodations = new ConcurrentBag<RawAccommodation>();
+                var utcDate = DateTime.UtcNow;
+                Parallel.ForEach(batch, new ParallelOptions {MaxDegreeOfParallelism = Environment.ProcessorCount},
+                    accommodation =>
+                    {
+                        // System.Text.Json don't support serialization of Double.Nan value, that is why here we use Newtonsoft serialization
+                        // TODO Change to System.Text.Json serialization
+                        var str = JsonConvert.SerializeObject(accommodation);
+                        var json = JsonDocument.Parse(str);
+
+                        var defaultCountryName =
+                            accommodation.Location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
+                        var normalizedCountryCode =
+                            _locationNameNormalizer.GetNormalizedCountryCode(defaultCountryName,
+                                accommodation.Location.CountryCode);
+                        var entity = new RawAccommodation
+                        {
+                            Id = 0,
+                            CountryCode = normalizedCountryCode,
+                            CountryNames = accommodation.Location.Country,
+                            SupplierLocalityCode = accommodation.Location.SupplierLocalityCode,
+                            LocalityNames = accommodation.Location.Locality,
+                            SupplierLocalityZoneCode = accommodation.Location.SupplierLocalityZoneCode,
+                            LocalityZoneNames = accommodation.Location.LocalityZone,
+                            Accommodation = json,
+                            Supplier = supplier,
+                            SupplierAccommodationId = accommodation.SupplierCode,
+                            Modified = utcDate
+                        };
+
+                        if (existedIds.TryGetValue((accommodation.SupplierCode, supplier), out var existedId))
+                        {
+                            entity.Id = existedId;
+                            existedAccommodations.Add(entity);
+
+                            return;
+                        }
+
+                        entity.Created = utcDate;
+                        newAccommodations.Add(entity);
+                    });
+
+                // ReSharper disable once MethodHasAsyncOverloadWithCancellation
+                // Because performance
+                _context.RawAccommodations.AddRange(newAccommodations);
+                _context.RawAccommodations.UpdateRange(existedAccommodations);
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _context.ChangeTracker.Entries()
+                    .Where(e => e.Entity != null)
+                    .Where(e => e.State != EntityState.Detached)
+                    .ToList()
+                    .ForEach(e => e.State = EntityState.Detached);
+
+                skip += _options.PreloadingBatchSize;
+            } while (true);
+
+            _logger.LogPreloadingAccommodationsFinish($"Finished Preloading accommodations of {supplier.ToString()} .");
 
 
             async Task<List<MultilingualAccommodation>> GetAccommodations(Suppliers supplier, DateTime modDate,
