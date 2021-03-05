@@ -6,11 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HappyTravel.EdoContracts" Version="1.6.7" />
+    <PackageReference Include="HappyTravel.EdoContracts" Version="1.6.7.1" />
     <PackageReference Include="HappyTravel.MultiLanguage" Version="1.0.2" />
-    <PackageReference Include="HappyTravel.VaultClient" Version="1.0.5" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.0">
+    <PackageReference Include="HappyTravel.VaultClient" Version="1.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
