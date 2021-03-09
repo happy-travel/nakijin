@@ -19,6 +19,7 @@ using Microsoft.Extensions.Options;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Index.Strtree;
 using Newtonsoft.Json;
+using OpenTelemetry.Trace;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 {
@@ -41,25 +42,33 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     {
         public AccommodationMapper(NakijinContext context,
             ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
-            MultilingualDataHelper multilingualDataHelper)
+            MultilingualDataHelper multilingualDataHelper,
+            TracerProvider tracerProvider)
         {
             _context = context;
             _logger = loggerFactory.CreateLogger<AccommodationMapper>();
             _batchSize = options.Value.MappingBatchSize;
             _multilingualDataHelper = multilingualDataHelper;
+            _tracerProvider = tracerProvider;
         }
 
-        public async Task MapAccommodations(List<Suppliers> suppliers, CancellationToken token)
+        public async Task MapAccommodations(List<Suppliers> suppliers, CancellationToken cancellationToken)
         {
+            var currentSpan = Tracer.CurrentSpan;
+            var tracer = _tracerProvider.GetTracer(nameof(AccommodationMapper));
+
             foreach (var supplier in suppliers)
             {
                 try
                 {
+                    using var supplierAccommodationsMappingSpan = tracer.StartActiveSpan(
+                        $"{nameof(MapAccommodations)} of {supplier.ToString()}", SpanKind.Internal, currentSpan);
+
                     _logger.LogMappingAccommodationsStart(
                         $"Started mapping of {supplier.ToString()} accommodations");
 
-                    token.ThrowIfCancellationRequested();
-                    await MapAccommodations(supplier, token);
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await MapAccommodations(supplier,supplierAccommodationsMappingSpan, cancellationToken);
 
                     _logger.LogMappingAccommodationsFinish(
                         $"Finished mapping of {supplier.ToString()} accommodations");
@@ -76,10 +85,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
         }
 
-        private async Task MapAccommodations(Suppliers supplier, CancellationToken cancellationToken)
+        private async Task MapAccommodations(Suppliers supplier, TelemetrySpan mappingSpan,
+            CancellationToken cancellationToken)
         {
             foreach (var country in await GetCountries(supplier))
             {
+                mappingSpan.AddEvent($"Started mapping accommodations of country with code {country.Code}");
+
                 _logger.LogMappingAccommodationsOfSpecifiedCountryStart(
                     $"Started mapping of {supplier.ToString()} accommodations of country with code {country.Code}");
 
@@ -479,6 +491,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         private readonly ILogger<AccommodationMapper> _logger;
         private readonly MultilingualDataHelper _multilingualDataHelper;
         private readonly NakijinContext _context;
+        private readonly TracerProvider _tracerProvider;
 
         private const float UncertainMatchingMinimumScore = 1.5f;
         private const float MatchingMinimumScore = 3f;

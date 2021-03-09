@@ -19,6 +19,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using OpenTelemetry.Trace;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 {
@@ -27,7 +28,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         public AccommodationPreloader(NakijinContext context,
             IConnectorClient connectorClient, ILoggerFactory loggerFactory,
             IOptions<StaticDataLoadingOptions> options, IOptions<SuppliersOptions> supplierOptions,
-            ILocationNameNormalizer locationNameNormalizer)
+            ILocationNameNormalizer locationNameNormalizer, TracerProvider tracerProvider)
         {
             _context = context;
             _logger = loggerFactory.CreateLogger<AccommodationPreloader>();
@@ -35,11 +36,15 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             _connectorClient = connectorClient;
             _suppliersOptions = supplierOptions.Value;
             _locationNameNormalizer = locationNameNormalizer;
+            _tracerProvider = tracerProvider;
         }
 
         public async Task Preload(List<Suppliers> suppliers, DateTime? modificationDate = null,
             CancellationToken cancellationToken = default)
         {
+            var currentSpan = Tracer.CurrentSpan;
+            var tracer = _tracerProvider.GetTracer(nameof(AccommodationPreloader));
+
             _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
 
             modificationDate ??= DateTime.MinValue;
@@ -47,8 +52,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             {
                 try
                 {
+                    using var supplierAccommodationsPreloadingSpan = tracer.StartActiveSpan(
+                        $"{nameof(Preload)} accommodations of {supplier.ToString()}", SpanKind.Internal, currentSpan);
+
                     cancellationToken.ThrowIfCancellationRequested();
-                    await Preload(supplier, modificationDate.Value, cancellationToken);
+                    await Preload(supplier, modificationDate.Value,
+                        cancellationToken);
                 }
                 catch (TaskCanceledException)
                 {
@@ -169,5 +178,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         private readonly NakijinContext _context;
         private readonly ILogger<AccommodationPreloader> _logger;
         private readonly StaticDataLoadingOptions _options;
+        private readonly TracerProvider _tracerProvider;
     }
 }
