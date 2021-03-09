@@ -135,7 +135,7 @@
         </member>
         <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsManagementController.MapLocations(System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers})">
             <summary>
-            Maps locations
+            Maps locations (countries, localities, locality zones) of suppliers with existing locations.
             </summary>
             <param name="suppliers"></param>
             <returns></returns>
