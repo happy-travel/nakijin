@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using HappyTravel.MultiLanguage;
 using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
 using HappyTravel.StaticDataMapper.Data.Models.Mappers;
+using OpenTelemetry.Trace;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 {
@@ -24,22 +25,28 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     {
         public AccommodationDataMerger(NakijinContext context, ISuppliersPriorityService suppliersPriorityService,
             IOptions<StaticDataLoadingOptions> options, MultilingualDataHelper multilingualDataHelper,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory, TracerProvider tracerProvider)
         {
             _context = context;
             _suppliersPriorityService = suppliersPriorityService;
             _options = options.Value;
             _logger = loggerFactory.CreateLogger<AccommodationDataMerger>();
             _multilingualDataHelper = multilingualDataHelper;
+            _tracerProvider = tracerProvider;
         }
 
 
         public async Task MergeAll(CancellationToken cancellationToken)
         {
+            var currentSpan = Tracer.CurrentSpan;
+            var tracer = _tracerProvider.GetTracer(nameof(AccommodationDataMerger));
             _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
          
             try
             {
+                using var accommodationsDataMergingSpan = tracer.StartActiveSpan($"{nameof(MergeAll)} accommodations",
+                    SpanKind.Internal, currentSpan);
+                
                 _logger.LogMergingAccommodationsDataStart($"Started merging accommodations data");
 
                 var notCalculatedAccommodations = new List<RichAccommodationDetails>();
@@ -414,7 +421,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             return result;
         }
 
-
+        private readonly TracerProvider _tracerProvider;
         private readonly StaticDataLoadingOptions _options;
         private readonly MultilingualDataHelper _multilingualDataHelper;
         private readonly ISuppliersPriorityService _suppliersPriorityService;

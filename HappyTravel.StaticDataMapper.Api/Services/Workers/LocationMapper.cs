@@ -15,6 +15,7 @@ using HappyTravel.MultiLanguage;
 using HappyTravel.StaticDataMapper.Api.Comparers;
 using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
 using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
+using OpenTelemetry.Trace;
 
 namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 {
@@ -22,30 +23,37 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
     {
         public LocationMapper(NakijinContext context, ILocationNameNormalizer locationNameNormalizer,
             IOptions<StaticDataLoadingOptions> options,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory, TracerProvider tracerProvider)
         {
             _context = context;
             _dbCommandTimeOut = options.Value.DbCommandTimeOut;
             _locationNameNormalizer = locationNameNormalizer;
             _logger = loggerFactory.CreateLogger<LocationMapper>();
+            _tracerProvider = tracerProvider;
         }
 
 
         public async Task MapLocations(List<Suppliers> suppliers, CancellationToken cancellationToken = default)
         {
+            var currentSpan = Tracer.CurrentSpan;
+            var tracer = _tracerProvider.GetTracer(nameof(LocationMapper));
+            
             _context.Database.SetCommandTimeout(_dbCommandTimeOut);
 
             foreach (var supplier in suppliers)
             {
                 try
                 {
+                    using var supplierLocationsMappingSpan = tracer.StartActiveSpan($"{nameof(MapLocations)} of {supplier.ToString()}",
+                        SpanKind.Internal, currentSpan);
+                    
                     _logger.LogMappingLocationsStart(
                         $"Started Mapping locations of {supplier.ToString()}.");
 
                     cancellationToken.ThrowIfCancellationRequested();
-                    await MapCountries(supplier, cancellationToken);
-                    await MapLocalities(supplier, cancellationToken);
-                    await MapLocalityZones(supplier, cancellationToken);
+                    await MapCountries(supplier, tracer, supplierLocationsMappingSpan, cancellationToken);
+                    await MapLocalities(supplier,  tracer, supplierLocationsMappingSpan, cancellationToken);
+                    await MapLocalityZones(supplier,  tracer, supplierLocationsMappingSpan, cancellationToken);
 
                     _logger.LogMappingLocationsFinish(
                         $"Finished Mapping locations of {supplier.ToString()}.");
@@ -62,8 +70,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
         }
 
-        private async Task MapCountries(Suppliers supplier, CancellationToken cancellationToken)
+        private async Task MapCountries(Suppliers supplier, Tracer tracer, TelemetrySpan parentSpan,
+            CancellationToken cancellationToken)
         {
+            using var countryMappingSpan = tracer.StartActiveSpan(nameof(MapCountries), SpanKind.Internal, parentSpan);
             _logger.LogMappingCountriesStart(
                 $"Started Mapping countries of {supplier.ToString()}.");
 
@@ -190,8 +200,11 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private async Task MapLocalities(Suppliers supplier, CancellationToken cancellationToken)
+        private async Task MapLocalities(Suppliers supplier, Tracer tracer, TelemetrySpan parentSpan,
+            CancellationToken cancellationToken)
         {
+            using var localityMappingSpan =
+                tracer.StartActiveSpan(nameof(MapLocalities), SpanKind.Internal, parentSpan);
             _logger.LogMappingLocalitiesStart(
                 $"Started Mapping localities of {supplier.ToString()}.");
 
@@ -199,8 +212,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             foreach (var country in countries)
             {
+                localityMappingSpan.AddEvent($"Started mapping localities of country with code {country.Code}");
+
                 _logger.LogMappingLocalitiesOfSpecifiedCountryStart(
-                    $"Started Mapping countries of {supplier.ToString()} of country with code {country.Code}.");
+                    $"Started Mapping localities of {supplier.ToString()} of country with code {country.Code}.");
 
                 var changedLocalityPairs = new Dictionary<int, int>();
                 var dbNormalizedLocalities = await GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
@@ -348,8 +363,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
         }
 
-        private async Task MapLocalityZones(Suppliers supplier, CancellationToken cancellationToken)
+        private async Task MapLocalityZones(Suppliers supplier, Tracer tracer, TelemetrySpan parentSpan,
+            CancellationToken cancellationToken)
         {
+            using var localityZoneMappingSpan =
+                tracer.StartActiveSpan(nameof(MapLocalityZones), SpanKind.Internal, parentSpan);
+            
             _logger.LogMappingLocalityZonesStart(
                 $"Started Mapping locality zones of {supplier.ToString()}.");
 
@@ -357,6 +376,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             foreach (var country in countries)
             {
+                localityZoneMappingSpan.AddEvent($"Started mapping locality zones of country with code {country.Code}");
+                
                 _logger.LogMappingLocalityZonesOfSpecifiedCountryStart(
                     $"Started Mapping locality zones of {supplier.ToString()} of country with code {country.Code}.");
 
@@ -624,5 +645,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         private readonly ILocationNameNormalizer _locationNameNormalizer;
         private readonly ILogger<LocationMapper> _logger;
         private readonly int _dbCommandTimeOut;
+        private readonly TracerProvider _tracerProvider;
     }
 }
