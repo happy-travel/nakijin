@@ -68,7 +68,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 AccommodationMapperLocationTypes.Country => BuildCountries(languageCode, skip, top, modified, cancellationToken),
                 AccommodationMapperLocationTypes.Locality => BuildLocalities(languageCode, skip, top, modified, cancellationToken),
                 AccommodationMapperLocationTypes.LocalityZone => BuildLocalityZones(languageCode, skip, top, modified, cancellationToken),
-                AccommodationMapperLocationTypes.Accommodation => BuildAccommodations(languageCode, skip, top, modified, cancellationToken),
+                AccommodationMapperLocationTypes.Accommodation => BuildAccommodations(skip, top, modified, cancellationToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(locationType), locationType, null)
             };
         }
@@ -153,7 +153,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         }
 
         
-        private async Task<List<Location>> BuildAccommodations(string languageCode, int skip, int top, DateTime from,
+        private async Task<List<Location>> BuildAccommodations(int skip, int top, DateTime from,
             CancellationToken cancellationToken)
         {
             var accommodations = await _context.Accommodations
@@ -167,19 +167,23 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 .OrderBy(alc => alc.accommodation.Id)
                 .Skip(skip)
                 .Take(top)
+                .Select(alc => new
+                {
+                    alc.accommodation.Id,
+                    alc.accommodation.MappingData,
+                    alc.accommodation.CountryCode,
+                })
                 .ToListAsync(cancellationToken);
-
+           
             return accommodations.Select(alc =>
                 {
-                    var accommodation = alc.accommodation.CalculatedAccommodation.Name.GetValueOrDefault(languageCode);
-                    var locality = alc.locality is not null
-                        ? alc.locality.Names.GetValueOrDefault(languageCode)
-                        : string.Empty;
-                    var country = alc.country.Names.GetValueOrDefault(languageCode);
-                    var htId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, alc.accommodation.Id);
-
-                    return new Location(htId, accommodation, locality, country, alc.country.Code,
-                        alc.accommodation.AccommodationWithManualCorrections.Location.Coordinates, 0,
+                    var accommodation = alc.MappingData.DefaultName;
+                    var locality = alc.MappingData.DefaultLocalityName;
+                    var country = alc.MappingData.DefaultCountryName;
+                    var htId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, alc.Id);
+                    
+                    return new Location(htId, accommodation, locality, country, alc.CountryCode,
+                        alc.MappingData.Coordinates, 0,
                         PredictionSources.Interior, AccommodationMapperLocationTypes.Accommodation,
                         LocationTypes.Accommodation);
                 })
