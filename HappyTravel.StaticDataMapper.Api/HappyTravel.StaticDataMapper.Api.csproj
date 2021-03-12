@@ -34,6 +34,7 @@
         <PackageReference Include="NetTopologySuite" Version="2.1.0" />
         <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.2" />
+        <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.0.0-rc2" />
         <PackageReference Include="Sentry.AspNetCore" Version="2.1.5-beta" />
         <PackageReference Include="OpenTelemetry" Version="1.0.0-rc2" />
         <PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="1.0.0-rc2" />

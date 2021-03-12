@@ -74,6 +74,8 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             {
                 builder
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
+                    .AddSource(nameof(AccommodationMapper), nameof(LocationMapper), nameof(AccommodationPreloader),
+                        nameof(AccommodationDataMerger))
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRedisInstrumentation(connection)
@@ -83,6 +85,9 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
                         options.AgentPort = agentPort;
                     })
                     .SetSampler(new AlwaysOnSampler());
+
+                if (environment.IsLocal())
+                    builder.AddConsoleExporter();
             });
 
 
@@ -121,7 +126,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
                     EnvironmentVariableHelper.Get("Nakijin:StaticDataLoader:MergingBatchSize", configuration);
                 var dbCommandTimeOut =
                     EnvironmentVariableHelper.Get("Nakijin:StaticDataLoader:DbCommandTimeOut", configuration);
-                
+
                 o.PreloadingBatchSize = string.IsNullOrEmpty(preloadingBatchSize)
                     ? Models.Constants.DefaultPreloadingBatchSize
                     : int.Parse(preloadingBatchSize);
