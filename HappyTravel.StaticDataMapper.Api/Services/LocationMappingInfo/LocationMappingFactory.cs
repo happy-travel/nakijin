@@ -20,7 +20,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
         {
             var accommodationsInfo = await (from country in _context.Countries
                 join accommodation in _context.Accommodations on country.Id equals accommodation.CountryId
-                where countryIds.Contains(country.Id)
+                where countryIds.Contains(country.Id) && accommodation.IsActive
                 select new
                 {
                     CountryId = country.Id,
@@ -60,7 +60,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
             var accommodationsInfo = await (from country in _context.Countries
                 join locality in _context.Localities on country.Id equals locality.CountryId
                 join accommodation in _context.Accommodations on locality.Id equals accommodation.LocalityId
-                where localityIds.Contains(locality.Id)
+                where localityIds.Contains(locality.Id) && accommodation.IsActive
                 select new
                 {
                     LocalityId = locality.Id,
@@ -101,7 +101,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 join locality in _context.Localities on country.Id equals locality.CountryId
                 join localityZone in _context.LocalityZones on locality.Id equals localityZone.LocalityId
                 join accommodation in _context.Accommodations on localityZone.Id equals accommodation.LocalityZoneId
-                where localityZoneIds.Contains(localityZone.Id)
+                where localityZoneIds.Contains(localityZone.Id) && accommodation.IsActive
                 select new
                 {
                     LocalityZoneId = localityZone.Id,
@@ -144,7 +144,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
                 join country in _context.Countries on accommodation.CountryId equals country.Id
                 join optionalLocality in _context.Localities on accommodation.LocalityId equals optionalLocality.Id into localities
                 from locality in localities.DefaultIfEmpty() 
-                where accommodationIds.Contains(accommodation.Id) && country.Id == accommodation.CountryId
+                where accommodationIds.Contains(accommodation.Id) && country.Id == accommodation.CountryId  && accommodation.IsActive
                 select new
                 {
                     CountryNames = country.Names,
