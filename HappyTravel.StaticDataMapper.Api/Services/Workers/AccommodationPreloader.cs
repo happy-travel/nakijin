@@ -10,7 +10,6 @@ using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.StaticDataMapper.Data;
 using HappyTravel.StaticDataMapper.Data.Models;
 using HappyTravel.StaticDataMapper.Data.Models.Mappers;
-using HappyTravel.SecurityClient;
 using HappyTravel.StaticDataMapper.Api.Infrastructure;
 using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
 using HappyTravel.StaticDataMapper.Api.Models;

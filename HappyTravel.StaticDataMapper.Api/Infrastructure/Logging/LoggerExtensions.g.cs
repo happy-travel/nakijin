@@ -108,7 +108,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure.Logging
                 $"INFORMATION | AccommodationPreloader: {{message}}");
             
             PreloadingAccommodationsFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
-                new EventId(80301, "PreloadingAccommodationsFinish"),
+                new EventId(90301, "PreloadingAccommodationsFinish"),
                 $"INFORMATION | AccommodationPreloader: {{message}}");
             
             PreloadingAccommodationsCancelOccured = LoggerMessage.Define<string>(LogLevel.Information,
@@ -118,6 +118,10 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure.Logging
             PreloadingAccommodationsErrorOccured = LoggerMessage.Define(LogLevel.Error,
                 new EventId(90303, "PreloadingAccommodationsError"),
                 $"ERROR | AccommodationPreloader: ");
+            
+            ConnectorClientErrorOccured = LoggerMessage.Define(LogLevel.Error,
+                new EventId(90401, "ConnectorClientError"),
+                $"ERROR | ConnectorClient: ");
             
         }
     
@@ -205,6 +209,9 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure.Logging
                 
          public static void LogPreloadingAccommodationsError(this ILogger logger, Exception exception)
             => PreloadingAccommodationsErrorOccured(logger, exception);
+                
+         public static void LogConnectorClientError(this ILogger logger, Exception exception)
+            => ConnectorClientErrorOccured(logger, exception);
     
     
         
@@ -263,5 +270,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure.Logging
         private static readonly Action<ILogger, string, Exception> PreloadingAccommodationsCancelOccured;
         
         private static readonly Action<ILogger, Exception> PreloadingAccommodationsErrorOccured;
+        
+        private static readonly Action<ILogger, Exception> ConnectorClientErrorOccured;
     }
 }
