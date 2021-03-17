@@ -57,7 +57,6 @@ namespace HappyTravel.StaticDataMapper.Api
                 })
                 .AddDoubleFlow();
 
-            services.AddHttpClient();
             services.ConfigureServiceOptions(Configuration, vaultClient)
                 .AddServices();
 

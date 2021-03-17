@@ -5,11 +5,10 @@ using System.Linq;
 using System.Net.Http;
 using HappyTravel.StaticDataMapper.Data.Models;
 using HappyTravel.StaticDataMapper.Data;
-using HappyTravel.SecurityClient;
 using HappyTravel.StaticDataMapper.Api.Infrastructure.Environments;
 using HappyTravel.StaticDataMapper.Api.Services;
 using HappyTravel.StaticDataMapper.Api.Services.Workers;
-using IdentityModel;
+using IdentityModel.Client;
 using IdentityServer4.AccessTokenValidation;
 using LocationNameNormalizer.Extensions;
 using Microsoft.AspNetCore.Builder;
@@ -23,7 +22,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Polly;
 using Polly.Extensions.Http;
-using Sentry.Protocol;
 using StackExchange.Redis;
 
 namespace HappyTravel.StaticDataMapper.Api.Infrastructure
@@ -39,7 +37,6 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             services.AddTransient<IAccommodationManagementService, AccommodationManagementService>();
             services.AddTransient<ISuppliersPriorityService, SuppliersPriorityService>();
             services.AddTransient<IConnectorClient, ConnectorClient>();
-            services.AddSingleton<ISecurityTokenManager, SecurityTokenManager>();
 
             services.AddTransient<IAccommodationService, AccommodationService>();
             services.AddTransient<ILocationService, LocationService>();
@@ -167,17 +164,21 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
             var authorityOptions = vaultClient.Get(configuration["Nakijin:Authority:Options"]).GetAwaiter().GetResult();
             var authorityUrl = authorityOptions["authorityUrl"];
-
-            services.Configure<TokenRequestOptions>(options =>
+            
+            services.AddAccessTokenManagement(options =>
             {
-                var uri = new Uri(new Uri(authorityUrl), "/connect/token");
-                options.Address = uri.ToString();
-                options.ClientId = clientOptions["clientId"];
-                options.ClientSecret = clientOptions["clientSecret"];
-                options.Scope = clientOptions["scope"];
-                options.GrantType = OidcConstants.GrantTypes.ClientCredentials;
+                options.Client.Clients.Add(HttpClientNames.Identity, new ClientCredentialsTokenRequest
+                {
+                  
+                    Address =   new Uri(new Uri(authorityUrl), "/connect/token").ToString(),
+                    ClientId = clientOptions["clientId"],
+                    ClientSecret = clientOptions["clientSecret"],
+                    Scope = clientOptions["scope"]
+                });
             });
-
+            
+            services.AddClientAccessTokenClient(HttpClientNames.Connectors, HttpClientNames.Identity);
+            
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(options =>
                 {
