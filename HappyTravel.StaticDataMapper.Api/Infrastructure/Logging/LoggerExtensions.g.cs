@@ -120,8 +120,12 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure.Logging
                 $"ERROR | AccommodationPreloader: ");
             
             ConnectorClientErrorOccured = LoggerMessage.Define(LogLevel.Error,
-                new EventId(90401, "ConnectorClientError"),
+                new EventId(90400, "ConnectorClientError"),
                 $"ERROR | ConnectorClient: ");
+            
+            SameHotelInOneSupplierErrorOccured = LoggerMessage.Define<string>(LogLevel.Error,
+                new EventId(90500, "SameHotelInOneSupplierError"),
+                $"ERROR | AccommodationMapper: {{message}}");
             
         }
     
@@ -212,6 +216,9 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure.Logging
                 
          public static void LogConnectorClientError(this ILogger logger, Exception exception)
             => ConnectorClientErrorOccured(logger, exception);
+                
+         public static void LogSameHotelInOneSupplierError(this ILogger logger, string message)
+            => SameHotelInOneSupplierErrorOccured(logger, message, null);
     
     
         
@@ -272,5 +279,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure.Logging
         private static readonly Action<ILogger, Exception> PreloadingAccommodationsErrorOccured;
         
         private static readonly Action<ILogger, Exception> ConnectorClientErrorOccured;
+        
+        private static readonly Action<ILogger, string, Exception> SameHotelInOneSupplierErrorOccured;
     }
 }

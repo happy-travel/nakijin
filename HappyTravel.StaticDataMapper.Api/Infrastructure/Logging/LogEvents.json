@@ -31,6 +31,7 @@
   {"id": 90302, "name": "PreloadingAccommodationsCancel", "level": "Information", "source": "AccommodationPreloader", "isException": false},
   {"id": 90303, "name": "PreloadingAccommodationsError", "level": "Error", "source": "AccommodationPreloader", "isException": true},
 
-  {"id": 90401, "name": "ConnectorClientError", "level": "Error", "source": "ConnectorClient", "isException": true}
+  {"id": 90400, "name": "ConnectorClientError", "level": "Error", "source": "ConnectorClient", "isException": true},
   
+  {"id": 90500, "name": "SameHotelInOneSupplierError", "level": "Error", "source": "AccommodationMapper", "isException": false}
 ]
