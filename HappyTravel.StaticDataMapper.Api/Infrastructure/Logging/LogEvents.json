@@ -33,5 +33,5 @@
 
   {"id": 90400, "name": "ConnectorClientError", "level": "Error", "source": "ConnectorClient", "isException": true},
   
-  {"id": 90500, "name": "SameHotelInOneSupplierError", "level": "Error", "source": "AccommodationMapper", "isException": true}
+  {"id": 90500, "name": "SameHotelInOneSupplierError", "level": "Error", "source": "AccommodationMapper", "isException": false}
 ]

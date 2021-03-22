@@ -213,8 +213,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
                 if (!accommodationToUpdate.SupplierAccommodationCodes.TryAdd(supplier, accommodation.SupplierCode))
                 {
-                    _logger.LogSameHotelInOneSupplierError(new Exception(
-                        $"{supplier.ToString()} have the same accommodations with codes {matchedAccommodation.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}"));
+                    _logger.LogSameHotelInOneSupplierError(
+                        $"{supplier.ToString()} have the same accommodations with codes {matchedAccommodation.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}");
                     AddOrIgnore(accommodation, false);
                     return;
                 }
@@ -225,8 +225,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     var entry = _context.ChangeTracker.Entries<RichAccommodationDetails>()
                         .Single(ac => ac.Entity.Id == matchedAccommodation.HtId);
 
-                    _logger.LogSameHotelInOneSupplierError(new Exception(
-                        $"{supplier.ToString()} have the same accommodations with codes {entry.Entity.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}"));
+                    _logger.LogSameHotelInOneSupplierError(
+                        $"{supplier.ToString()} have the same accommodations with codes {entry.Entity.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}");
                     AddOrIgnore(accommodation, false);
                     return;
                 }

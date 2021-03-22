@@ -37,23 +37,24 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         {
             var currentSpan = Tracer.CurrentSpan;
             var tracer = _tracerProvider.GetTracer(nameof(LocationMapper));
-            
+
             _context.Database.SetCommandTimeout(_dbCommandTimeOut);
 
             foreach (var supplier in suppliers)
             {
                 try
                 {
-                    using var supplierLocationsMappingSpan = tracer.StartActiveSpan($"{nameof(MapLocations)} of {supplier.ToString()}",
+                    using var supplierLocationsMappingSpan = tracer.StartActiveSpan(
+                        $"{nameof(MapLocations)} of {supplier.ToString()}",
                         SpanKind.Internal, currentSpan);
-                    
+
                     _logger.LogMappingLocationsStart(
                         $"Started Mapping locations of {supplier.ToString()}.");
 
                     cancellationToken.ThrowIfCancellationRequested();
-                    await MapCountries(supplier, tracer, supplierLocationsMappingSpan, cancellationToken);
-                    await MapLocalities(supplier,  tracer, supplierLocationsMappingSpan, cancellationToken);
-                    await MapLocalityZones(supplier,  tracer, supplierLocationsMappingSpan, cancellationToken);
+                    await MapCountries(supplier, supplierLocationsMappingSpan, cancellationToken);
+                    await MapLocalities(supplier, supplierLocationsMappingSpan, cancellationToken);
+                    await MapLocalityZones(supplier, supplierLocationsMappingSpan, cancellationToken);
 
                     _logger.LogMappingLocationsFinish(
                         $"Finished Mapping locations of {supplier.ToString()}.");
@@ -70,9 +71,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
         }
 
-        private async Task MapCountries(Suppliers supplier, Tracer tracer, TelemetrySpan parentSpan,
+        private async Task MapCountries(Suppliers supplier, TelemetrySpan parentSpan,
             CancellationToken cancellationToken)
         {
+            var tracer = _tracerProvider.GetTracer(nameof(LocationMapper));
             using var countryMappingSpan = tracer.StartActiveSpan(nameof(MapCountries), SpanKind.Internal, parentSpan);
             _logger.LogMappingCountriesStart(
                 $"Started Mapping countries of {supplier.ToString()}.");
@@ -200,9 +202,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private async Task MapLocalities(Suppliers supplier, Tracer tracer, TelemetrySpan parentSpan,
+        private async Task MapLocalities(Suppliers supplier, TelemetrySpan parentSpan,
             CancellationToken cancellationToken)
         {
+            var tracer = _tracerProvider.GetTracer(nameof(LocationMapper));
             using var localityMappingSpan =
                 tracer.StartActiveSpan(nameof(MapLocalities), SpanKind.Internal, parentSpan);
             _logger.LogMappingLocalitiesStart(
@@ -363,12 +366,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
         }
 
-        private async Task MapLocalityZones(Suppliers supplier, Tracer tracer, TelemetrySpan parentSpan,
+        private async Task MapLocalityZones(Suppliers supplier, TelemetrySpan parentSpan,
             CancellationToken cancellationToken)
         {
+            var tracer = _tracerProvider.GetTracer(nameof(LocationMapper));
             using var localityZoneMappingSpan =
                 tracer.StartActiveSpan(nameof(MapLocalityZones), SpanKind.Internal, parentSpan);
-            
+
             _logger.LogMappingLocalityZonesStart(
                 $"Started Mapping locality zones of {supplier.ToString()}.");
 
@@ -377,7 +381,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             foreach (var country in countries)
             {
                 localityZoneMappingSpan.AddEvent($"Started mapping locality zones of country with code {country.Code}");
-                
+
                 _logger.LogMappingLocalityZonesOfSpecifiedCountryStart(
                     $"Started Mapping locality zones of {supplier.ToString()} of country with code {country.Code}.");
 
