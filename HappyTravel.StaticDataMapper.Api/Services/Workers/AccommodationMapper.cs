@@ -68,7 +68,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         $"Started mapping of {supplier.ToString()} accommodations");
 
                     cancellationToken.ThrowIfCancellationRequested();
-                    await MapAccommodations(supplier,supplierAccommodationsMappingSpan, cancellationToken);
+                    await MapAccommodations(supplier, supplierAccommodationsMappingSpan, cancellationToken);
 
                     _logger.LogMappingAccommodationsFinish(
                         $"Finished mapping of {supplier.ToString()} accommodations");
@@ -177,7 +177,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 .ForEach(e => e.State = EntityState.Detached);
 
 
-            void AddOrIgnore(Contracts.MultilingualAccommodation accommodation)
+            void AddOrIgnore(Contracts.MultilingualAccommodation accommodation, bool isActive = true)
             {
                 if (countryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
                     return;
@@ -195,6 +195,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 dbAccommodation.CountryId = locationIds.CountryId;
                 dbAccommodation.LocalityId = locationIds.LocalityId;
                 dbAccommodation.LocalityZoneId = locationIds.LocalityZoneId;
+                dbAccommodation.IsActive = isActive;
 
                 accommodationsToAdd.Add(dbAccommodation);
             }
@@ -209,7 +210,26 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     IsCalculated = false,
                     SupplierAccommodationCodes = matchedAccommodation.SupplierAccommodationCodes
                 };
-                accommodationToUpdate.SupplierAccommodationCodes.TryAdd(supplier, accommodation.SupplierCode);
+
+                if (!accommodationToUpdate.SupplierAccommodationCodes.TryAdd(supplier, accommodation.SupplierCode))
+                {
+                    _logger.LogSameHotelInOneSupplierError(new Exception(
+                        $"{supplier.ToString()} have the same accommodations with codes {matchedAccommodation.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}"));
+                    AddOrIgnore(accommodation, false);
+                    return;
+                }
+
+                if (_context.ChangeTracker.Entries<RichAccommodationDetails>()
+                    .Any(ac => ac.Entity.Id == matchedAccommodation.HtId))
+                {
+                    var entry = _context.ChangeTracker.Entries<RichAccommodationDetails>()
+                        .Single(ac => ac.Entity.Id == matchedAccommodation.HtId);
+
+                    _logger.LogSameHotelInOneSupplierError(new Exception(
+                        $"{supplier.ToString()} have the same accommodations with codes {entry.Entity.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}"));
+                    AddOrIgnore(accommodation, false);
+                    return;
+                }
 
                 _context.Accommodations.Attach(accommodationToUpdate);
                 _context.Entry(accommodationToUpdate).Property(p => p.IsCalculated).IsModified = true;
