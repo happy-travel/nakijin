@@ -13,5 +13,7 @@ namespace HappyTravel.StaticDataMapper.Api.Models.Mappers
         public AccommodationMappingData MappingData { get; set; }
         
         public Dictionary<Suppliers,string> SupplierAccommodationCodes { get; set; } = new Dictionary<Suppliers, string>();
+
+        public bool IsActive { get; set; } = true;
     }
 }

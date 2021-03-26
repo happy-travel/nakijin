@@ -1,4 +1,6 @@
 using System;
+using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
+using HappyTravel.StaticDataMapper.Data.Models.Mappers;
 
 namespace HappyTravel.StaticDataMapper.Data.Models
 {
@@ -11,5 +13,8 @@ namespace HappyTravel.StaticDataMapper.Data.Models
         public bool IsActive { get; set; }
         public DateTime Created { get; set; }
         public  DateTime Modified { get; set; }
+        
+        public virtual RichAccommodationDetails FirstAccommodation { get; set; }
+        public virtual RichAccommodationDetails SecondAccommodation { get; set; }
     }
 }

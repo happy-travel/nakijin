@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="HappyTravel.EdoContracts" Version="1.6.7.1" />
+        <PackageReference Include="HappyTravel.EdoContracts" Version="1.6.7.2" />
         <PackageReference Include="HappyTravel.MultiLanguage" Version="1.0.2" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
         <PackageReference Include="xunit" Version="2.4.1" />

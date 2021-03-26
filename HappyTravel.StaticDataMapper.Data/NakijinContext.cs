@@ -86,7 +86,7 @@ namespace HappyTravel.StaticDataMapper.Data
                         c => JsonConvert.DeserializeObject<Dictionary<AccommodationDataTypes, List<Suppliers>>>(c))
                     .IsRequired();
                 a.Property(p => p.IsCalculated).IsRequired().HasDefaultValue(true);
-                a.Property(p => p.IsActive).IsRequired().HasDefaultValue(true);
+                a.Property(p => p.IsActive).IsRequired();
                 a.Property(p => p.Created)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
@@ -109,6 +109,11 @@ namespace HappyTravel.StaticDataMapper.Data
                 m.Property(p => p.Modified)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
+
+                m.HasOne(p => p.FirstAccommodation).WithMany(ac => ac.FirstUncertainMatches)
+                    .HasForeignKey(um => um.FirstHtId).OnDelete(DeleteBehavior.Restrict);
+                m.HasOne(p => p.SecondAccommodation).WithMany(ac => ac.SecondUncertainMatches)
+                    .HasForeignKey(um => um.SecondHtId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<StaticData>(m =>

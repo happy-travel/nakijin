@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.Accommodations.Internals;
+using HappyTravel.Geography;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.StaticDataMapper.Data;
 using HappyTravel.StaticDataMapper.Data.Models;
@@ -88,21 +89,42 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         private async Task MapAccommodations(Suppliers supplier, TelemetrySpan mappingSpan,
             CancellationToken cancellationToken)
         {
+            var tracer = _tracerProvider.GetTracer(nameof(AccommodationMapper));
+
             foreach (var country in await GetCountries(supplier))
             {
-                mappingSpan.AddEvent($"Started mapping accommodations of country with code {country.Code}");
+                var countryAccommodationsMappingSpan =
+                    tracer.StartActiveSpan($"{nameof(MapAccommodations)} of country with code {country.Code}",
+                        SpanKind.Internal, mappingSpan);
 
                 _logger.LogMappingAccommodationsOfSpecifiedCountryStart(
                     $"Started mapping of {supplier.ToString()} accommodations of country with code {country.Code}");
-
+                
                 var countryAccommodationsTree = await GetCountryAccommodationsTree(country.Code, supplier);
+                countryAccommodationsMappingSpan.AddEvent("Constructed country accommodations tree");
+                
+                
                 var countryAccommodationsOfSupplier =
-                    await GetCountryAccommodationBySupplier(country.Code, supplier);
-                var countryUncertainMatchesOfSupplier =
-                    await GetCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
+                    await GeCountryAccommodationBySupplier(country.Code, supplier);
+
+                var notActiveCountryAccommodationsOfSupplier =
+                    countryAccommodationsOfSupplier.Where(ac => !ac.Value.IsActive)
+                        .ToDictionary(ac => ac.Key, ac => ac.Value);
+
+                var activeCountryAccommodationsOfSupplier =
+                    countryAccommodationsOfSupplier.Where(ac => ac.Value.IsActive)
+                        .ToDictionary(ac => ac.Key, ac => ac.Value);
+                countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country accommodations");
+               
+                var activeCountryUncertainMatchesOfSupplier =
+                    await GetActiveCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
+                countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country uncertain matches");
+                
+                
                 var countryLocalities = await GetLocalitiesByCountry(country.Id);
                 var countryLocalityZones = await GetLocalityZonesByCountry(country.Id);
-
+                countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country locations");
+                
                 var accommodationDetails = new List<Contracts.MultilingualAccommodation>();
                 int skip = 0;
                 do
@@ -110,10 +132,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     cancellationToken.ThrowIfCancellationRequested();
                     accommodationDetails = await GetAccommodationsForMapping(country.Code, supplier, skip,
                         _batchSize, cancellationToken);
+                    countryAccommodationsMappingSpan.AddEvent($"Got supplier's specified country accommodations batch skip = {skip}, top = {_batchSize}");
+                    
                     skip += accommodationDetails.Count;
                     await Map(country, accommodationDetails, supplier, countryAccommodationsTree,
-                        countryAccommodationsOfSupplier, countryUncertainMatchesOfSupplier, countryLocalities,
-                        countryLocalityZones, cancellationToken);
+                        activeCountryAccommodationsOfSupplier, notActiveCountryAccommodationsOfSupplier,
+                        activeCountryUncertainMatchesOfSupplier, countryLocalities,
+                        countryLocalityZones, countryAccommodationsMappingSpan, cancellationToken);
                 } while (accommodationDetails.Count > 0);
 
                 _logger.LogMappingAccommodationsOfSpecifiedCountryFinish(
@@ -125,24 +150,33 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         private async Task Map((string Code, int Id) country,
             List<Contracts.MultilingualAccommodation> accommodationsToMap,
             Suppliers supplier, STRtree<AccommodationKeyData> countryAccommodationsTree,
-            Dictionary<string, AccommodationKeyData> countryAccommodationsOfSupplier,
-            List<Tuple<int, int>> countryUncertainMatchesOfSupplier, Dictionary<string, int> countryLocalities,
+            Dictionary<string, AccommodationKeyData> activeCountryAccommodationsOfSupplier,
+            Dictionary<string, AccommodationKeyData> notActiveCountryAccommodationsOfSupplier,
+            List<Tuple<int, int>> activeCountryUncertainMatchesOfSupplier, Dictionary<string, int> countryLocalities,
             Dictionary<(int LocalityId, string LocalityZoneName), int> countryLocalityZones,
+            TelemetrySpan mappingSpan,
             CancellationToken cancellationToken)
         {
             var accommodationsToAdd = new List<RichAccommodationDetails>();
+            var uncertainAccommodationsToAdd = new List<AccommodationUncertainMatches>();
             var utcDate = DateTime.UtcNow;
-
+            
             foreach (var accommodation in accommodationsToMap)
-
             {
                 var normalized = _multilingualDataHelper.NormalizeAccommodation(accommodation);
+                if (normalized.Location.Coordinates.IsEmpty())
+                {
+                    _logger.LogEmptyCoordinatesInAccommodation(
+                        $"{supplier.ToString()} have the accommodation with empty coordinates, which code is {accommodation.SupplierCode}");
+                    AddOrChangeActivity(normalized, false);
+                    continue;
+                }
 
                 // TODO: Try get nearest from db 
                 var nearestAccommodations = GetNearest(normalized, countryAccommodationsTree);
                 if (!nearestAccommodations.Any())
                 {
-                    AddOrIgnore(normalized);
+                    AddOrChangeActivity(normalized, true);
                     continue;
                 }
 
@@ -151,12 +185,10 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 switch (matchingResult)
                 {
                     case MatchingResults.NotMatch:
-                        AddOrIgnore(normalized);
+                        AddOrChangeActivity(normalized, true);
                         break;
                     case MatchingResults.Uncertain:
-                        await AddUncertainMatches(normalized, supplier, matchedAccommodation.HtId, score,
-                            countryAccommodationsOfSupplier, countryUncertainMatchesOfSupplier,
-                            GetLocationIds(normalized.Location), cancellationToken);
+                        AddUncertain(normalized, matchedAccommodation.HtId, score);
                         break;
                     case MatchingResults.Match:
                         Update(normalized, matchedAccommodation);
@@ -166,10 +198,15 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 }
             }
 
+            mappingSpan.AddEvent("Map of accommodations batch");
 
+            
             _context.AddRange(accommodationsToAdd);
+            _context.AddRange(uncertainAccommodationsToAdd);
             await _context.SaveChangesAsync(cancellationToken);
-
+            
+            mappingSpan.AddEvent("Save batch changes to db");
+            
             _context.ChangeTracker.Entries()
                 .Where(e => e.Entity != null)
                 .Where(e => e.State != EntityState.Detached)
@@ -177,25 +214,75 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 .ForEach(e => e.State = EntityState.Detached);
 
 
-            void AddOrIgnore(Contracts.MultilingualAccommodation accommodation, bool isActive = true)
+            void AddUncertain(Contracts.MultilingualAccommodation accommodation, int existingHtId, float score)
             {
-                if (countryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
+                int matchedHtId = 0;
+                if (activeCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode, out var existing))
+                {
+                    matchedHtId = existing.HtId;
+                    if (activeCountryUncertainMatchesOfSupplier.Any(eum
+                        => eum.Equals(new Tuple<int, int>(matchedHtId, existingHtId))
+                        || eum.Equals(new Tuple<int, int>(existingHtId, matchedHtId))))
+                        return;
+                }
+
+                uncertainAccommodationsToAdd.Add(new AccommodationUncertainMatches
+                {
+                    Score = score,
+                    FirstHtId = existingHtId,
+                    SecondHtId = matchedHtId != 0 ? matchedHtId : 0,
+                    Created = utcDate,
+                    Modified = utcDate,
+                    SecondAccommodation = matchedHtId == 0 ? GetDbAccommodation(accommodation, true) : null,
+                    IsActive = true
+                });
+            }
+
+
+            void AddOrChangeActivity(Contracts.MultilingualAccommodation accommodation, bool isActive)
+            {
+                if (isActive && activeCountryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
                     return;
 
-                var dbAccommodation = new RichAccommodationDetails();
-                dbAccommodation.CountryCode = country.Code;
-                dbAccommodation.CalculatedAccommodation = accommodation;
-                dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.SupplierCode);
-                dbAccommodation.Created = utcDate;
-                dbAccommodation.Modified = utcDate;
-                dbAccommodation.IsCalculated = true;
-                dbAccommodation.MappingData = _multilingualDataHelper.GetAccommodationDataForMapping(accommodation);
+                if (isActive && notActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
+                    out var existingNotActive))
+                {
+                    var accommodationToUpdate = new RichAccommodationDetails
+                    {
+                        Id = existingNotActive.HtId,
+                        IsActive = true,
+                        Modified = utcDate
+                    };
 
-                var locationIds = GetLocationIds(accommodation.Location);
-                dbAccommodation.CountryId = locationIds.CountryId;
-                dbAccommodation.LocalityId = locationIds.LocalityId;
-                dbAccommodation.LocalityZoneId = locationIds.LocalityZoneId;
-                dbAccommodation.IsActive = isActive;
+                    _context.Attach(accommodationToUpdate);
+                    _context.Entry(accommodationToUpdate).Property(ac => ac.IsActive).IsModified = true;
+                    _context.Entry(accommodationToUpdate).Property(ac => ac.Modified).IsModified = true;
+
+                    return;
+                }
+
+                if (!isActive && notActiveCountryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
+                    return;
+
+                if (!isActive && activeCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
+                    out var existingActive))
+                {
+                    var accommodationToUpdate = new RichAccommodationDetails
+                    {
+                        Id = existingActive.HtId,
+                        IsActive = false,
+                        Modified = utcDate
+                    };
+
+                    _context.Attach(accommodationToUpdate);
+                    _context.Entry(accommodationToUpdate).Property(ac => ac.IsActive).IsModified = true;
+                    _context.Entry(accommodationToUpdate).Property(ac => ac.Modified).IsModified = true;
+
+                    return;
+                }
+
+
+                var dbAccommodation = GetDbAccommodation(accommodation, isActive);
 
                 accommodationsToAdd.Add(dbAccommodation);
             }
@@ -213,9 +300,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
                 if (!accommodationToUpdate.SupplierAccommodationCodes.TryAdd(supplier, accommodation.SupplierCode))
                 {
-                    _logger.LogSameHotelInOneSupplierError(
+                    _logger.LogSameAccommodationInOneSupplierError(
                         $"{supplier.ToString()} have the same accommodations with codes {matchedAccommodation.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}");
-                    AddOrIgnore(accommodation, false);
+                    AddOrChangeActivity(accommodation, false);
                     return;
                 }
 
@@ -225,9 +312,9 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     var entry = _context.ChangeTracker.Entries<RichAccommodationDetails>()
                         .Single(ac => ac.Entity.Id == matchedAccommodation.HtId);
 
-                    _logger.LogSameHotelInOneSupplierError(
+                    _logger.LogSameAccommodationInOneSupplierError(
                         $"{supplier.ToString()} have the same accommodations with codes {entry.Entity.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}");
-                    AddOrIgnore(accommodation, false);
+                    AddOrChangeActivity(accommodation, false);
                     return;
                 }
 
@@ -235,7 +322,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 _context.Entry(accommodationToUpdate).Property(p => p.IsCalculated).IsModified = true;
                 _context.Entry(accommodationToUpdate).Property(p => p.Modified).IsModified = true;
 
-                if (countryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
+                if (activeCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
                     out var existingAccommodation))
                 {
                     var accommodationToDeactivate = new RichAccommodationDetails
@@ -256,6 +343,30 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 }
 
                 _context.Entry(accommodationToUpdate).Property(p => p.SupplierAccommodationCodes).IsModified = true;
+
+                // TODO: Deactivate  uncertain matches if exist
+            }
+
+
+            RichAccommodationDetails GetDbAccommodation(Contracts.MultilingualAccommodation accommodation,
+                bool isActive)
+            {
+                var dbAccommodation = new RichAccommodationDetails();
+                dbAccommodation.CountryCode = country.Code;
+                dbAccommodation.CalculatedAccommodation = accommodation;
+                dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.SupplierCode);
+                dbAccommodation.Created = utcDate;
+                dbAccommodation.Modified = utcDate;
+                dbAccommodation.IsCalculated = true;
+                dbAccommodation.MappingData = _multilingualDataHelper.GetAccommodationDataForMapping(accommodation);
+
+                var locationIds = GetLocationIds(accommodation.Location);
+                dbAccommodation.CountryId = locationIds.CountryId;
+                dbAccommodation.LocalityId = locationIds.LocalityId;
+                dbAccommodation.LocalityZoneId = locationIds.LocalityZoneId;
+                dbAccommodation.IsActive = isActive;
+
+                return dbAccommodation;
             }
 
 
@@ -335,7 +446,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private async Task<Dictionary<string, AccommodationKeyData>> GetCountryAccommodationBySupplier(
+        private async Task<Dictionary<string, AccommodationKeyData>> GeCountryAccommodationBySupplier(
             string countryCode, Suppliers supplier)
         {
             var countryAccommodations = new List<AccommodationKeyData>();
@@ -346,15 +457,15 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 accommodations =
                     await _context.Accommodations.Where(ac
                             => ac.CountryCode == countryCode && EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
-                                supplier.ToString().ToLower())
-                            && ac.IsActive)
+                                supplier.ToString().ToLower()))
                         .OrderBy(ac => ac.Id)
                         .Skip(skip)
                         .Take(_batchSize)
                         .Select(ac => new AccommodationKeyData
                         {
                             HtId = ac.Id,
-                            SupplierAccommodationCodes = ac.SupplierAccommodationCodes
+                            SupplierAccommodationCodes = ac.SupplierAccommodationCodes,
+                            IsActive = ac.IsActive
                         })
                         .ToListAsync();
 
@@ -366,6 +477,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             return countryAccommodations.ToDictionary(ac => ac.SupplierAccommodationCodes[supplier],
                 ac => ac);
         }
+
 
         private async Task<STRtree<AccommodationKeyData>> GetCountryAccommodationsTree(string countryCode,
             Suppliers supplier)
@@ -401,69 +513,13 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             var tree = new STRtree<AccommodationKeyData>(countryAccommodations.Count);
             foreach (var ac in countryAccommodations)
             {
-                tree.Insert(new Point(ac.MappingData.Coordinates.Longitude,
-                    ac.MappingData.Coordinates.Latitude).EnvelopeInternal, ac);
+                if (!ac.MappingData.Coordinates.IsEmpty())
+                    tree.Insert(new Point(ac.MappingData.Coordinates.Longitude,
+                        ac.MappingData.Coordinates.Latitude).EnvelopeInternal, ac);
             }
 
             tree.Build();
             return tree;
-        }
-
-        private async Task<int> Add(Contracts.MultilingualAccommodation accommodation, Suppliers supplier,
-            (int CountryId, int? LocalityId, int? LocalityZoneId) locationIds,
-            CancellationToken cancellationToken)
-        {
-            var dbAccommodation = new RichAccommodationDetails();
-            var utcDate = DateTime.UtcNow;
-            dbAccommodation.CountryCode = accommodation.Location.CountryCode;
-            dbAccommodation.CountryId = locationIds.CountryId;
-            dbAccommodation.LocalityId = locationIds.LocalityId;
-            dbAccommodation.LocalityZoneId = locationIds.LocalityZoneId;
-            dbAccommodation.CalculatedAccommodation = accommodation;
-            dbAccommodation.SupplierAccommodationCodes.Add(supplier, accommodation.SupplierCode);
-            dbAccommodation.Created = utcDate;
-            dbAccommodation.Modified = utcDate;
-            dbAccommodation.IsCalculated = true;
-            dbAccommodation.MappingData = _multilingualDataHelper.GetAccommodationDataForMapping(accommodation);
-            _context.Accommodations.Add(dbAccommodation);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return dbAccommodation.Id;
-        }
-
-
-        private async Task AddUncertainMatches(Contracts.MultilingualAccommodation accommodation,
-            Suppliers supplier, int existingHtId, float score,
-            Dictionary<string, AccommodationKeyData> existingCountryAccommodations,
-            List<Tuple<int, int>> existingUncertainMatches,
-            (int CountryId, int? LocalityId, int? LocalityZoneId) locationIds,
-            CancellationToken cancellationToken)
-        {
-            int firstHtId = 0;
-            if (existingCountryAccommodations.TryGetValue(accommodation.SupplierCode, out var existing))
-            {
-                firstHtId = existing.HtId;
-                if (existingUncertainMatches.Any(eum => eum.Equals(new Tuple<int, int>(firstHtId, existingHtId))
-                    || eum.Equals(new Tuple<int, int>(existingHtId, firstHtId))))
-                    return;
-            }
-            else
-            {
-                firstHtId = await Add(accommodation, supplier, locationIds, cancellationToken);
-            }
-
-            var utcDate = DateTime.UtcNow;
-            _context.AccommodationUncertainMatches.Add(new AccommodationUncertainMatches
-            {
-                Score = score,
-                FirstHtId = existingHtId,
-                SecondHtId = firstHtId,
-                Created = utcDate,
-                Modified = utcDate,
-                IsActive = true
-            });
-
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
         private async Task<List<(string Code, int Id)>> GetCountries(Suppliers supplier)
@@ -478,14 +534,14 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             return countries;
         }
 
-        private Task<List<Tuple<int, int>>> GetCountryUncertainMatchesBySupplier(string countryCode,
+        private Task<List<Tuple<int, int>>> GetActiveCountryUncertainMatchesBySupplier(string countryCode,
             Suppliers supplier, CancellationToken cancellationToken)
             => (from um in _context.AccommodationUncertainMatches
                 join firstAc in _context.Accommodations on um.FirstHtId equals firstAc.Id
                 join secondAc in _context.Accommodations on um.SecondHtId equals secondAc.Id
                 where um.IsActive && firstAc.CountryCode == countryCode && secondAc.CountryCode == countryCode &&
-                    (!EF.Functions.JsonExists(firstAc.SupplierAccommodationCodes,
-                        supplier.ToString().ToLower()) || !EF.Functions.JsonExists(secondAc.SupplierAccommodationCodes,
+                    (EF.Functions.JsonExists(firstAc.SupplierAccommodationCodes,
+                        supplier.ToString().ToLower()) || EF.Functions.JsonExists(secondAc.SupplierAccommodationCodes,
                         supplier.ToString().ToLower()))
                 select new Tuple<int, int>(um.FirstHtId, um.SecondHtId)).ToListAsync(cancellationToken);
 
