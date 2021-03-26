@@ -1,7 +1,7 @@
 using HappyTravel.EdoContracts.Accommodations.Internals;
-using LocationNameNormalizer;
+using HappyTravel.LocationNameNormalizer;
+using HappyTravel.LocationNameNormalizer.Extensions;
 using HappyTravel.MultiLanguage;
-using LocationNameNormalizer.Extensions;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.StaticDataMapper.Api.Models;
 using HappyTravel.StaticDataMapper.Data.Models.Accommodations;

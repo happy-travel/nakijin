@@ -13,7 +13,7 @@ using HappyTravel.StaticDataMapper.Data.Models.Mappers;
 using HappyTravel.StaticDataMapper.Api.Infrastructure;
 using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
 using HappyTravel.StaticDataMapper.Api.Models;
-using LocationNameNormalizer;
+using HappyTravel.LocationNameNormalizer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

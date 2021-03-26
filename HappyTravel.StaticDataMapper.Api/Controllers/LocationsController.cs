@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using HappyTravel.StaticDataMapper.Api.Infrastructure;
 using HappyTravel.StaticDataMapper.Api.Services;
-using HappyTravel.StaticDataMapper.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Country = LocationNameNormalizer.Models.Country;
+using HappyTravel.EdoContracts.StaticData;
 
 namespace HappyTravel.StaticDataMapper.Api.Controllers
 {
