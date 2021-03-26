@@ -104,20 +104,18 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 countryAccommodationsMappingSpan.AddEvent("Constructed country accommodations tree");
 
 
-                var countryAccommodationsOfSupplier =
-                    await GeCountryAccommodationBySupplier(country.Code, supplier);
+                var countryAccommodationsOfSupplier = await GeCountryAccommodationBySupplier(country.Code, supplier);
 
-                var notActiveCountryAccommodationsOfSupplier =
-                    countryAccommodationsOfSupplier.Where(ac => !ac.AccommodationKeyData.IsActive)
-                        .ToDictionary(ac => ac.SupplierCode, ac => ac.AccommodationKeyData);
+                var notActiveCountryAccommodationsOfSupplier = countryAccommodationsOfSupplier
+                    .Where(ac => !ac.AccommodationKeyData.IsActive)
+                    .ToDictionary(ac => ac.SupplierCode, ac => ac.AccommodationKeyData);
 
-                var activeCountryAccommodationsOfSupplier =
-                    countryAccommodationsOfSupplier.Where(ac => ac.AccommodationKeyData.IsActive)
-                        .ToDictionary(ac => ac.SupplierCode, ac => ac.AccommodationKeyData);
+                var activeCountryAccommodationsOfSupplier = countryAccommodationsOfSupplier
+                    .Where(ac => ac.AccommodationKeyData.IsActive)
+                    .ToDictionary(ac => ac.SupplierCode, ac => ac.AccommodationKeyData);
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country accommodations");
 
-                var activeCountryUncertainMatchesOfSupplier =
-                    await GetActiveCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
+                var activeCountryUncertainMatchesOfSupplier = await GetActiveCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country uncertain matches");
 
 
@@ -245,22 +243,23 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                 if (isActive && activeCountryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
                     return;
 
-                if (isActive && notActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
-                    out var existingNotActive))
-                {
-                    var accommodationToUpdate = new RichAccommodationDetails
-                    {
-                        Id = existingNotActive.HtId,
-                        IsActive = true,
-                        Modified = utcDate
-                    };
-
-                    _context.Attach(accommodationToUpdate);
-                    _context.Entry(accommodationToUpdate).Property(ac => ac.IsActive).IsModified = true;
-                    _context.Entry(accommodationToUpdate).Property(ac => ac.Modified).IsModified = true;
-
-                    return;
-                }
+                // This situation is not real 
+                // if (isActive && notActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
+                //     out var existingNotActive))
+                // {
+                //     var accommodationToUpdate = new RichAccommodationDetails
+                //     {
+                //         Id = existingNotActive.HtId,
+                //         IsActive = true,
+                //         Modified = utcDate
+                //     };
+                //
+                //     _context.Attach(accommodationToUpdate);
+                //     _context.Entry(accommodationToUpdate).Property(ac => ac.IsActive).IsModified = true;
+                //     _context.Entry(accommodationToUpdate).Property(ac => ac.Modified).IsModified = true;
+                //
+                //     return;
+                // }
 
                 if (!isActive && notActiveCountryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
                     return;
@@ -447,9 +446,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
         }
 
 
-        private async Task<List<( string SupplierCode, AccommodationKeyData AccommodationKeyData)>>
-            GeCountryAccommodationBySupplier(
-                string countryCode, Suppliers supplier)
+        private async Task<List<(string SupplierCode, AccommodationKeyData AccommodationKeyData)>>
+            GeCountryAccommodationBySupplier(string countryCode, Suppliers supplier)
         {
             var countryAccommodations = new List<AccommodationKeyData>();
             var accommodations = new List<AccommodationKeyData>();
