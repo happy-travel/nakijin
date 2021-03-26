@@ -69,7 +69,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                         $"Started mapping of {supplier.ToString()} accommodations");
 
                     cancellationToken.ThrowIfCancellationRequested();
-                    await MapAccommodations(supplier, supplierAccommodationsMappingSpan, cancellationToken);
+                    await MapAccommodations(supplier, supplierAccommodationsMappingSpan, tracer, cancellationToken);
 
                     _logger.LogMappingAccommodationsFinish(
                         $"Finished mapping of {supplier.ToString()} accommodations");
@@ -86,14 +86,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
             }
         }
 
-        private async Task MapAccommodations(Suppliers supplier, TelemetrySpan mappingSpan,
+        private async Task MapAccommodations(Suppliers supplier, TelemetrySpan mappingSpan, Tracer tracer,
             CancellationToken cancellationToken)
         {
-            var tracer = _tracerProvider.GetTracer(nameof(AccommodationMapper));
-
             foreach (var country in await GetCountries(supplier))
             {
-                var countryAccommodationsMappingSpan =
+                using var countryAccommodationsMappingSpan =
                     tracer.StartActiveSpan($"{nameof(MapAccommodations)} of country with code {country.Code}",
                         SpanKind.Internal, mappingSpan);
 
