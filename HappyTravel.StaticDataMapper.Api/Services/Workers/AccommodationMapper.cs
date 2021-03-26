@@ -113,8 +113,7 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     .ToDictionary(ac => ac.SupplierCode, ac => ac.AccommodationKeyData);
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country accommodations");
 
-                var activeCountryUncertainMatchesOfSupplier =
-                    await GetActiveCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
+                var activeCountryUncertainMatchesOfSupplier = await GetActiveCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country uncertain matches");
 
 
