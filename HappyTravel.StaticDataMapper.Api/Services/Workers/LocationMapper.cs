@@ -215,8 +215,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             foreach (var country in countries)
             {
-                localityMappingSpan.AddEvent($"Started mapping localities of country with code {country.Code}");
-
                 _logger.LogMappingLocalitiesOfSpecifiedCountryStart(
                     $"Started Mapping localities of {supplier.ToString()} of country with code {country.Code}.");
 
@@ -310,9 +308,12 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     .ToList()
                     .ForEach(e => e.State = EntityState.Detached);
 
+                localityMappingSpan.AddEvent($"Done mapping localities of country with code {country.Code}");
+
                 _logger.LogMappingLocalitiesOfSpecifiedCountryFinish(
                     $"Finished Mapping localities of {supplier.ToString()} of country {country.Code}");
             }
+
 
             _logger.LogMappingLocalitiesFinish(
                 $"Finished Mapping localities of {supplier.ToString()}.");
@@ -380,8 +381,6 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
 
             foreach (var country in countries)
             {
-                localityZoneMappingSpan.AddEvent($"Started mapping locality zones of country with code {country.Code}");
-
                 _logger.LogMappingLocalityZonesOfSpecifiedCountryStart(
                     $"Started Mapping locality zones of {supplier.ToString()} of country with code {country.Code}.");
 
@@ -491,6 +490,8 @@ namespace HappyTravel.StaticDataMapper.Api.Services.Workers
                     .Where(e => e.State != EntityState.Detached)
                     .ToList()
                     .ForEach(e => e.State = EntityState.Detached);
+
+                localityZoneMappingSpan.AddEvent($"Done mapping locality zones of country with code {country.Code}");
 
                 _logger.LogMappingLocalityZonesOfSpecifiedCountryFinish(
                     $"Finished Mapping locality zones of {supplier.ToString()} of country with code {country.Code}.");

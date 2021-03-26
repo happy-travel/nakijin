@@ -25,5 +25,9 @@ namespace HappyTravel.StaticDataMapper.Data.Models.Accommodations
         public bool IsActive { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
+
+
+        public virtual ICollection<AccommodationUncertainMatches> FirstUncertainMatches { get; set; }
+        public virtual ICollection<AccommodationUncertainMatches> SecondUncertainMatches { get; set; }
     }
 }
