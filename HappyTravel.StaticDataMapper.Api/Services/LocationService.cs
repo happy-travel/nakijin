@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
 using HappyTravel.StaticDataMapper.Data;
 using HappyTravel.StaticDataMapper.Data.Models;
-using HappyTravel.LocationNameNormalizer.Models;
 using Microsoft.EntityFrameworkCore;
 using Contracts = HappyTravel.EdoContracts.StaticData;
 
