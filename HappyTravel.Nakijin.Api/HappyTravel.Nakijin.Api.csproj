@@ -11,7 +11,7 @@
 
     <PropertyGroup>
         <NoWarn>1701;1702;1591</NoWarn>
-        <DocumentationFile>..\HappyTravel.StaticDataMapper.Api\HappyTravel.StaticDataMapper.Api.xml</DocumentationFile>
+        <DocumentationFile>..\HappyTravel.Nakijin.Api\HappyTravel.Nakijin.Api.xml</DocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -50,7 +50,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\HappyTravel.StaticDataMapper.Data\HappyTravel.Nakijin.Data.csproj" />
+        <ProjectReference Include="..\HappyTravel.Nakijin.Data\HappyTravel.Nakijin.Data.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="HappyTravel.Nakijin.Api.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 
