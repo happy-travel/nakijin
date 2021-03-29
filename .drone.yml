@@ -58,7 +58,7 @@ steps:
     HTDC_VAULT_ENDPOINT:
       from_secret: VAULT_DEV_ENDPOINT
   commands:
-    - cd HappyTravel.StaticDataMapper.Data
+    - cd HappyTravel.Nakijin.Data
     - dotnet tool restore
     - dotnet ef database update
 
@@ -142,7 +142,7 @@ steps:
     HTDC_VAULT_ENDPOINT:
       from_secret: VAULT_PROD_ENDPOINT
   commands:
-    - cd HappyTravel.StaticDataMapper.Data
+    - cd HappyTravel.Nakijin.Data
     - dotnet tool restore
     - dotnet ef database update
 
