@@ -14,7 +14,7 @@ WORKDIR /src
 COPY *.sln ./
 COPY . .
 RUN dotnet restore
-WORKDIR /src/HappyTravel.StaticDataMapper.Api
+WORKDIR /src/HappyTravel.Nakijin.Api
 RUN dotnet build -c Release -o /app
 
 FROM build AS publish
@@ -27,4 +27,4 @@ COPY --from=publish /app .
 
 HEALTHCHECK --interval=6s --timeout=10s --retries=3 CMD curl -sS 127.0.0.1/health || exit 1
 
-ENTRYPOINT ["dotnet", "HappyTravel.StaticDataMapper.Api.dll"]
+ENTRYPOINT ["dotnet", "HappyTravel.Nakijin.Api.dll"]
