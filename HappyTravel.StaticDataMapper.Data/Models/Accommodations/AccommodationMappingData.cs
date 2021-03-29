@@ -2,7 +2,7 @@ using HappyTravel.EdoContracts.Accommodations.Enums;
 using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.Geography;
 
-namespace HappyTravel.StaticDataMapper.Data.Models.Accommodations
+namespace HappyTravel.Nakijin.Data.Models.Accommodations
 {
     public class AccommodationMappingData
     {

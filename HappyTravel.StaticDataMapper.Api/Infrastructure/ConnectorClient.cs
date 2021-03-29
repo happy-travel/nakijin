@@ -5,12 +5,12 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
-using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
+using HappyTravel.Nakijin.Api.Infrastructure.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace HappyTravel.StaticDataMapper.Api.Infrastructure
+namespace HappyTravel.Nakijin.Api.Infrastructure
 {
     public class ConnectorClient : IConnectorClient
     {

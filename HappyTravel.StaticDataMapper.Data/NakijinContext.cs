@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.StaticDataMapper.Data.Models;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
-using HappyTravel.StaticDataMapper.Data.Models.Mappers;
+using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Data.Models.Mappers;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
-namespace HappyTravel.StaticDataMapper.Data
+namespace HappyTravel.Nakijin.Data
 {
     public class NakijinContext : DbContext
     {

@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.Geography;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.StaticDataMapper.Data;
-using HappyTravel.StaticDataMapper.Data.Models;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
-using HappyTravel.StaticDataMapper.Api.Infrastructure;
-using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
-using HappyTravel.StaticDataMapper.Api.Models;
-using HappyTravel.StaticDataMapper.Api.Models.Mappers;
-using HappyTravel.StaticDataMapper.Api.Models.Mappers.Enums;
+using HappyTravel.Nakijin.Data;
+using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Api.Infrastructure;
+using HappyTravel.Nakijin.Api.Infrastructure.Logging;
+using HappyTravel.Nakijin.Api.Models;
+using HappyTravel.Nakijin.Api.Models.Mappers;
+using HappyTravel.Nakijin.Api.Models.Mappers.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -22,7 +22,7 @@ using NetTopologySuite.Index.Strtree;
 using Newtonsoft.Json;
 using OpenTelemetry.Trace;
 
-namespace HappyTravel.StaticDataMapper.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers
 {
     /*
         1. Get accommodations by a country

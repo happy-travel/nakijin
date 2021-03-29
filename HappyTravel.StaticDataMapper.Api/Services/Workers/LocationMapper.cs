@@ -2,22 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using HappyTravel.StaticDataMapper.Data;
-using HappyTravel.StaticDataMapper.Data.Models;
+using HappyTravel.Nakijin.Data;
+using HappyTravel.Nakijin.Data.Models;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Api.Infrastructure;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.LocationNameNormalizer;
 using HappyTravel.LocationNameNormalizer.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using HappyTravel.MultiLanguage;
-using HappyTravel.StaticDataMapper.Api.Comparers;
-using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Api.Comparers;
+using HappyTravel.Nakijin.Api.Infrastructure.Logging;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
 using OpenTelemetry.Trace;
 
-namespace HappyTravel.StaticDataMapper.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers
 {
     public class LocationMapper : ILocationMapper
     {

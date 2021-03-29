@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.StaticDataMapper.Api.Infrastructure;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Api.Infrastructure;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Contracts = HappyTravel.EdoContracts.Accommodations.Internals;
 
-namespace HappyTravel.StaticDataMapper.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers
 {
     public static class ComparisonScoreCalculator
     {

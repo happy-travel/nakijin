@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
-namespace HappyTravel.StaticDataMapper.Api.Infrastructure.Environments
+namespace HappyTravel.Nakijin.Api.Infrastructure.Environments
 {
     public static class EnvironmentVariableHelper
     {

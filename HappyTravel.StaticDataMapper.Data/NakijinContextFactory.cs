@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace HappyTravel.StaticDataMapper.Data
+namespace HappyTravel.Nakijin.Data
 {
     public class NakijinContextFactory : IDesignTimeDbContextFactory<NakijinContext>
     {

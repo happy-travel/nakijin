@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Data.Models;
+using HappyTravel.Nakijin.Data.Models;
 using Contracts = HappyTravel.EdoContracts.StaticData;
 
-namespace HappyTravel.StaticDataMapper.Api.Services
+namespace HappyTravel.Nakijin.Api.Services
 {
     public interface ILocationService
     {

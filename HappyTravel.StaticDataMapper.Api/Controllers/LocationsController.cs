@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Api.Infrastructure;
-using HappyTravel.StaticDataMapper.Api.Services;
+using HappyTravel.Nakijin.Api.Infrastructure;
+using HappyTravel.Nakijin.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HappyTravel.EdoContracts.StaticData;
 
-namespace HappyTravel.StaticDataMapper.Api.Controllers
+namespace HappyTravel.Nakijin.Api.Controllers
 {
     [ApiController]
     [ApiVersion("1.0")]

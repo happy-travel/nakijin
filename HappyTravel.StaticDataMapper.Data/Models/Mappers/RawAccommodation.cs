@@ -2,7 +2,7 @@
 using System.Text.Json;
 using HappyTravel.MultiLanguage;
 
-namespace HappyTravel.StaticDataMapper.Data.Models.Mappers
+namespace HappyTravel.Nakijin.Data.Models.Mappers
 {
     // TODO change name 
     public class RawAccommodation

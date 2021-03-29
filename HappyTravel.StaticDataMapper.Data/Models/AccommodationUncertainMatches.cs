@@ -1,8 +1,8 @@
 using System;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
-using HappyTravel.StaticDataMapper.Data.Models.Mappers;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Data.Models.Mappers;
 
-namespace HappyTravel.StaticDataMapper.Data.Models
+namespace HappyTravel.Nakijin.Data.Models
 {
     public class AccommodationUncertainMatches
     {

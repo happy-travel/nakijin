@@ -1,4 +1,4 @@
-using HappyTravel.StaticDataMapper.Api.Infrastructure.Environments;
+using HappyTravel.Nakijin.Api.Infrastructure.Environments;
 using HappyTravel.StdOutLogger.Extensions;
 using HappyTravel.StdOutLogger.Infrastructure;
 using Microsoft.AspNetCore;
@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace HappyTravel.StaticDataMapper.Api
+namespace HappyTravel.Nakijin.Api
 {
     public class Program
     {

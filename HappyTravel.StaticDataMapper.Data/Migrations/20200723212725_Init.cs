@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace HappyTravel.StaticDataMapper.Data.Migrations
+namespace HappyTravel.Nakijin.Data.Migrations
 {
     public partial class Init : Migration
     {

@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Extensions.Logging;
 
-namespace HappyTravel.StaticDataMapper.Api.Infrastructure.Logging
+namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
 {
     public static class LoggerExtensions
     {

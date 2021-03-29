@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
-using HappyTravel.StaticDataMapper.Data;
-using HappyTravel.StaticDataMapper.Data.Models;
+using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
+using HappyTravel.Nakijin.Data;
+using HappyTravel.Nakijin.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Contracts = HappyTravel.EdoContracts.StaticData;
 
-namespace HappyTravel.StaticDataMapper.Api.Services
+namespace HappyTravel.Nakijin.Api.Services
 {
     public class LocationService : ILocationService
     {

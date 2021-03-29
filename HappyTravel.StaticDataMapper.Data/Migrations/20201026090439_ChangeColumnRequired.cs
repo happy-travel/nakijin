@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace HappyTravel.StaticDataMapper.Data.Migrations
+namespace HappyTravel.Nakijin.Data.Migrations
 {
     public partial class ChangeColumnRequired : Migration
     {

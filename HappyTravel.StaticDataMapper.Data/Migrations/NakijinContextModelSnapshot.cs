@@ -2,13 +2,13 @@
 using System;
 using System.Text.Json;
 using HappyTravel.MultiLanguage;
-using HappyTravel.StaticDataMapper.Data;
+using HappyTravel.Nakijin.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
-namespace HappyTravel.StaticDataMapper.Data.Migrations
+namespace HappyTravel.Nakijin.Data.Migrations
 {
     [DbContext(typeof(NakijinContext))]
     partial class NakijinContextModelSnapshot : ModelSnapshot

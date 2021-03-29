@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Data;
-using HappyTravel.StaticDataMapper.Data.Models;
+using HappyTravel.Nakijin.Data;
+using HappyTravel.Nakijin.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.EdoContracts.Accommodations.Internals;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
-using HappyTravel.StaticDataMapper.Api.Services.Workers;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Api.Services.Workers;
 
-namespace HappyTravel.StaticDataMapper.Api.Services
+namespace HappyTravel.Nakijin.Api.Services
 {
     public class AccommodationManagementService : IAccommodationManagementService
     {

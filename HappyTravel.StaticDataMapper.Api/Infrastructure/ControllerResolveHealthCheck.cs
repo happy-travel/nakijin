@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace HappyTravel.StaticDataMapper.Api.Infrastructure
+namespace HappyTravel.Nakijin.Api.Infrastructure
 {
     public class ControllerResolveHealthCheck : IHealthCheck
     {

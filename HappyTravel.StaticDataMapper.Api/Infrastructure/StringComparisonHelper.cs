@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace HappyTravel.StaticDataMapper.Api.Infrastructure
+namespace HappyTravel.Nakijin.Api.Infrastructure
 {
     public static class StringComparisonHelper
     {

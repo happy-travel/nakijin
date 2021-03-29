@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HappyTravel.StaticDataMapper.Api.Infrastructure
+namespace HappyTravel.Nakijin.Api.Infrastructure
 {
     public interface IConnectorClient
     {

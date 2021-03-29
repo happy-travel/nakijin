@@ -1,7 +1,7 @@
 using System;
 using HappyTravel.Geography;
 
-namespace HappyTravel.StaticDataMapper.Api.Infrastructure
+namespace HappyTravel.Nakijin.Api.Infrastructure
 {
     public static class GeoPointExtension
     {

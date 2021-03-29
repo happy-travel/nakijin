@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
-using HappyTravel.StaticDataMapper.Api.Models.LocationInfo;
-using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
-using Location = HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo.Location;
+using HappyTravel.Nakijin.Api.Models.LocationInfo;
+using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
+using Location = HappyTravel.Nakijin.Api.Models.LocationServiceInfo.Location;
 
-namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
+namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
 {
     public interface ILocationMappingInfoService
     {

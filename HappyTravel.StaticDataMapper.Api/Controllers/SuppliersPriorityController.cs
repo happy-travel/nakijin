@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Data.Models;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
-using HappyTravel.StaticDataMapper.Api.Services;
+using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HappyTravel.StaticDataMapper.Api.Controllers
+namespace HappyTravel.Nakijin.Api.Controllers
 {
     [ApiController]
     [ApiVersion("1.0")]

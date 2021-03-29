@@ -24,7 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\HappyTravel.StaticDataMapper.Api\HappyTravel.StaticDataMapper.Api.csproj" />
+      <ProjectReference Include="..\HappyTravel.StaticDataMapper.Api\HappyTravel.Nakijin.Api.csproj" />
     </ItemGroup>
 
 </Project>

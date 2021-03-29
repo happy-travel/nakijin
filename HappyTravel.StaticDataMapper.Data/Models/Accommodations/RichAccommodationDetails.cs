@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using HappyTravel.EdoContracts.Accommodations;
 
-namespace HappyTravel.StaticDataMapper.Data.Models.Accommodations
+namespace HappyTravel.Nakijin.Data.Models.Accommodations
 {
     public class RichAccommodationDetails
     {

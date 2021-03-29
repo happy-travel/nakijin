@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.StaticDataMapper.Data.Models;
+using HappyTravel.Nakijin.Data.Models;
 
-namespace HappyTravel.StaticDataMapper.Api.Services
+namespace HappyTravel.Nakijin.Api.Services
 {
     public interface IAccommodationService
     {

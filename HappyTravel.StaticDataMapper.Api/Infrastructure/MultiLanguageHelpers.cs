@@ -1,6 +1,6 @@
 using HappyTravel.MultiLanguage;
 
-namespace HappyTravel.StaticDataMapper.Api.Infrastructure
+namespace HappyTravel.Nakijin.Api.Infrastructure
 {
     public static class MultiLanguageHelpers
     {

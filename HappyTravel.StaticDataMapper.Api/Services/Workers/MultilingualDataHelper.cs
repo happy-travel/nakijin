@@ -3,10 +3,10 @@ using HappyTravel.LocationNameNormalizer;
 using HappyTravel.LocationNameNormalizer.Extensions;
 using HappyTravel.MultiLanguage;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.StaticDataMapper.Api.Models;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Api.Models;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
 
-namespace HappyTravel.StaticDataMapper.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers
 {
     public class MultilingualDataHelper
     {

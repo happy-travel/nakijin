@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace HappyTravel.StaticDataMapper.Data.Models.Accommodations
+namespace HappyTravel.Nakijin.Data.Models.Accommodations
 {
     [JsonConverter(typeof(StringEnumConverter))]
     public enum AccommodationDataTypes

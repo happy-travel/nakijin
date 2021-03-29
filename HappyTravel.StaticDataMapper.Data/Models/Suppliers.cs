@@ -1,4 +1,4 @@
-namespace HappyTravel.StaticDataMapper.Data.Models
+namespace HappyTravel.Nakijin.Data.Models
 {
     public enum Suppliers
     {

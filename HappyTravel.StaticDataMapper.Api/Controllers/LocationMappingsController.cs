@@ -5,14 +5,14 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
-using HappyTravel.StaticDataMapper.Api.Models.LocationInfo;
-using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
-using HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo;
+using HappyTravel.Nakijin.Api.Models.LocationInfo;
+using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
+using HappyTravel.Nakijin.Api.Services.LocationMappingInfo;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Location = HappyTravel.StaticDataMapper.Api.Models.LocationInfo.Location;
+using Location = HappyTravel.Nakijin.Api.Models.LocationInfo.Location;
 
-namespace HappyTravel.StaticDataMapper.Api.Controllers
+namespace HappyTravel.Nakijin.Api.Controllers
 {
     [ApiController]
     [ApiVersion("1.0")]

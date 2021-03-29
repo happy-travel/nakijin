@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using HappyTravel.MultiLanguage;
 
-namespace HappyTravel.StaticDataMapper.Data.Models
+namespace HappyTravel.Nakijin.Data.Models
 {
     public class Country
     {

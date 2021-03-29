@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using HappyTravel.StaticDataMapper.Data.Models;
+using HappyTravel.Nakijin.Data.Models;
 
-namespace HappyTravel.StaticDataMapper.Api.Comparers
+namespace HappyTravel.Nakijin.Api.Comparers
 {
     public class LocalityComparer :IEqualityComparer<Locality>
     {

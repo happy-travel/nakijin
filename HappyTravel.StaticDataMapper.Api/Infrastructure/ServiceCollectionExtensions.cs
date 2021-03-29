@@ -4,11 +4,11 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using HappyTravel.LocationNameNormalizer.Extensions;
-using HappyTravel.StaticDataMapper.Data.Models;
-using HappyTravel.StaticDataMapper.Data;
-using HappyTravel.StaticDataMapper.Api.Infrastructure.Environments;
-using HappyTravel.StaticDataMapper.Api.Services;
-using HappyTravel.StaticDataMapper.Api.Services.Workers;
+using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.Nakijin.Data;
+using HappyTravel.Nakijin.Api.Infrastructure.Environments;
+using HappyTravel.Nakijin.Api.Services;
+using HappyTravel.Nakijin.Api.Services.Workers;
 using IdentityModel.Client;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
@@ -24,7 +24,7 @@ using Polly;
 using Polly.Extensions.Http;
 using StackExchange.Redis;
 
-namespace HappyTravel.StaticDataMapper.Api.Infrastructure
+namespace HappyTravel.Nakijin.Api.Infrastructure
 {
     public static class ServiceCollectionExtensions
     {
@@ -65,7 +65,7 @@ namespace HappyTravel.StaticDataMapper.Api.Infrastructure
             }
 
             var connection = ConnectionMultiplexer.Connect(EnvironmentVariableHelper.Get("Redis:Endpoint", configuration));
-            var serviceName = $"{nameof(StaticDataMapper)}-{environment.EnvironmentName}";
+            var serviceName = $"{nameof(Nakijin)}-{environment.EnvironmentName}";
 
             services.AddOpenTelemetryTracing(builder =>
             {

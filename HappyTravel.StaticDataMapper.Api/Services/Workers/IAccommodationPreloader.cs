@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Data.Models;
+using HappyTravel.Nakijin.Data.Models;
 
-namespace HappyTravel.StaticDataMapper.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers
 {
     public interface IAccommodationPreloader
     {

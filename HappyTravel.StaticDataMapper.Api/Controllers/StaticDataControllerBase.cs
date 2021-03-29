@@ -1,7 +1,7 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace HappyTravel.StaticDataMapper.Api.Controllers
+namespace HappyTravel.Nakijin.Api.Controllers
 {
     public class StaticDataControllerBase : ControllerBase 
     {

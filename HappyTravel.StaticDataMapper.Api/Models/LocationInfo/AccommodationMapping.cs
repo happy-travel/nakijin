@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using HappyTravel.StaticDataMapper.Data.Models;
+using HappyTravel.Nakijin.Data.Models;
 
-namespace HappyTravel.StaticDataMapper.Api.Models.LocationInfo
+namespace HappyTravel.Nakijin.Api.Models.LocationInfo
 {
     public readonly struct AccommodationMapping
     {

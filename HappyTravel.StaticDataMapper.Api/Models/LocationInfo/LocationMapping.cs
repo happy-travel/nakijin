@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace HappyTravel.StaticDataMapper.Api.Models.LocationInfo
+namespace HappyTravel.Nakijin.Api.Models.LocationInfo
 {
     public readonly struct LocationMapping
     {

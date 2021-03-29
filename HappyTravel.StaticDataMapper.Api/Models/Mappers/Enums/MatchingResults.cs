@@ -1,4 +1,4 @@
-﻿namespace HappyTravel.StaticDataMapper.Api.Models.Mappers.Enums
+﻿namespace HappyTravel.Nakijin.Api.Models.Mappers.Enums
 {
     public enum MatchingResults
     {

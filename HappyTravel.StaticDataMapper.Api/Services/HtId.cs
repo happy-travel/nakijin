@@ -1,8 +1,8 @@
 using System;
 using CSharpFunctionalExtensions;
-using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
+using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 
-namespace HappyTravel.StaticDataMapper.Api.Services
+namespace HappyTravel.Nakijin.Api.Services
 {
     public static class HtId
     {

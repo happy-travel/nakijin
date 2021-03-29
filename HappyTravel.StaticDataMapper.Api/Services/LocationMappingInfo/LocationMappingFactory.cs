@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Api.Models.LocationInfo;
-using HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo;
-using HappyTravel.StaticDataMapper.Data;
+using HappyTravel.Nakijin.Api.Models.LocationInfo;
+using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
+using HappyTravel.Nakijin.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
+namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
 {
     public class LocationMappingFactory : ILocationMappingFactory
     {

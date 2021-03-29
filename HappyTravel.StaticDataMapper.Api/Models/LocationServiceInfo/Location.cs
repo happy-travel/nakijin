@@ -1,7 +1,7 @@
 ﻿using HappyTravel.EdoContracts.GeoData.Enums;
 using HappyTravel.Geography;
 
-namespace HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo
+namespace HappyTravel.Nakijin.Api.Models.LocationServiceInfo
 {
     public readonly struct Location
     {

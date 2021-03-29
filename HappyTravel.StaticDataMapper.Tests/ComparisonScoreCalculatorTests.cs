@@ -4,9 +4,9 @@ using HappyTravel.EdoContracts.Accommodations.Enums;
 using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.Geography;
 using Xunit;
-using HappyTravel.StaticDataMapper.Api.Services.Workers;
+using HappyTravel.Nakijin.Api.Services.Workers;
 
-namespace HappyTravel.StaticDataMapper.Tests
+namespace HappyTravel.Nakijin.Tests
 {
     public class ComparisonScoreCalculatorTests
     {

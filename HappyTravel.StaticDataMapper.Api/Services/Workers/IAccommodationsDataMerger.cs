@@ -1,9 +1,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
 
-namespace HappyTravel.StaticDataMapper.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers
 {
     public interface IAccommodationsDataMerger
     {

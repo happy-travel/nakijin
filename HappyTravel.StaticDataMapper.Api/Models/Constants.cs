@@ -1,4 +1,4 @@
-namespace HappyTravel.StaticDataMapper.Api.Models
+namespace HappyTravel.Nakijin.Api.Models
 {
     public static class Constants
     {

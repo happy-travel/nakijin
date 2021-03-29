@@ -1,6 +1,6 @@
 using HappyTravel.Geography;
 
-namespace HappyTravel.StaticDataMapper.Api.Models.LocationInfo
+namespace HappyTravel.Nakijin.Api.Models.LocationInfo
 {
     public readonly struct Location
     {

@@ -4,9 +4,9 @@ using System.IO;
 using System.Reflection;
 using FloxDc.CacheFlow.Extensions;
 using HappyTravel.ErrorHandling.Extensions;
-using HappyTravel.StaticDataMapper.Api.Infrastructure;
-using HappyTravel.StaticDataMapper.Api.Infrastructure.Environments;
-using HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo;
+using HappyTravel.Nakijin.Api.Infrastructure;
+using HappyTravel.Nakijin.Api.Infrastructure.Environments;
+using HappyTravel.Nakijin.Api.Services.LocationMappingInfo;
 using HappyTravel.StdOutLogger.Extensions;
 using HappyTravel.VaultClient;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +21,7 @@ using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace HappyTravel.StaticDataMapper.Api
+namespace HappyTravel.Nakijin.Api
 {
     public class Startup
     {

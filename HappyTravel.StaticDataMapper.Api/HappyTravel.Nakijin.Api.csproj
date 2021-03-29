@@ -50,8 +50,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\HappyTravel.SecurityClient\HappyTravel.SecurityClient.csproj" />
-        <ProjectReference Include="..\HappyTravel.StaticDataMapper.Data\HappyTravel.StaticDataMapper.Data.csproj" />
+        <ProjectReference Include="..\HappyTravel.StaticDataMapper.Data\HappyTravel.Nakijin.Data.csproj" />
     </ItemGroup>
 
 

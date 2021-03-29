@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using HappyTravel.StaticDataMapper.Api.Models.LocationInfo;
+using HappyTravel.Nakijin.Api.Models.LocationInfo;
 
-namespace HappyTravel.StaticDataMapper.Api.Services.LocationMappingInfo
+namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
 {
     public interface ILocationMappingFactory
     {

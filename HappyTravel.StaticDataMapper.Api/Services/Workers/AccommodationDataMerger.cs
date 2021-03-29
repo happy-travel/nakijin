@@ -6,20 +6,20 @@ using System.Threading.Tasks;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.EdoContracts.Accommodations.Enums;
 using HappyTravel.EdoContracts.Accommodations.Internals;
-using HappyTravel.StaticDataMapper.Data;
-using HappyTravel.StaticDataMapper.Data.Models;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
-using HappyTravel.StaticDataMapper.Api.Infrastructure;
+using HappyTravel.Nakijin.Data;
+using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using HappyTravel.MultiLanguage;
-using HappyTravel.StaticDataMapper.Api.Infrastructure.Logging;
-using HappyTravel.StaticDataMapper.Data.Models.Mappers;
+using HappyTravel.Nakijin.Api.Infrastructure.Logging;
+using HappyTravel.Nakijin.Data.Models.Mappers;
 using OpenTelemetry.Trace;
 
-namespace HappyTravel.StaticDataMapper.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers
 {
     public class AccommodationDataMerger : IAccommodationsDataMerger
     {

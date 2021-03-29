@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using HappyTravel.StaticDataMapper.Data.Models;
+using HappyTravel.Nakijin.Data.Models;
 
-namespace HappyTravel.StaticDataMapper.Api.Infrastructure
+namespace HappyTravel.Nakijin.Api.Infrastructure
 {
 #nullable disable
     public class StaticDataLoadingOptions

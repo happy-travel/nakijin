@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <doc>
     <assembly>
-        <name>HappyTravel.StaticDataMapper.Api</name>
+        <name>HappyTravel.Nakijin.Api</name>
     </assembly>
     <members>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(HappyTravel.StaticDataMapper.Data.Models.Suppliers,System.String)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.Get(HappyTravel.Nakijin.Data.Models.Suppliers,System.String)">
             <summary>
             Gets accommodation
             </summary>
@@ -12,14 +12,14 @@
             <param name="supplierAccommodationCode">Supplier Accommodation code </param>
             <returns>Accommodation details</returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.String)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.Get(System.String)">
             <summary>
             Gets accommodation
             </summary>
             <param name="accommodationHtId">Accommodation HtId</param>
             <returns>Accommodation details</returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.Get(System.Int32,System.Int32,System.Collections.Generic.List{System.String})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.Get(System.Int32,System.Int32,System.Collections.Generic.List{System.String})">
             <summary>
              Returns a list of accommodation details
             </summary>
@@ -28,31 +28,31 @@
             <param name="suppliers"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsController.GetLastModifiedDate">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.GetLastModifiedDate">
             <summary>
               Gets date of last modified accommodation.
             </summary>
             <returns>Last changed location modified date</returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.CancelAccommodationPreloading">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.CancelAccommodationPreloading">
             <summary>
             Cancels preloading
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.CancelAccommodationMapping">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.CancelAccommodationMapping">
             <summary>
             Cancels accommodation mapping
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.CancelAccommodationDataMerge">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.CancelAccommodationDataMerge">
             <summary>
             Cancels accommodation merging 
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.Preload(System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers},System.Nullable{System.DateTime},System.Threading.CancellationToken)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.Preload(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers},System.Nullable{System.DateTime},System.Threading.CancellationToken)">
             <summary>
             Loads raw accommodation data 
             </summary>
@@ -61,27 +61,27 @@
             <param name="cancellationToken"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.MapAccommodations(System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.MapAccommodations(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers})">
             <summary>
             Maps accommodations 
             </summary>
             <param name="suppliers"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.MergeAccommodationsData">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.MergeAccommodationsData">
             <summary>
             Merges accommodations
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.RecalculateData(System.Int32)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.RecalculateData(System.Int32)">
             <summary>
             Calculates accommodation final data
             </summary>
             <param name="id">Accommodation id</param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.AddSuppliersPriority(System.Int32,System.Collections.Generic.Dictionary{HappyTravel.StaticDataMapper.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers}})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.AddSuppliersPriority(System.Int32,System.Collections.Generic.Dictionary{HappyTravel.Nakijin.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers}})">
             <summary>
             Adds suppliers priority to accommodation
             </summary>
@@ -89,7 +89,7 @@
             <param name="suppliersPriorities"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.AddManualCorrectionToAccommodation(System.Int32,HappyTravel.EdoContracts.Accommodations.MultilingualAccommodation)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.AddManualCorrectionToAccommodation(System.Int32,HappyTravel.EdoContracts.Accommodations.MultilingualAccommodation)">
             <summary>
              Adds manual correction to accommodation
             </summary>
@@ -97,20 +97,20 @@
             <param name="accommodation"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.AccommodationsManagementController.MatchUncertain(System.Int32)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.MatchUncertain(System.Int32)">
             <summary>
             Matches uncertain matches
             </summary>
             <param name="uncertainMatchId"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationMappingsController.GetMapping(System.Collections.Generic.List{System.String})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationMappingsController.GetMapping(System.Collections.Generic.List{System.String})">
             <summary>
             Gets location mapping list info by given htId list
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationMappingsController.GetLocations(HappyTravel.StaticDataMapper.Api.Models.LocationServiceInfo.AccommodationMapperLocationTypes,System.DateTime,System.Int32,System.Int32,System.Threading.CancellationToken)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationMappingsController.GetLocations(HappyTravel.Nakijin.Api.Models.LocationServiceInfo.AccommodationMapperLocationTypes,System.DateTime,System.Int32,System.Int32,System.Threading.CancellationToken)">
             <summary>
             Retrieves locations by a location type
             </summary>
@@ -121,33 +121,33 @@
             <param name="cancellationToken"></param>
             <returns>List of locations</returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsController.GetCountries(System.Collections.Generic.List{System.String})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationsController.GetCountries(System.Collections.Generic.List{System.String})">
             <summary>
             Gets all available countries list
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsController.GetLastModifiedDate">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationsController.GetLastModifiedDate">
             <summary>
              Gets date of last modified location.
             </summary>
             <returns>Last changed location modified date</returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.LocationsManagementController.MapLocations(System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationsManagementController.MapLocations(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers})">
             <summary>
             Maps locations (countries, localities, locality zones) of suppliers with existing locations.
             </summary>
             <param name="suppliers"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.StaticDataMapper.Api.Controllers.SuppliersPriorityController.AddOrUpdateDefaultPriority(System.Collections.Generic.Dictionary{HappyTravel.StaticDataMapper.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.StaticDataMapper.Data.Models.Suppliers}})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.SuppliersPriorityController.AddOrUpdateDefaultPriority(System.Collections.Generic.Dictionary{HappyTravel.Nakijin.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers}})">
             <summary>
             Sets or updates default priority
             </summary>
             <param name="suppliersPriority"></param>
             <returns></returns>
         </member>
-        <member name="T:HappyTravel.StaticDataMapper.Api.Infrastructure.ForbidUnauthenticatedPolicyEvaluator">
+        <member name="T:HappyTravel.Nakijin.Api.Infrastructure.ForbidUnauthenticatedPolicyEvaluator">
             <summary>
                 Prevents authorization policies execution for not authenticated clients
             </summary>

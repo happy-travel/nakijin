@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.StaticDataMapper.Data.Models;
-using HappyTravel.StaticDataMapper.Data.Models.Accommodations;
+using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
 
-namespace HappyTravel.StaticDataMapper.Api.Models.Mappers
+namespace HappyTravel.Nakijin.Api.Models.Mappers
 {
     public class AccommodationKeyData
     {
