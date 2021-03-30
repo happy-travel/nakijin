@@ -178,6 +178,15 @@ namespace HappyTravel.Nakijin.Data
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
             });
+
+            builder.Entity<HtAccommodationMapping>(ha =>
+            {
+                ha.HasKey(p => p.Id);
+                ha.Property(p => p.HtId).IsRequired();
+                ha.Property(p => p.Modified).IsRequired();
+                ha.Property(p => p.Created).IsRequired();
+                ha.Property(p => p.MappedHtIds).HasColumnType("jsonb").IsRequired();
+            });
         }
 
 
@@ -188,5 +197,6 @@ namespace HappyTravel.Nakijin.Data
         public virtual DbSet<RawAccommodation> RawAccommodations { get; set; }
         public virtual DbSet<AccommodationUncertainMatches> AccommodationUncertainMatches { get; set; }
         public virtual DbSet<StaticData> StaticDatas { get; set; }
+        public virtual DbSet<HtAccommodationMapping> HtAccommodationMappings { get; set; }
     }
 }
