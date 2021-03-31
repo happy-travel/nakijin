@@ -23,7 +23,7 @@ namespace HappyTravel.Nakijin.Data.Migrations
                 .HasAnnotation("ProductVersion", "3.1.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            modelBuilder.Entity("HappyTravel.StaticDataMapper.Data.Models.Mappers.RawAccommodation", b =>
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.Mappers.RawAccommodation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
