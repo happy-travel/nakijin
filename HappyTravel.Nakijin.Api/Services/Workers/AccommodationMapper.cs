@@ -89,6 +89,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         private async Task MapAccommodations(Suppliers supplier, TelemetrySpan mappingSpan, Tracer tracer,
             CancellationToken cancellationToken)
         {
+            var htAccommodationMappings = await GetHtAccommodationMappings();
+
             foreach (var country in await GetCountries(supplier))
             {
                 using var countryAccommodationsMappingSpan =
@@ -135,7 +137,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     await Map(country, accommodationDetails, supplier, countryAccommodationsTree,
                         activeCountryAccommodationsOfSupplier, notActiveCountryAccommodationsOfSupplier,
                         activeCountryUncertainMatchesOfSupplier, countryLocalities,
-                        countryLocalityZones, countryAccommodationsMappingSpan, cancellationToken);
+                        countryLocalityZones, htAccommodationMappings, countryAccommodationsMappingSpan,
+                        cancellationToken);
                 } while (accommodationDetails.Count > 0);
 
                 _logger.LogMappingAccommodationsOfSpecifiedCountryFinish(
@@ -151,6 +154,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             Dictionary<string, AccommodationKeyData> notActiveCountryAccommodationsOfSupplier,
             List<Tuple<int, int>> activeCountryUncertainMatchesOfSupplier, Dictionary<string, int> countryLocalities,
             Dictionary<(int LocalityId, string LocalityZoneName), int> countryLocalityZones,
+            Dictionary<int, (int Id, HashSet<int> MappedHtIds)> htAccommodationMappings,
             TelemetrySpan mappingSpan,
             CancellationToken cancellationToken)
         {
@@ -338,11 +342,54 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     _context.Accommodations.Attach(accommodationToDeactivate);
                     _context.Entry(accommodationToDeactivate).Property(p => p.IsActive).IsModified = true;
                     _context.Entry(accommodationToDeactivate).Property(p => p.Modified).IsModified = true;
+
+                    AddOrUpdateHtAccommodationMappings(matchedAccommodation.HtId, existingAccommodation.HtId);
                 }
 
                 _context.Entry(accommodationToUpdate).Property(p => p.SupplierAccommodationCodes).IsModified = true;
 
                 // TODO: Deactivate  uncertain matches if exist
+            }
+
+
+            void AddOrUpdateHtAccommodationMappings(int htId, int deactivatedHtId)
+            {
+                var dbHtAccommodationMapping = new HtAccommodationMapping
+                {
+                    HtId = htId,
+                    MappedHtIds = new HashSet<int>() {deactivatedHtId},
+                    Modified = utcDate,
+                    IsActive = true
+                };
+
+                if (htAccommodationMappings.TryGetValue(deactivatedHtId, out var mappingsOfDeactivated))
+                {
+                    dbHtAccommodationMapping.MappedHtIds.UnionWith(mappingsOfDeactivated.MappedHtIds);
+                    var htAccommodationMappingToDeactivate = new HtAccommodationMapping
+                    {
+                        Id = mappingsOfDeactivated.Id,
+                        IsActive = false,
+                        Modified = utcDate
+                    };
+                    _context.Attach(htAccommodationMappingToDeactivate);
+                    _context.Entry(htAccommodationMappingToDeactivate).Property(m => m.IsActive).IsModified = true;
+                    _context.Entry(htAccommodationMappingToDeactivate).Property(m => m.Modified).IsModified = true;
+                }
+
+                if (htAccommodationMappings.TryGetValue(htId, out var mappings))
+                {
+                    dbHtAccommodationMapping.Id = mappings.Id;
+                    dbHtAccommodationMapping.MappedHtIds.UnionWith(mappings.MappedHtIds);
+
+                    _context.Attach(dbHtAccommodationMapping);
+                    _context.Entry(dbHtAccommodationMapping).Property(m => m.MappedHtIds).IsModified = true;
+                    _context.Entry(dbHtAccommodationMapping).Property(m => m.Modified).IsModified = true;
+
+                    return;
+                }
+
+                dbHtAccommodationMapping.Created = utcDate;
+                _context.Add(dbHtAccommodationMapping);
             }
 
 
@@ -559,6 +606,16 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     Id = z.Id
                 }).ToDictionaryAsync(z => (z.LocalityId, z.LocalityZoneName), z => z.Id);
 
+        private Task<Dictionary<int, (int Id, HashSet<int> MappedHtIds)>> GetHtAccommodationMappings()
+            => _context.HtAccommodationMappings
+                .Where(m => m.IsActive)
+                .Select(m => new
+                {
+                    Id = m.Id,
+                    HtId = m.HtId,
+                    MappedHtIds = m.MappedHtIds
+                })
+                .ToDictionaryAsync(m => m.HtId, m => (m.Id, m.MappedHtIds));
 
         private readonly int _batchSize;
         private readonly ILogger<AccommodationMapper> _logger;

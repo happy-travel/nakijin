@@ -8,6 +8,7 @@ using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Microsoft.EntityFrameworkCore;
 
 namespace HappyTravel.Nakijin.Api.Services
@@ -55,33 +56,36 @@ namespace HappyTravel.Nakijin.Api.Services
             if (type != AccommodationMapperLocationTypes.Accommodation)
                 return Result.Failure<Accommodation>($"{type} is not supported");
 
-            var accommodation = await _context.Accommodations
-                .Where(ac => ac.IsActive && ac.Id == id)
-                .Select(ac => new
-                {
-                    Id = ac.Id,
-                    CountryId = ac.CountryId,
-                    LocalityId = ac.LocalityId,
-                    LocalityZoneId = ac.LocalityZoneId,
-                    Data = ac.CalculatedAccommodation,
-                    Modified = ac.Modified
-                })
-                .SingleOrDefaultAsync();
+            var accommodation = await GetRichDetails(id);
 
-            if (accommodation == null)
-                return Result.Failure<Accommodation>("Accommodation does not exists");
+            if (accommodation == default)
+            {
+                var activeHtId = await _context.HtAccommodationMappings
+                    .Where(m => m.IsActive && EF.Functions.JsonContains(m.MappedHtIds, id.ToString()))
+                    .Select(m => m.HtId)
+                    .SingleOrDefaultAsync();
+
+                if (activeHtId == default)
+                    return Result.Failure<Accommodation>("Accommodation does not exists");
+
+                accommodation = await GetRichDetails(activeHtId);
+                
+                if(accommodation == default)
+                    return Result.Failure<Accommodation>("Accommodation does not exists");
+            }
 
             return MapToAccommodation(accommodation.Id, accommodation.CountryId,
-                accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.Data, languageCode,
+                accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.CalculatedAccommodation, languageCode,
                 accommodation.Modified);
         }
-        
+
 
         public Task<DateTime> GetLastModifiedDate()
             => _context.Accommodations.OrderByDescending(d => d.Modified).Select(l => l.Modified).FirstOrDefaultAsync();
 
 
-        public async Task<List<Accommodation>> Get(int skip, int top, IEnumerable<Suppliers> suppliersFilter, string languageCode)
+        public async Task<List<Accommodation>> Get(int skip, int top, IEnumerable<Suppliers> suppliersFilter,
+            string languageCode)
         {
             var suppliersKeys = suppliersFilter.Select(s => s.ToString().ToLower()).ToArray();
             var accommodationsQuery = _context.Accommodations
@@ -92,9 +96,10 @@ namespace HappyTravel.Nakijin.Api.Services
 
             if (suppliersKeys.Any())
             {
-                accommodationsQuery = accommodationsQuery.Where(ac => EF.Functions.JsonExistAny(ac.SupplierAccommodationCodes, suppliersKeys));
+                accommodationsQuery = accommodationsQuery.Where(ac
+                    => EF.Functions.JsonExistAny(ac.SupplierAccommodationCodes, suppliersKeys));
             }
-            
+
             var accommodations = await accommodationsQuery
                 .Select(ac => new
                 {
@@ -112,6 +117,19 @@ namespace HappyTravel.Nakijin.Api.Services
                 .ToList();
         }
 
+        private async Task<RichAccommodationDetails?> GetRichDetails(int id)
+            => await _context.Accommodations
+                .Where(ac => ac.IsActive && ac.Id == id)
+                .Select(ac => new RichAccommodationDetails
+                {
+                    Id = ac.Id,
+                    CountryId = ac.CountryId,
+                    LocalityId = ac.LocalityId,
+                    LocalityZoneId = ac.LocalityZoneId,
+                    CalculatedAccommodation = ac.CalculatedAccommodation,
+                    Modified = ac.Modified
+                })
+                .SingleOrDefaultAsync();
 
         private Accommodation MapToAccommodation(int htId, int htCountryId, int? htLocalityId, int? htLocalityZoneId,
             MultilingualAccommodation accommodation, string language, DateTime? modified = null)
@@ -165,11 +183,12 @@ namespace HappyTravel.Nakijin.Api.Services
                 accommodation.Rating,
                 accommodation.Schedule,
                 textualDescriptions,
-                accommodation.Type, 
+                accommodation.Type,
                 accommodationHtId,
                 modified: modified
             );
         }
+
 
         private readonly NakijinContext _context;
     }
