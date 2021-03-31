@@ -23,7 +23,7 @@ namespace HappyTravel.Nakijin.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
                 .HasAnnotation("ProductVersion", "5.0.0");
 
-            modelBuilder.Entity("HappyTravel.StaticDataMapper.Data.Models.AccommodationUncertainMatches", b =>
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.AccommodationUncertainMatches", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -49,7 +49,7 @@ namespace HappyTravel.Nakijin.Data.Migrations
                     b.ToTable("AccommodationUncertainMatches");
                 });
 
-            modelBuilder.Entity("HappyTravel.StaticDataMapper.Data.Models.Accommodations.RichAccommodationDetails", b =>
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.Accommodations.RichAccommodationDetails", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -90,7 +90,7 @@ namespace HappyTravel.Nakijin.Data.Migrations
                     b.ToTable("Accommodations");
                 });
 
-            modelBuilder.Entity("HappyTravel.StaticDataMapper.Data.Models.Mappers.RawAccommodation", b =>
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.Mappers.RawAccommodation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -117,7 +117,7 @@ namespace HappyTravel.Nakijin.Data.Migrations
                     b.ToTable("RawAccommodations");
                 });
 
-            modelBuilder.Entity("HappyTravel.StaticDataMapper.Data.Models.StaticData", b =>
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.StaticData", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
