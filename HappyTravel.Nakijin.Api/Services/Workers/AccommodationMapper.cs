@@ -357,7 +357,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 var dbHtAccommodationMapping = new HtAccommodationMapping
                 {
                     HtId = htId,
-                    MappedHtIds = new HashSet<int>(){deactivatedHtId},
+                    MappedHtIds = new HashSet<int>() {deactivatedHtId},
                     Modified = utcDate,
                     IsActive = true
                 };
@@ -614,7 +614,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     Id = m.Id,
                     HtId = m.HtId,
                     MappedHtIds = m.MappedHtIds
-                }).ToDictionaryAsync(m => m.HtId, m => (m.Id, m.MappedHtIds));
+                })
+                .ToDictionaryAsync(m => m.HtId, m => (m.Id, m.MappedHtIds));
 
         private readonly int _batchSize;
         private readonly ILogger<AccommodationMapper> _logger;

@@ -56,7 +56,7 @@ namespace HappyTravel.Nakijin.Api.Services
             if (type != AccommodationMapperLocationTypes.Accommodation)
                 return Result.Failure<Accommodation>($"{type} is not supported");
 
-            var accommodation = await GetRich(id);
+            var accommodation = await GetRichDetails(id);
 
             if (accommodation == default)
             {
@@ -68,7 +68,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 if (activeHtId == default)
                     return Result.Failure<Accommodation>("Accommodation does not exists");
 
-                accommodation = await GetRich(activeHtId);
+                accommodation = await GetRichDetails(activeHtId);
                 
                 if(accommodation == default)
                     return Result.Failure<Accommodation>("Accommodation does not exists");
@@ -117,7 +117,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 .ToList();
         }
 
-        private async Task<RichAccommodationDetails?> GetRich(int id)
+        private async Task<RichAccommodationDetails?> GetRichDetails(int id)
             => await _context.Accommodations
                 .Where(ac => ac.IsActive && ac.Id == id)
                 .Select(ac => new RichAccommodationDetails
