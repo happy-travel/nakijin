@@ -61,7 +61,7 @@ namespace HappyTravel.Nakijin.Api.Services
             if (accommodation == default)
             {
                 var activeHtId = await _context.HtAccommodationMappings
-                    .Where(m => m.IsActive && EF.Functions.JsonExists(m.MappedHtIds, id.ToString()))
+                    .Where(m => m.IsActive && EF.Functions.JsonContains(m.MappedHtIds, id.ToString()))
                     .Select(m => m.HtId)
                     .SingleOrDefaultAsync();
 

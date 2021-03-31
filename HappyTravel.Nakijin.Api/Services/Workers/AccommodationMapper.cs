@@ -357,38 +357,39 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 var dbHtAccommodationMapping = new HtAccommodationMapping
                 {
                     HtId = htId,
-                    MappedHtIds = new HashSet<int>(deactivatedHtId),
+                    MappedHtIds = new HashSet<int>(){deactivatedHtId},
                     Modified = utcDate,
                     IsActive = true
                 };
+
+                if (htAccommodationMappings.TryGetValue(deactivatedHtId, out var mappingsOfDeactivated))
+                {
+                    dbHtAccommodationMapping.MappedHtIds.UnionWith(mappingsOfDeactivated.MappedHtIds);
+                    var htAccommodationMappingToDeactivate = new HtAccommodationMapping
+                    {
+                        Id = mappingsOfDeactivated.Id,
+                        IsActive = false,
+                        Modified = utcDate
+                    };
+                    _context.Attach(htAccommodationMappingToDeactivate);
+                    _context.Entry(htAccommodationMappingToDeactivate).Property(m => m.IsActive).IsModified = true;
+                    _context.Entry(htAccommodationMappingToDeactivate).Property(m => m.Modified).IsModified = true;
+                }
+
                 if (htAccommodationMappings.TryGetValue(htId, out var mappings))
                 {
                     dbHtAccommodationMapping.Id = mappings.Id;
                     dbHtAccommodationMapping.MappedHtIds.UnionWith(mappings.MappedHtIds);
 
-                    if (htAccommodationMappings.TryGetValue(deactivatedHtId, out var mappingsOfDeactivated))
-                    {
-                        dbHtAccommodationMapping.MappedHtIds.UnionWith(mappingsOfDeactivated.MappedHtIds);
-                        var htAccommodationMappingToDeactivate = new HtAccommodationMapping
-                        {
-                            Id = mappingsOfDeactivated.Id,
-                            IsActive = false,
-                            Modified = utcDate
-                        };
-                        _context.Attach(htAccommodationMappingToDeactivate);
-                        _context.Entry(htAccommodationMappingToDeactivate).Property(m => m.IsActive).IsModified = true;
-                        _context.Entry(htAccommodationMappingToDeactivate).Property(m => m.Modified).IsModified = true;
-                    }
-
                     _context.Attach(dbHtAccommodationMapping);
                     _context.Entry(dbHtAccommodationMapping).Property(m => m.MappedHtIds).IsModified = true;
                     _context.Entry(dbHtAccommodationMapping).Property(m => m.Modified).IsModified = true;
+
+                    return;
                 }
-                else
-                {
-                    dbHtAccommodationMapping.Created = utcDate;
-                    _context.Add(dbHtAccommodationMapping);
-                }
+
+                dbHtAccommodationMapping.Created = utcDate;
+                _context.Add(dbHtAccommodationMapping);
             }
 
 
@@ -613,7 +614,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     Id = m.Id,
                     HtId = m.HtId,
                     MappedHtIds = m.MappedHtIds
-                }).ToDictionaryAsync(m => m.HtId, m => (m.HtId, m.MappedHtIds));
+                }).ToDictionaryAsync(m => m.HtId, m => (m.Id, m.MappedHtIds));
 
         private readonly int _batchSize;
         private readonly ILogger<AccommodationMapper> _logger;
