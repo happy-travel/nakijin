@@ -130,8 +130,9 @@ namespace HappyTravel.Nakijin.Api.Services
                 return Result.Failure("Wrong accommodation Id");
 
             foreach (var supplierAccommodation in secondAccommodation.SupplierAccommodationCodes)
-                firstAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key,
-                    supplierAccommodation.Value);
+                if (!firstAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key,
+                    supplierAccommodation.Value))
+                    return Result.Failure("Accommodations have dependencies from the same provider.");
 
             var utcDate = DateTime.UtcNow;
 
