@@ -49,6 +49,7 @@ namespace HappyTravel.Nakijin.Api.Services
             return Result.Success();
         }
 
+
         public async Task<Result> MatchAccommodations(int htId, int htIdToMatch)
         {
             var (_, isFailure, error) = await Match(htId, htIdToMatch);
@@ -183,7 +184,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 htAccommodationMapping.MappedHtIds.UnionWith(dbHtAccommodationMapping.MappedHtIds);
                 htAccommodationMapping.Modified = utcDate;
                 _context.Update(htAccommodationMapping);
-                
+
                 return;
             }
 
