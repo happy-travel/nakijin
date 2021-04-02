@@ -231,6 +231,24 @@ namespace HappyTravel.Nakijin.Api.Controllers
         }
 
 
+        /// <summary>
+        /// Matches two ht accommodations
+        /// </summary>
+        /// <param name="htId"></param>
+        /// <param name="htIdToMatch"></param>
+        /// <returns></returns>
+        [HttpPost("accommodations/match")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> MatchAccommodations(int htId, int htIdToMatch)
+        {
+            var (_, isFailure, error) = await _accommodationManagementService.MatchAccommodations(htId, htIdToMatch);
+            if (isFailure)
+                return BadRequest(error);
+
+            return Ok();
+        }
+
         private static CancellationTokenSource _accommodationDataMergeTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));
 
