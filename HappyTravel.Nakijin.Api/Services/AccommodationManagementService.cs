@@ -122,29 +122,29 @@ namespace HappyTravel.Nakijin.Api.Services
         // This method only make changes on db context - not on db.
         private async Task<Result> Match(int htId, int htIdToMatch)
         {
-            var firstAccommodation =
+            var accommodation =
                 await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == htId && ac.IsActive);
-            var secondAccommodation =
+            var accommodationToMatch =
                 await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == htIdToMatch && ac.IsActive);
 
-            if (firstAccommodation == default || secondAccommodation == default)
+            if (accommodation == default || accommodationToMatch == default)
                 return Result.Failure("Wrong accommodation Id");
 
-            foreach (var supplierAccommodation in secondAccommodation.SupplierAccommodationCodes)
-                if (!firstAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key,
+            foreach (var supplierAccommodation in accommodationToMatch.SupplierAccommodationCodes)
+                if (!accommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key,
                     supplierAccommodation.Value))
                     return Result.Failure("Accommodations have dependencies from the same provider.");
 
             var utcDate = DateTime.UtcNow;
 
-            firstAccommodation.IsCalculated = false;
-            firstAccommodation.Modified = utcDate;
+            accommodation.IsCalculated = false;
+            accommodation.Modified = utcDate;
 
-            secondAccommodation.IsActive = false;
-            secondAccommodation.Modified = utcDate;
+            accommodationToMatch.IsActive = false;
+            accommodationToMatch.Modified = utcDate;
 
-            _context.Update(firstAccommodation);
-            _context.Update(secondAccommodation);
+            _context.Update(accommodation);
+            _context.Update(accommodationToMatch);
 
             return Result.Success();
         }
