@@ -7,6 +7,7 @@ namespace HappyTravel.Nakijin.Data.Models
         Illusions = 2,
         DirectContracts = 3,
         Etg = 4,
-        Rakuten = 5
+        Rakuten = 5,
+        Columbus = 6
     }
 }
