@@ -246,23 +246,22 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 if (isActive && activeCountryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
                     return;
 
-                // This situation is not real 
-                // if (isActive && notActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
-                //     out var existingNotActive))
-                // {
-                //     var accommodationToUpdate = new RichAccommodationDetails
-                //     {
-                //         Id = existingNotActive.HtId,
-                //         IsActive = true,
-                //         Modified = utcDate
-                //     };
-                //
-                //     _context.Attach(accommodationToUpdate);
-                //     _context.Entry(accommodationToUpdate).Property(ac => ac.IsActive).IsModified = true;
-                //     _context.Entry(accommodationToUpdate).Property(ac => ac.Modified).IsModified = true;
-                //
-                //     return;
-                // }
+                if (isActive && notActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
+                    out var existingNotActive))
+                {
+                    var accommodationToUpdate = new RichAccommodationDetails
+                    {
+                        Id = existingNotActive.HtId,
+                        IsActive = true,
+                        Modified = utcDate
+                    };
+                
+                    _context.Attach(accommodationToUpdate);
+                    _context.Entry(accommodationToUpdate).Property(ac => ac.IsActive).IsModified = true;
+                    _context.Entry(accommodationToUpdate).Property(ac => ac.Modified).IsModified = true;
+                
+                    return;
+                }
 
                 if (!isActive && notActiveCountryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
                     return;
