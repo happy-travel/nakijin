@@ -108,7 +108,7 @@
             <summary>
             Matches two ht accommodations
             </summary>
-            <param name="htId"></param>
+            <param name="sourceHtId"></param>
             <param name="htIdToMatch"></param>
             <returns></returns>
         </member>
