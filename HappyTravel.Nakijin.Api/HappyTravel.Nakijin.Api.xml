@@ -104,6 +104,14 @@
             <param name="uncertainMatchId"></param>
             <returns></returns>
         </member>
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.MatchAccommodations(System.Int32,System.Int32)">
+            <summary>
+            Matches two ht accommodations
+            </summary>
+            <param name="htId"></param>
+            <param name="htIdToMatch"></param>
+            <returns></returns>
+        </member>
         <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationMappingsController.GetMapping(System.Collections.Generic.List{System.String})">
             <summary>
             Gets location mapping list info by given htId list
