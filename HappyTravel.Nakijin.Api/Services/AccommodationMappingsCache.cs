@@ -13,6 +13,7 @@ namespace HappyTravel.Nakijin.Api.Services
             _context = context;
         }
 
+        
         public async Task Fill()
         {
             var dbMappings = await _context.HtAccommodationMappings.Where(m => m.IsActive).ToListAsync();
@@ -24,6 +25,7 @@ namespace HappyTravel.Nakijin.Api.Services
             }
         }
 
+        
         public async ValueTask<int> GetActualHtId(int mappedHtId)
         {
             if (_accommodationMappings.IsEmpty)
@@ -37,7 +39,6 @@ namespace HappyTravel.Nakijin.Api.Services
 
 
         private readonly ConcurrentDictionary<int, int> _accommodationMappings = new ConcurrentDictionary<int, int>();
-
         private readonly NakijinContext _context;
     }
 }
