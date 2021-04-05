@@ -16,10 +16,11 @@ namespace HappyTravel.Nakijin.Api.Services
     public class AccommodationManagementService : IAccommodationManagementService
     {
         public AccommodationManagementService(NakijinContext context,
-            IAccommodationsDataMerger accommodationsDataMerger)
+            IAccommodationsDataMerger accommodationsDataMerger,AccommodationMappingsCache mappingsCache)
         {
             _context = context;
             _accommodationsDataMerger = accommodationsDataMerger;
+            _mappingsCache = mappingsCache;
         }
 
 
@@ -46,6 +47,7 @@ namespace HappyTravel.Nakijin.Api.Services
             // No need to check for failure, because always needed calculation here
             await RecalculateData(uncertainMatch.FirstHtId);
 
+            await _mappingsCache.Fill();
             return Result.Success();
         }
 
@@ -61,6 +63,7 @@ namespace HappyTravel.Nakijin.Api.Services
             // No need to check for failure, because always needed calculation here
             await RecalculateData(sourceHtId);
 
+            await _mappingsCache.Fill();
             return Result.Success();
         }
 
@@ -196,5 +199,6 @@ namespace HappyTravel.Nakijin.Api.Services
 
         private readonly IAccommodationsDataMerger _accommodationsDataMerger;
         private readonly NakijinContext _context;
+        private readonly AccommodationMappingsCache _mappingsCache;
     }
 }
