@@ -43,23 +43,23 @@ namespace HappyTravel.Nakijin.Api.Services
             _context.Update(uncertainMatch);
             await _context.SaveChangesAsync();
 
-            // No need to check for failure
+            // No need to check for failure, because always needed calculation here
             await RecalculateData(uncertainMatch.FirstHtId);
 
             return Result.Success();
         }
 
 
-        public async Task<Result> MatchAccommodations(int htId, int htIdToMatch)
+        public async Task<Result> MatchAccommodations(int sourceHtId, int htIdToMatch)
         {
-            var (_, isFailure, error) = await Match(htId, htIdToMatch);
+            var (_, isFailure, error) = await Match(sourceHtId, htIdToMatch);
             if (isFailure)
                 return Result.Failure(error);
 
-            await AddOrUpdateMappings(htId, htIdToMatch);
+            await AddOrUpdateMappings(sourceHtId, htIdToMatch);
             await _context.SaveChangesAsync();
-            // No need to check for failure
-            await RecalculateData(htId);
+            // No need to check for failure, because always needed calculation here
+            await RecalculateData(sourceHtId);
 
             return Result.Success();
         }
@@ -120,30 +120,31 @@ namespace HappyTravel.Nakijin.Api.Services
 
 
         // This method only make changes on db context - not on db.
-        private async Task<Result> Match(int htId, int htIdToMatch)
+        private async Task<Result> Match(int sourceHtId, int htIdToMatch)
         {
-            var accommodation =
-                await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == htId && ac.IsActive);
+            var sourceAccommodation =
+                await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == sourceHtId && ac.IsActive);
             var accommodationToMatch =
                 await _context.Accommodations.SingleOrDefaultAsync(ac => ac.Id == htIdToMatch && ac.IsActive);
 
-            if (accommodation == default || accommodationToMatch == default)
+            if (sourceAccommodation == default || accommodationToMatch == default)
                 return Result.Failure("Wrong accommodation Id");
 
             foreach (var supplierAccommodation in accommodationToMatch.SupplierAccommodationCodes)
-                if (!accommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key,
-                    supplierAccommodation.Value))
+            {
+                if (!sourceAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key, supplierAccommodation.Value))
                     return Result.Failure("Accommodations have dependencies from the same provider.");
+            }
 
             var utcDate = DateTime.UtcNow;
 
-            accommodation.IsCalculated = false;
-            accommodation.Modified = utcDate;
+            sourceAccommodation.IsCalculated = false;
+            sourceAccommodation.Modified = utcDate;
 
             accommodationToMatch.IsActive = false;
             accommodationToMatch.Modified = utcDate;
 
-            _context.Update(accommodation);
+            _context.Update(sourceAccommodation);
             _context.Update(accommodationToMatch);
 
             return Result.Success();
@@ -151,12 +152,12 @@ namespace HappyTravel.Nakijin.Api.Services
 
         // This method only make changes on db context - not on db.
         // If ht mappings will be not large, may be this method will be used from mapping worker
-        private async Task AddOrUpdateMappings(int htId, int htIdToMap)
+        private async Task AddOrUpdateMappings(int sourceHtId, int htIdToMap)
         {
             var utcDate = DateTime.UtcNow;
-            var dbHtAccommodationMapping = new HtAccommodationMapping
+            var dbSourceAccommodationMapping = new HtAccommodationMapping
             {
-                HtId = htId,
+                HtId = sourceHtId,
                 MappedHtIds = new HashSet<int>() {htIdToMap},
                 Modified = utcDate,
                 IsActive = true
@@ -169,27 +170,27 @@ namespace HappyTravel.Nakijin.Api.Services
 
             if (htAccommodationMappingToDeactivate != default)
             {
-                dbHtAccommodationMapping.MappedHtIds.UnionWith(htAccommodationMappingToDeactivate.MappedHtIds);
+                dbSourceAccommodationMapping.MappedHtIds.UnionWith(htAccommodationMappingToDeactivate.MappedHtIds);
                 htAccommodationMappingToDeactivate.IsActive = false;
                 htAccommodationMappingToDeactivate.Modified = utcDate;
                 _context.Update(htAccommodationMappingToDeactivate);
             }
 
             var htAccommodationMapping = await _context.HtAccommodationMappings
-                .Where(hm => hm.HtId == htId)
+                .Where(hm => hm.HtId == sourceHtId)
                 .SingleOrDefaultAsync();
 
             if (htAccommodationMapping != default)
             {
-                htAccommodationMapping.MappedHtIds.UnionWith(dbHtAccommodationMapping.MappedHtIds);
+                htAccommodationMapping.MappedHtIds.UnionWith(dbSourceAccommodationMapping.MappedHtIds);
                 htAccommodationMapping.Modified = utcDate;
                 _context.Update(htAccommodationMapping);
 
                 return;
             }
 
-            dbHtAccommodationMapping.Created = utcDate;
-            _context.Add(dbHtAccommodationMapping);
+            dbSourceAccommodationMapping.Created = utcDate;
+            _context.Add(dbSourceAccommodationMapping);
         }
 
 
