@@ -16,7 +16,7 @@ namespace HappyTravel.Nakijin.Api.Services
     public class AccommodationManagementService : IAccommodationManagementService
     {
         public AccommodationManagementService(NakijinContext context,
-            IAccommodationsDataMerger accommodationsDataMerger,AccommodationMappingsCache mappingsCache)
+            IAccommodationsDataMerger accommodationsDataMerger, AccommodationMappingsCache mappingsCache)
         {
             _context = context;
             _accommodationsDataMerger = accommodationsDataMerger;
@@ -135,7 +135,8 @@ namespace HappyTravel.Nakijin.Api.Services
 
             foreach (var supplierAccommodation in accommodationToMatch.SupplierAccommodationCodes)
             {
-                if (!sourceAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key, supplierAccommodation.Value))
+                if (!sourceAccommodation.SupplierAccommodationCodes.TryAdd(supplierAccommodation.Key,
+                    supplierAccommodation.Value))
                     return Result.Failure("Accommodations have dependencies from the same provider.");
             }
 

@@ -43,7 +43,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
     {
         public AccommodationMapper(NakijinContext context,
             ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
-            MultilingualDataHelper multilingualDataHelper,AccommodationMappingsCache mappingsCache,
+            MultilingualDataHelper multilingualDataHelper, AccommodationMappingsCache mappingsCache,
             TracerProvider tracerProvider)
         {
             _context = context;
@@ -74,7 +74,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
                     _logger.LogMappingAccommodationsFinish(
                         $"Finished mapping of {supplier.ToString()} accommodations");
-                    
+
                     await _mappingsCache.Fill();
                     supplierAccommodationsMappingSpan.AddEvent("Reset accommodation mappings cache");
                 }
