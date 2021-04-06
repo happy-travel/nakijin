@@ -54,7 +54,7 @@ steps:
     GITHUB_TOKEN:
       from_secret: GITHUB_TOKEN
     HTDC_VAULT_TOKEN:
-      from_secret: VAULT_DEV_TOKEN      
+      from_secret: VAULT_DEV_TOKEN
     HTDC_VAULT_ENDPOINT:
       from_secret: VAULT_DEV_ENDPOINT
   commands:
@@ -91,9 +91,9 @@ steps:
   image: pelotech/drone-helm3:0.14.2
   settings:
     mode: upgrade
-    chart: ./Helm_v3/nakijin
+    chart: ./Helm/nakijin
     release: nakijin-dev
-    values_files: ["Helm_v3/nakijin/values_dev.yaml"]
+    values_files: ["Helm/nakijin/values_dev.yaml"]
     namespace: dev
     skip_tls_verify: true
     wait: true
@@ -138,7 +138,7 @@ steps:
     GITHUB_TOKEN:
       from_secret: GITHUB_TOKEN
     HTDC_VAULT_TOKEN:
-      from_secret: VAULT_PROD_TOKEN      
+      from_secret: VAULT_PROD_TOKEN
     HTDC_VAULT_ENDPOINT:
       from_secret: VAULT_PROD_ENDPOINT
   commands:
@@ -175,9 +175,9 @@ steps:
   image: pelotech/drone-helm3:0.14.2
   settings:
     mode: upgrade
-    chart: ./Helm_v3/nakijin
+    chart: ./Helm/nakijin
     release: nakijin-production
-    values_files: ["Helm_v3/nakijin/values_prod.yaml"]
+    values_files: ["Helm/nakijin/values_prod.yaml"]
     namespace: production
     skip_tls_verify: true
     wait_for_upgrade: true
