@@ -43,7 +43,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
     {
         public AccommodationMapper(NakijinContext context,
             ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
-            MultilingualDataHelper multilingualDataHelper,
+            MultilingualDataHelper multilingualDataHelper, AccommodationMappingsCache mappingsCache,
             TracerProvider tracerProvider)
         {
             _context = context;
@@ -51,6 +51,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _batchSize = options.Value.MappingBatchSize;
             _multilingualDataHelper = multilingualDataHelper;
             _tracerProvider = tracerProvider;
+            _mappingsCache = mappingsCache;
         }
 
         public async Task MapAccommodations(List<Suppliers> suppliers, CancellationToken cancellationToken)
@@ -73,6 +74,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
                     _logger.LogMappingAccommodationsFinish(
                         $"Finished mapping of {supplier.ToString()} accommodations");
+
+                    await _mappingsCache.Fill();
+                    supplierAccommodationsMappingSpan.AddEvent("Reset accommodation mappings cache");
                 }
                 catch (TaskCanceledException)
                 {
@@ -637,6 +641,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         private readonly MultilingualDataHelper _multilingualDataHelper;
         private readonly NakijinContext _context;
         private readonly TracerProvider _tracerProvider;
+        private readonly AccommodationMappingsCache _mappingsCache;
 
         private const float UncertainMatchingMinimumScore = 1.5f;
         private const float MatchingMinimumScore = 3f;

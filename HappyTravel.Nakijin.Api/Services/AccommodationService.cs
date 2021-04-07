@@ -15,8 +15,9 @@ namespace HappyTravel.Nakijin.Api.Services
 {
     public class AccommodationService : IAccommodationService
     {
-        public AccommodationService(NakijinContext context)
+        public AccommodationService(NakijinContext context, AccommodationMappingsCache mappingsCache)
         {
+            _mappingsCache = mappingsCache;
             _context = context;
         }
 
@@ -56,26 +57,17 @@ namespace HappyTravel.Nakijin.Api.Services
             if (type != AccommodationMapperLocationTypes.Accommodation)
                 return Result.Failure<Accommodation>($"{type} is not supported");
 
-            var accommodation = await GetRichDetails(id);
+            var actualHtId = await _mappingsCache.GetActualHtId(id);
+
+            var accommodation = await GetRichDetails(actualHtId);
 
             if (accommodation == default)
-            {
-                var activeHtId = await _context.HtAccommodationMappings
-                    .Where(m => m.IsActive && EF.Functions.JsonContains(m.MappedHtIds, id.ToString()))
-                    .Select(m => m.HtId)
-                    .SingleOrDefaultAsync();
+                return Result.Failure<Accommodation>("Accommodation does not exists");
 
-                if (activeHtId == default)
-                    return Result.Failure<Accommodation>("Accommodation does not exists");
-
-                accommodation = await GetRichDetails(activeHtId);
-                
-                if(accommodation == default)
-                    return Result.Failure<Accommodation>("Accommodation does not exists");
-            }
 
             return MapToAccommodation(accommodation.Id, accommodation.CountryId,
-                accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.CalculatedAccommodation, languageCode,
+                accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.CalculatedAccommodation,
+                languageCode,
                 accommodation.Modified);
         }
 
@@ -189,7 +181,7 @@ namespace HappyTravel.Nakijin.Api.Services
             );
         }
 
-
+        private readonly AccommodationMappingsCache _mappingsCache;
         private readonly NakijinContext _context;
     }
 }
