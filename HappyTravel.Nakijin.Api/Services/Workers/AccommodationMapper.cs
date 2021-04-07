@@ -225,7 +225,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     if (activeCountryUncertainMatchesOfSupplier.Any(eum
                         => eum.Equals(new Tuple<int, int>(matchedHtId, existingHtId))
                         || eum.Equals(new Tuple<int, int>(existingHtId, matchedHtId))))
+                    {
                         return;
+                    }
                 }
                 else if (notActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
                     out var existingNotActive))
@@ -236,7 +238,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     if (activeCountryUncertainMatchesOfSupplier.Any(eum
                         => eum.Equals(new Tuple<int, int>(matchedHtId, existingHtId))
                         || eum.Equals(new Tuple<int, int>(existingHtId, matchedHtId))))
+                    {
                         return;
+                    }
                 }
 
                 uncertainAccommodationsToAdd.Add(new AccommodationUncertainMatches
