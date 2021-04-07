@@ -18,10 +18,10 @@ namespace HappyTravel.Nakijin.Api.Services
         {
             var dbMappings = await _context.HtAccommodationMappings.Where(m => m.IsActive).ToListAsync();
             _accommodationMappings.Clear();
-            foreach (var htMapping in dbMappings)
+            foreach (var mapping in dbMappings)
             {
-                foreach (var mappedHtId in htMapping.MappedHtIds)
-                    _accommodationMappings.TryAdd(mappedHtId, htMapping.HtId);
+                foreach (var mappedHtId in mapping.MappedHtIds)
+                    _accommodationMappings.TryAdd(mappedHtId, mapping.HtId);
             }
         }
 
