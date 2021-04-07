@@ -37,13 +37,12 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
             _locationsMapperTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
             Task.Factory.StartNew(async () =>
-                {
-                    using var scope = _serviceProvider.CreateScope();
+            {
+                using var scope = _serviceProvider.CreateScope();
 
-                    var locationService = scope.ServiceProvider.GetRequiredService<ILocationMapper>();
-                    await locationService.MapLocations(suppliers, _locationsMapperTokenSource.Token);
-                }, _locationsMapperTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
-                .ConfigureAwait(false);
+                var locationService = scope.ServiceProvider.GetRequiredService<ILocationMapper>();
+                await locationService.MapLocations(suppliers, _locationsMapperTokenSource.Token);
+            }, _locationsMapperTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             return Accepted();
         }
