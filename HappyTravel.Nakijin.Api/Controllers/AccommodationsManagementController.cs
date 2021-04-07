@@ -12,6 +12,7 @@ using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace HappyTravel.Nakijin.Api.Controllers
 {
@@ -23,10 +24,11 @@ namespace HappyTravel.Nakijin.Api.Controllers
     public class AccommodationsManagementController : StaticDataControllerBase
     {
         public AccommodationsManagementController(IServiceProvider serviceProvider,
-            IAccommodationManagementService accommodationManagementService)
+            IAccommodationManagementService accommodationManagementService, ILoggerFactory loggerFactory)
         {
             _serviceProvider = serviceProvider;
             _accommodationManagementService = accommodationManagementService;
+            _logger = loggerFactory.CreateLogger<AccommodationsManagementController>();
         }
 
 
@@ -87,13 +89,13 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
             _accommodationPreloaderTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
 
-            Task.Run(async () =>
+            Task.Factory.StartNew(async () =>
             {
                 using var scope = _serviceProvider.CreateScope();
 
                 var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
                 await preloader.Preload(suppliers, modificationDate, _accommodationPreloaderTokenSource.Token);
-            }, cancellationToken);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             return Accepted();
         }
 
@@ -113,14 +115,19 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
             _accommodationMappingTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
 
-            Task.Run(async () =>
+             Task.Factory.StartNew(async () =>
             {
+                _logger.LogInformation("Started Mapping");
                 using var scope = _serviceProvider.CreateScope();
 
                 var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
                 await mapper.MapAccommodations(suppliers, _accommodationMappingTokenSource.Token);
-            }, _accommodationMappingTokenSource.Token);
-
+            }, _accommodationMappingTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
+                .ContinueWith((task) =>
+                {
+                    if(task.IsFaulted)
+                    _logger.LogError(task.Exception?.GetBaseException().Message);
+                });
             return Accepted();
         }
 
@@ -139,13 +146,12 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
             _accommodationDataMergeTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
 
-            Task.Run(async () =>
+            Task.Factory.StartNew(async () =>
             {
                 using var scope = _serviceProvider.CreateScope();
-
                 var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
                 await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
-            }, _accommodationDataMergeTokenSource.Token);
+            }, _accommodationDataMergeTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             return Accepted();
         }
@@ -258,6 +264,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         private static CancellationTokenSource _accommodationPreloaderTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));
 
+        private readonly ILogger<AccommodationsManagementController> _logger;
         private readonly IAccommodationManagementService _accommodationManagementService;
         private readonly IServiceProvider _serviceProvider;
     }
