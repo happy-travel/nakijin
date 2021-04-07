@@ -225,7 +225,22 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     if (activeCountryUncertainMatchesOfSupplier.Any(eum
                         => eum.Equals(new Tuple<int, int>(matchedHtId, existingHtId))
                         || eum.Equals(new Tuple<int, int>(existingHtId, matchedHtId))))
+                    {
                         return;
+                    }
+                }
+                else if (notActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
+                    out var existingNotActive))
+                {
+                    matchedHtId = existingNotActive.HtId;
+                    AddOrChangeActivity(accommodation, true);
+
+                    if (activeCountryUncertainMatchesOfSupplier.Any(eum
+                        => eum.Equals(new Tuple<int, int>(matchedHtId, existingHtId))
+                        || eum.Equals(new Tuple<int, int>(existingHtId, matchedHtId))))
+                    {
+                        return;
+                    }
                 }
 
                 uncertainAccommodationsToAdd.Add(new AccommodationUncertainMatches
@@ -255,11 +270,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         IsActive = true,
                         Modified = utcDate
                     };
-                
+
                     _context.Attach(accommodationToUpdate);
                     _context.Entry(accommodationToUpdate).Property(ac => ac.IsActive).IsModified = true;
                     _context.Entry(accommodationToUpdate).Property(ac => ac.Modified).IsModified = true;
-                
+
                     return;
                 }
 
