@@ -24,11 +24,10 @@ namespace HappyTravel.Nakijin.Api.Controllers
     public class AccommodationsManagementController : StaticDataControllerBase
     {
         public AccommodationsManagementController(IServiceProvider serviceProvider,
-            IAccommodationManagementService accommodationManagementService, ILoggerFactory loggerFactory)
+            IAccommodationManagementService accommodationManagementService)
         {
             _serviceProvider = serviceProvider;
             _accommodationManagementService = accommodationManagementService;
-            _logger = loggerFactory.CreateLogger<AccommodationsManagementController>();
         }
 
 
@@ -88,13 +87,19 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 _accommodationPreloaderTokenSource.Cancel();
 
             _accommodationPreloaderTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
+            var scope = _serviceProvider.CreateScope();
 
             Task.Factory.StartNew(async () =>
             {
-                using var scope = _serviceProvider.CreateScope();
-
-                var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
-                await preloader.Preload(suppliers, modificationDate, _accommodationPreloaderTokenSource.Token);
+                try
+                {
+                    var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
+                    await preloader.Preload(suppliers, modificationDate, _accommodationPreloaderTokenSource.Token);
+                }
+                finally
+                {
+                    scope.Dispose();
+                }
             }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             return Accepted();
         }
@@ -114,20 +119,21 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 _accommodationMappingTokenSource.Cancel();
 
             _accommodationMappingTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
+            var scope = _serviceProvider.CreateScope();
 
-             Task.Factory.StartNew(async () =>
+            Task.Factory.StartNew(async () =>
             {
-                _logger.LogInformation("Started Mapping");
-                using var scope = _serviceProvider.CreateScope();
-
-                var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                await mapper.MapAccommodations(suppliers, _accommodationMappingTokenSource.Token);
-            }, _accommodationMappingTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
-                .ContinueWith((task) =>
+                try
                 {
-                    if(task.IsFaulted)
-                    _logger.LogError(task.Exception?.GetBaseException().Message);
-                });
+                    var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                    await mapper.MapAccommodations(suppliers, _accommodationMappingTokenSource.Token);
+                }
+                finally
+                {
+                    scope.Dispose();
+                }
+            }, _accommodationMappingTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
             return Accepted();
         }
 
@@ -145,12 +151,18 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 _accommodationMappingTokenSource.Cancel();
 
             _accommodationDataMergeTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
-
+            var scope = _serviceProvider.CreateScope();
             Task.Factory.StartNew(async () =>
             {
-                using var scope = _serviceProvider.CreateScope();
-                var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
-                await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
+                try
+                {
+                    var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                    await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
+                }
+                finally
+                {
+                    scope.Dispose();
+                }
             }, _accommodationDataMergeTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             return Accepted();
@@ -248,7 +260,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> MatchAccommodations(int sourceHtId, int htIdToMatch)
         {
-            var (_, isFailure, error) = await _accommodationManagementService.MatchAccommodations(sourceHtId, htIdToMatch);
+            var (_, isFailure, error) =
+                await _accommodationManagementService.MatchAccommodations(sourceHtId, htIdToMatch);
             if (isFailure)
                 return BadRequest(error);
 
@@ -264,7 +277,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         private static CancellationTokenSource _accommodationPreloaderTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));
 
-        private readonly ILogger<AccommodationsManagementController> _logger;
+
         private readonly IAccommodationManagementService _accommodationManagementService;
         private readonly IServiceProvider _serviceProvider;
     }
