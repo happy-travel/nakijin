@@ -43,7 +43,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
 
             services.AddNameNormalizationServices();
             services.AddSingleton<MultilingualDataHelper>();
-            services.AddSingleton<AccommodationMappingsCache>();
+            services.AddTransient<AccommodationMappingsCache>();
 
             return services;
         }
