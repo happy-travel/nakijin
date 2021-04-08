@@ -69,6 +69,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         private static List<string> GetWordsToIgnore(string[] constantWords, params string?[] wordsToIgnore)
         {
             var result = new List<string>(constantWords);
+            result.AddRange(CommonWordsToIgnore);
 
             foreach (var word in wordsToIgnore)
                 if (!string.IsNullOrEmpty(word))
@@ -129,5 +130,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
         private static readonly string[] WordsToIgnoreForAddressesComparison =
             new string[] {"street", "area", "road",};
+
+        private static readonly string[] CommonWordsToIgnore = new[] {"a", "an", "at", "the", "on"};
     }
 }
