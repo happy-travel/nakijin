@@ -41,12 +41,12 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             var currentSpan = Tracer.CurrentSpan;
             var tracer = _tracerProvider.GetTracer(nameof(AccommodationDataMerger));
             _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
-         
+
             try
             {
                 using var accommodationsDataMergingSpan = tracer.StartActiveSpan($"{nameof(MergeAll)} accommodations",
                     SpanKind.Internal, currentSpan);
-                
+
                 _logger.LogMergingAccommodationsDataStart($"Started merging accommodations data");
 
                 var notCalculatedAccommodations = new List<RichAccommodationDetails>();
@@ -85,11 +85,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         dbAccommodation.Id = ac.Id;
                         dbAccommodation.IsCalculated = true;
                         dbAccommodation.CalculatedAccommodation = calculatedData;
+                        dbAccommodation.HasDirectContract = calculatedData.HasDirectContract;
                         dbAccommodation.MappingData =
                             _multilingualDataHelper.GetAccommodationDataForMapping(calculatedData);
                         dbAccommodation.Modified = DateTime.UtcNow;
                         _context.Accommodations.Attach(dbAccommodation);
                         _context.Entry(dbAccommodation).Property(p => p.CalculatedAccommodation).IsModified = true;
+                        _context.Entry(dbAccommodation).Property(p => p.HasDirectContract).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.IsCalculated).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.Modified).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.MappingData).IsModified = true;
@@ -103,9 +105,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         .ToList()
                         .ForEach(e => e.State = EntityState.Detached);
                 } while (notCalculatedAccommodations.Count > 0);
-                
-                _logger.LogMergingAccommodationsDataFinish($"Finished merging accommodations data");
 
+                _logger.LogMergingAccommodationsDataFinish($"Finished merging accommodations data");
             }
             catch (TaskCanceledException)
             {
@@ -115,7 +116,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             {
                 _logger.LogMergingAccommodationsDataError(ex);
             }
-            
         }
 
         public async Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation)
@@ -200,6 +200,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Type),
                 accommodationWithManualCorrection.Type, t => t == 0);
 
+            var hasDirectContractList = supplierAccommodationDetails.Select(ac => ac.Value.HasDirectContract).ToList();
+            hasDirectContractList.Add(accommodationWithManualCorrection.HasDirectContract);
+            var hasDirectContract = MergeBoolData(hasDirectContractList);
+
             return new MultilingualAccommodation
             (
                 String.Empty,
@@ -213,7 +217,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 contacts: contactInfo,
                 additionalInfo: additionalInfo,
                 schedule: scheduleInfo,
-                textualDescriptions: textualDescriptions
+                textualDescriptions: textualDescriptions,
+                hasDirectContract: hasDirectContract
             );
         }
 
@@ -419,6 +424,15 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }
 
             return result;
+        }
+
+        private bool MergeBoolData(IEnumerable<bool> data)
+        {
+            foreach (var boolItem in data)
+                if (boolItem == true)
+                    return true;
+
+            return false;
         }
 
         private readonly TracerProvider _tracerProvider;

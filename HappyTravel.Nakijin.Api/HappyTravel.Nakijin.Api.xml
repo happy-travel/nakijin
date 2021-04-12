@@ -19,13 +19,14 @@
             <param name="accommodationHtId">Accommodation HtId</param>
             <returns>Accommodation details</returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.Get(System.Int32,System.Int32,System.Collections.Generic.List{System.String})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.Get(System.Int32,System.Int32,System.Collections.Generic.List{System.String},System.Nullable{System.Boolean})">
             <summary>
              Returns a list of accommodation details
             </summary>
             <param name="skip"></param>
             <param name="top"></param>
             <param name="suppliers"></param>
+            <param name="hasDirectContractFilter"></param>
             <returns></returns>
         </member>
         <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.GetLastModifiedDate">

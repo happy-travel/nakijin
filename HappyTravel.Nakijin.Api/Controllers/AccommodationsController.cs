@@ -69,12 +69,16 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// <param name="skip"></param>
         /// <param name="top"></param>
         /// <param name="suppliers"></param>
+        /// <param name="hasDirectContractFilter"></param>
         /// <returns></returns>
         [HttpGet("accommodations")]
         [ProducesResponseType(typeof(List<Accommodation>), (int) HttpStatusCode.OK)]
-        public async Task<IActionResult> Get(int skip, int top, [FromQuery] List<string> suppliers)
+        public async Task<IActionResult> Get(int skip, int top, [FromQuery] List<string> suppliers,
+            [FromQuery] bool? hasDirectContractFilter)
         {
-            var accommodations = await _accommodationService.Get(skip, top, suppliers.ToSuppliersList(), LanguageCode);
+            // For now these filters are enough, if will be more we must add separate model for filters.
+            var accommodations = await _accommodationService.Get(skip, top, suppliers.ToSuppliersList(),
+                hasDirectContractFilter, LanguageCode);
             return Ok(accommodations);
         }
 

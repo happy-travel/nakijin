@@ -44,7 +44,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 accommodation.Rating,
                 accommodation.Schedule,
                 accommodation.TextualDescriptions,
-                accommodation.Type
+                accommodation.Type,
+                accommodation.HasDirectContract
             );
 
 
