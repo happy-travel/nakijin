@@ -13,6 +13,8 @@ namespace HappyTravel.Nakijin.Data.Models.Accommodations
         public string CountryCode { get; set; }
         public AccommodationMappingData MappingData { get; set; }
         public MultilingualAccommodation CalculatedAccommodation { get; set; }
+        
+        public bool HasDirectContract { get; set; }
         public MultilingualAccommodation AccommodationWithManualCorrections { get; set; }
 
         public Dictionary<AccommodationDataTypes, List<Suppliers>> SuppliersPriority { get; set; } =

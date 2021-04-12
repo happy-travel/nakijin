@@ -77,20 +77,29 @@ namespace HappyTravel.Nakijin.Api.Services
 
 
         public async Task<List<Accommodation>> Get(int skip, int top, IEnumerable<Suppliers> suppliersFilter,
-            string languageCode)
+            bool? hasDirectContractFilter, string languageCode)
         {
             var suppliersKeys = suppliersFilter.Select(s => s.ToString().ToLower()).ToArray();
             var accommodationsQuery = _context.Accommodations
-                .Where(ac => ac.IsActive)
-                .OrderBy(ac => ac.Id)
-                .Skip(skip)
-                .Take(top);
+                .Where(ac => ac.IsActive);
+
 
             if (suppliersKeys.Any())
             {
                 accommodationsQuery = accommodationsQuery.Where(ac
                     => EF.Functions.JsonExistAny(ac.SupplierAccommodationCodes, suppliersKeys));
             }
+
+            if (hasDirectContractFilter != null)
+            {
+                accommodationsQuery =
+                    accommodationsQuery.Where(ac => ac.HasDirectContract == hasDirectContractFilter.Value);
+            }
+
+            accommodationsQuery = accommodationsQuery
+                .OrderBy(ac => ac.Id)
+                .Skip(skip)
+                .Take(top);
 
             var accommodations = await accommodationsQuery
                 .Select(ac => new

@@ -70,6 +70,7 @@ namespace HappyTravel.Nakijin.Data
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),
                         c => JsonConvert.DeserializeObject<MultilingualAccommodation>(c));
+                a.Property(p => p.HasDirectContract).IsRequired();
                 a.Property(p => p.AccommodationWithManualCorrections)
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),
