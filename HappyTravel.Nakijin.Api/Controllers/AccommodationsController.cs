@@ -32,8 +32,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// <param name="supplierAccommodationCode">Supplier Accommodation code </param>
         /// <returns>Accommodation details</returns>
         [HttpGet("suppliers/{supplier}/accommodations/{supplierAccommodationCode}")]
-        [ProducesResponseType(typeof(Accommodation), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(Accommodation), (int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> Get(Suppliers supplier, string supplierAccommodationCode)
         {
             var (_, isFailure, result, error) =
@@ -51,8 +51,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// <param name="accommodationHtId">Accommodation HtId</param>
         /// <returns>Accommodation details</returns>
         [HttpGet("accommodations/{accommodationHtId}")]
-        [ProducesResponseType(typeof(Accommodation), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(Accommodation), (int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
         public async Task<IActionResult> Get(string accommodationHtId)
         {
             var (_, isFailure, result, error) = await _accommodationService.Get(accommodationHtId, LanguageCode);
@@ -72,11 +72,13 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// <param name="hasDirectContractFilter"></param>
         /// <returns></returns>
         [HttpGet("accommodations")]
-        [ProducesResponseType(typeof(List<Accommodation>), (int)HttpStatusCode.OK)]
-        public async Task<IActionResult> Get(int skip, int top, [FromQuery] List<string> suppliers, [FromQuery] bool? hasDirectContractFilter)
+        [ProducesResponseType(typeof(List<Accommodation>), (int) HttpStatusCode.OK)]
+        public async Task<IActionResult> Get(int skip, int top, [FromQuery] List<string> suppliers,
+            [FromQuery] bool? hasDirectContractFilter)
         {
             // For now these filters are enough, if will be more we must add separate model for filters.
-            var accommodations = await _accommodationService.Get(skip, top, suppliers.ToSuppliersList(), hasDirectContractFilter, LanguageCode);
+            var accommodations = await _accommodationService.Get(skip, top, suppliers.ToSuppliersList(),
+                hasDirectContractFilter, LanguageCode);
             return Ok(accommodations);
         }
 
@@ -84,7 +86,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         ///   Gets date of last modified accommodation.
         /// </summary>
         /// <returns>Last changed location modified date</returns>
-        [ProducesResponseType(typeof(DateTime), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(DateTime), (int) HttpStatusCode.OK)]
         [HttpGet("accommodations/last-modified-date")]
         public async Task<IActionResult> GetLastModifiedDate()
         {

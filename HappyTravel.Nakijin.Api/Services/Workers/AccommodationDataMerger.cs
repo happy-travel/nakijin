@@ -202,8 +202,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             var hasDirectContractList = supplierAccommodationDetails.Select(ac => ac.Value.HasDirectContract).ToList();
             hasDirectContractList.Add(accommodationWithManualCorrection.HasDirectContract);
-            var hasDirectContract =
-                MergeBoolData(hasDirectContractList);
+            var hasDirectContract = MergeBoolData(hasDirectContractList);
 
             return new MultilingualAccommodation
             (
