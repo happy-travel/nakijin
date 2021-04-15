@@ -131,6 +131,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         private static readonly string[] WordsToIgnoreForAddressesComparison =
             new string[] {"street", "area", "road",};
 
-        private static readonly string[] CommonWordsToIgnore = new[] {"a", "an", "at", "the", "on"};
+        private static readonly string[] CommonWordsToIgnore = new string[]
+        {
+            /*"a", "an", "at", "the", "on"*/
+        };
     }
 }
