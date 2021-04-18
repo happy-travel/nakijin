@@ -34,5 +34,7 @@
   {"id": 90400, "name": "ConnectorClientError", "level": "Error", "source": "ConnectorClient", "isException": true},
   
   {"id": 90500, "name": "SameAccommodationInOneSupplierError", "level": "Error", "source": "AccommodationMapper", "isException": false},
-  {"id": 90501, "name": "EmptyCoordinatesInAccommodation", "level": "Error", "source": "AccommodationMapper", "isException": false}
+  {"id": 90501, "name": "EmptyCoordinatesInAccommodation", "level": "Error", "source": "AccommodationMapper", "isException": false},
+  
+  {"id": 90502, "name": "LocationsPublished", "level": "Information", "source": "PredictionsUpdateService", "isException": false}
 ]
