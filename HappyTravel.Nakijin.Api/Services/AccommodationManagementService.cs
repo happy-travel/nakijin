@@ -46,7 +46,6 @@ namespace HappyTravel.Nakijin.Api.Services
             
             await _mappingsCache.Fill();
             
-            // TODO: add pub/sub event
             return Result.Success();
         }
 
@@ -61,7 +60,7 @@ namespace HappyTravel.Nakijin.Api.Services
             await _context.SaveChangesAsync();
 
             await _mappingsCache.Fill();
-            // TODO: add pub/sub event
+            
             return Result.Success();
         }
 
