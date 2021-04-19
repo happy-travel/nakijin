@@ -2,8 +2,8 @@
 {
     public enum EventTypes
     {
-        AddEvent = 0,
-        RemoveEvent = 1,
-        UpdateEvent = 2
+        Add = 0,
+        Remove = 1,
+        Update = 2
     }
 }
