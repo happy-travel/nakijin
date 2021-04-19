@@ -40,10 +40,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             var locationsNamesToIgnore =
                 GetLocationsNamesForIgnoreOnNameComparision(nearestAccommodation, accommodation);
 
-            if (nearestAccommodation.DefaultName.Contains("hotel", StringComparison.InvariantCultureIgnoreCase) &&
-                nearestAccommodation.DefaultName.Contains("apartment", StringComparison.InvariantCultureIgnoreCase)
-                || accommodation.DefaultName.Contains("hotel", StringComparison.InvariantCultureIgnoreCase) &&
-                accommodation.DefaultName.Contains("apartment", StringComparison.InvariantCultureIgnoreCase))
+            if (nearestAccommodation.DefaultName.Contains("hotel", StringComparison.InvariantCultureIgnoreCase) 
+                && nearestAccommodation.DefaultName.Contains("apartment", StringComparison.InvariantCultureIgnoreCase)
+                || accommodation.DefaultName.Contains("hotel", StringComparison.InvariantCultureIgnoreCase) 
+                && accommodation.DefaultName.Contains("apartment", StringComparison.InvariantCultureIgnoreCase))
             {
                 return StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.DefaultName,
                     accommodation.DefaultName,
