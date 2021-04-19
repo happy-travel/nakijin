@@ -8,6 +8,7 @@ namespace HappyTravel.Nakijin.Api.Services.PredictionsUpdate
 {
     public interface IPredictionsUpdateService
     {
-        Task Publish(List<Location> locations, EntryTypes type, CancellationToken cancellationToken = default);
+        Task Publish(Location location, EventTypes type);
+        Task Publish(List<Location> locations, EventTypes type, CancellationToken cancellationToken = default);
     }
 }

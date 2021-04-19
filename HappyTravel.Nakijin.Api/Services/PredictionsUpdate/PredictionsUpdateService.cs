@@ -28,25 +28,24 @@ namespace HappyTravel.Nakijin.Api.Services.PredictionsUpdate
         }
         
         
-        public async Task Publish(List<Location> locations, EntryTypes type, CancellationToken cancellationToken = default)
+        public async Task Publish(Location location, EventTypes type)
+        {
+            await _database.StreamAddAsync(_stream, new []{Build(location, type)});
+            _logger.LogLocationsPublished( $"Location '{location.HtId}' has been published");
+        }
+
+        
+        public async Task Publish(List<Location> locations, EventTypes type, CancellationToken cancellationToken = default)
         {
             const int batchSize = 1000;
             using (await _mutex.LockAsync(cancellationToken))
             {
                 foreach (var batchOfLocations in ListHelper.Split(locations, batchSize))
                 {
-                    await _database.StreamAddAsync(_stream, Build(batchOfLocations));
+                    await _database.StreamAddAsync(_stream, Build(batchOfLocations, type));
                     _logger.LogLocationsPublished( $"{batchOfLocations} locations have been published");
                 }
             }
-
-            NameValueEntry[] Build(List<Location> batchOfLocations) 
-                => batchOfLocations.Select(l =>
-                    {
-                        var entry = new LocationEntry(type, l);
-                        return new NameValueEntry(entry.Location.HtId, JsonSerializer.Serialize(entry));
-                    })
-                    .ToArray();
         }
 
         
@@ -79,6 +78,18 @@ namespace HappyTravel.Nakijin.Api.Services.PredictionsUpdate
                 _database.StreamDelete(_stream, messagesToClear.Select(m => m.Id).ToArray());
             }
         }
+
+        
+        NameValueEntry Build(Location location, EventTypes type)
+        {
+            var entry = new LocationEntry(type, location);
+            return new(location.HtId, JsonSerializer.Serialize(entry));
+        }
+        
+        
+        NameValueEntry[] Build(List<Location> batchOfLocations, EventTypes type) 
+            => batchOfLocations.Select(l => Build(l, type))
+                .ToArray();
 
 
         private readonly AsyncLock _mutex = new ();

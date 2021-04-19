@@ -4,13 +4,13 @@ namespace HappyTravel.Nakijin.Api.Models.PredictionsUpdate
 {
     public readonly struct LocationEntry
     {
-        public LocationEntry(EntryTypes type, Location location)
+        public LocationEntry(EventTypes type, Location location)
         {
             Type = type;
             Location = location;
         }
 
-        public EntryTypes Type { get; }
+        public EventTypes Type { get; }
         public Location Location { get; }
     }
 }

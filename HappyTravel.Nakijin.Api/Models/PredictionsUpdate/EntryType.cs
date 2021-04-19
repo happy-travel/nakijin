@@ -1,9 +1,9 @@
 ﻿namespace HappyTravel.Nakijin.Api.Models.PredictionsUpdate
 {
-    public enum EntryTypes
+    public enum EventTypes
     {
-        Add = 0,
-        Remove = 1,
-        Update = 2
+        AddEvent = 0,
+        RemoveEvent = 1,
+        UpdateEvent = 2
     }
 }
