@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -20,7 +21,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             if (!firstSequence.Any() && !secondSequence.Any())
                 return 1;
 
-            var intersectedSequence = firstSequence.Intersect(secondSequence).ToArray();
+            var intersectedSequence = firstSequence.Intersect(secondSequence, new StringComparer()).ToArray();
             return (float) intersectedSequence.Length /
                 (firstSequence.Length + secondSequence.Length - intersectedSequence.Length);
         }
@@ -29,18 +30,12 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             => value
                 .ToStringWithoutSpecialCharacters()
                 .ToStringWithoutMultipleWhitespaces()
-                .ToStringWithoutWordsToIgnore(wordsToIgnore)
-                .ToStringWithoutMultipleWhitespaces()
-                .Split(" ");
+                .Split(" ")
+                .ToArrayWithoutWordsToIgnore(wordsToIgnore);
 
-        private static string ToStringWithoutWordsToIgnore(this string value, List<string> wordsToIgnore)
-        {
-            var result = value.ToLowerInvariant();
-            foreach (var wordToIgnore in wordsToIgnore)
-                    result = result.Replace(wordToIgnore, "");
-
-            return result;
-        }
+        private static string[] ToArrayWithoutWordsToIgnore(this string[] value, List<string> wordsToIgnore)
+            => value.Where(str => !wordsToIgnore.Any(w => w.Contains(str.Trim().ToLowerInvariant()))).Distinct()
+                .ToArray();
 
         private static string ToStringWithoutSpecialCharacters(this string value)
             => Regex.Replace(value, SpecialCharactersProcessingPattern, " ",
@@ -53,5 +48,21 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
 
         private const string SpecialCharactersProcessingPattern = @"[^\p{L}0-9]+";
         private const string MultipleSpacesProcessingPattern = @"\s+";
+    }
+
+    internal class StringComparer : IEqualityComparer<string>
+    {
+        public bool Equals(string? x, string? y)
+        {
+            if (string.IsNullOrEmpty(x) || string.IsNullOrEmpty(y))
+                return false;
+
+            var lowerX = x.ToLowerInvariant();
+            var lowery = y.ToLowerInvariant();
+            return lowerX.Contains(lowery) || lowery.Contains(lowerX);
+        }
+
+        // Always return the same value to check all pairs with method Equals
+        public int GetHashCode(string obj) => 1;
     }
 }
