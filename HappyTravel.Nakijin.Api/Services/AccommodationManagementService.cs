@@ -43,11 +43,9 @@ namespace HappyTravel.Nakijin.Api.Services
 
             _context.Update(uncertainMatch);
             await _context.SaveChangesAsync();
-
-            // No need to check for failure, because always needed calculation here
-            await RecalculateData(uncertainMatch.FirstHtId);
-
+            
             await _mappingsCache.Fill();
+            
             return Result.Success();
         }
 
@@ -60,10 +58,9 @@ namespace HappyTravel.Nakijin.Api.Services
 
             await AddOrUpdateMappings(sourceHtId, htIdToMatch);
             await _context.SaveChangesAsync();
-            // No need to check for failure, because always needed calculation here
-            await RecalculateData(sourceHtId);
 
             await _mappingsCache.Fill();
+            
             return Result.Success();
         }
 

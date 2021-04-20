@@ -37,19 +37,51 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         private static float GetNamesScore(in AccommodationMappingData nearestAccommodation,
             in AccommodationMappingData accommodation)
         {
-            var scores = new List<float>(WordsToIgnoreSetForHotelNamesComparison.Count);
+            var locationsNamesToIgnore =
+                GetLocationsNamesForIgnoreOnNameComparision(nearestAccommodation, accommodation);
 
+            if (nearestAccommodation.DefaultName.Contains("hotel", StringComparison.InvariantCultureIgnoreCase) 
+                && nearestAccommodation.DefaultName.Contains("apartment", StringComparison.InvariantCultureIgnoreCase)
+                || accommodation.DefaultName.Contains("hotel", StringComparison.InvariantCultureIgnoreCase) 
+                && accommodation.DefaultName.Contains("apartment", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.DefaultName,
+                    accommodation.DefaultName,
+                    GetWordsToIgnore(locationsNamesToIgnore));
+            }
+
+            var scores = new List<float>(WordsToIgnoreSetForHotelNamesComparison.Count + 1);
             foreach (var wordsToIgnore in WordsToIgnoreSetForHotelNamesComparison)
             {
                 scores.Add(StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.DefaultName,
                     accommodation.DefaultName,
-                    GetWordsToIgnore(wordsToIgnore, nearestAccommodation.DefaultLocalityName,
-                        accommodation.DefaultLocalityName, nearestAccommodation.DefaultLocalityZoneName,
-                        accommodation.DefaultLocalityZoneName)
+                    GetWordsToIgnore(locationsNamesToIgnore, wordsToIgnore)
                 ));
             }
 
             return scores.Max();
+        }
+
+        private static List<string> GetLocationsNamesForIgnoreOnNameComparision(
+            in AccommodationMappingData nearestAccommodation,
+            in AccommodationMappingData accommodation)
+        {
+            var result = new List<string>();
+
+            result.AddRange(GetWords(nearestAccommodation.DefaultCountryName));
+            result.AddRange(GetWords(accommodation.DefaultCountryName));
+            result.AddRange(GetWords(accommodation.DefaultLocalityName));
+            result.AddRange(GetWords(nearestAccommodation.DefaultLocalityName));
+            result.AddRange(GetWords(accommodation.DefaultLocalityZoneName));
+            result.AddRange(GetWords(nearestAccommodation.DefaultLocalityZoneName));
+
+            return result.Distinct().ToList();
+
+
+            List<string> GetWords(string value)
+                => string.IsNullOrEmpty(value)
+                    ? new List<string>()
+                    : value.Split(" ").ToList();
         }
 
         private static float GetAddressScore(in AccommodationMappingData nearestAccommodation,
@@ -57,19 +89,16 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         {
             return AddressScore * StringComparisonHelper.GetEqualityCoefficient(
                 nearestAccommodation.Address,
-                accommodation.Address, GetWordsToIgnore(WordsToIgnoreForAddressesComparison,
-                    accommodation.DefaultCountryName,
-                    //Not all providers have localityZone
-                    accommodation.DefaultLocalityName, nearestAccommodation.DefaultLocalityName,
-                    accommodation.DefaultLocalityZoneName,
-                    nearestAccommodation.DefaultLocalityZoneName)
-            );
+                accommodation.Address, GetWordsToIgnore(
+                    GetLocationsNamesForIgnoreOnNameComparision(nearestAccommodation, accommodation),
+                    WordsToIgnoreForAddressesComparison));
         }
 
-        private static List<string> GetWordsToIgnore(string[] constantWords, params string?[] wordsToIgnore)
+        private static List<string> GetWordsToIgnore(List<string> wordsToIgnore, string[]? constantWords = default)
         {
-            var result = new List<string>(constantWords);
-            result.AddRange(CommonWordsToIgnore);
+            var result = new List<string>(CommonWordsToIgnore);
+            if (constantWords != default)
+                result.AddRange(constantWords);
 
             foreach (var word in wordsToIgnore)
                 if (!string.IsNullOrEmpty(word))
@@ -124,16 +153,16 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             new List<string[]>
             {
                 new string[] {"apartments", "apartment"},
-                new string[] {"hotel", "hotels"},
-                new string[] {"hotel apartments", "hotel apartment"}
+                new string[] {"hotel", "hotels"}
             };
+
 
         private static readonly string[] WordsToIgnoreForAddressesComparison =
             new string[] {"street", "area", "road",};
 
         private static readonly string[] CommonWordsToIgnore = new string[]
         {
-            /*"a", "an", "at", "the", "on"*/
+            "a", "an", "at", "the", "on"
         };
     }
 }
