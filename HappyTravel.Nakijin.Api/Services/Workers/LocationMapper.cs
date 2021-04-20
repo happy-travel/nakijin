@@ -104,6 +104,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var defaultName = country.Names.GetValueOrDefault(DefaultLanguageCode);
+                if (!defaultName.IsValid())
+                    continue;
+
                 var code = _locationNameNormalizer.GetNormalizedCountryCode(defaultName, country.Code);
                 var dbCountry = new Country
                 {
@@ -252,6 +255,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     var defaultLocalityName = locality.LocalityNames.GetValueOrDefault(DefaultLanguageCode);
                     var normalizedLocalityName =
                         _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
+
+                    if (!normalizedLocalityName.IsValid())
+                        continue;
 
                     var dbNotSuppliersLocality =
                         notSuppliersLocalities.FirstOrDefault(l => l.Names.En == normalizedLocalityName);
@@ -428,6 +434,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
                     var defaultLocalityZone = zone.LocalityZoneNames.GetValueOrDefault(DefaultLanguageCode);
                     var normalizedLocalityZone = defaultLocalityZone.ToNormalizedName();
+                    if (!normalizedLocalityZone.IsValid())
+                        continue;
 
                     var dbNotSuppliersZone = notSuppliersLocalityZones.FirstOrDefault(lz
                         => lz.DefaultLocality == normalizedLocalityName
