@@ -58,8 +58,9 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
                 return false;
 
             var lowerX = x.ToLowerInvariant();
-            var lowery = y.ToLowerInvariant();
-            return lowerX.Contains(lowery) || lowery.Contains(lowerX);
+            var lowerY = y.ToLowerInvariant();
+            // For name comparision we  consider words equal if one contains another: to ignore prefixes and endings.
+            return lowerX.Contains(lowerY) || lowerY.Contains(lowerX);
         }
 
         // Always return the same value to check all pairs with method Equals
