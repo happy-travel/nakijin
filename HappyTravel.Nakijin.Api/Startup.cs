@@ -139,7 +139,7 @@ namespace HappyTravel.Nakijin.Api
 
             services.AddTransient<ILocationMappingInfoService, LocationMappingInfoService>();
             services.AddTransient<ILocationMappingFactory, LocationMappingFactory>();
-            services.AddPredictionsUpdate(Configuration, _environment);
+            services.AddPredictionsUpdate(vaultClient, Configuration, _environment);
         }
 
 
