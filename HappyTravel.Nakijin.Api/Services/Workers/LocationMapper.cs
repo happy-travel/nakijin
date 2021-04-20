@@ -121,7 +121,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 if (dbNotSuppliersCountry != default)
                 {
                     dbCountry.Id = dbNotSuppliersCountry.Id;
-                    dbCountry.Names = MultiLanguageHelpers.Merge(dbCountry.Names, dbNotSuppliersCountry.Names);
+                    dbCountry.Names = MultiLanguageHelpers.MergeMultilingualStrings(dbCountry.Names, dbNotSuppliersCountry.Names);
                     dbCountry.SupplierCountryCodes =
                         new Dictionary<Suppliers, string>(dbNotSuppliersCountry.SupplierCountryCodes);
                     dbCountry.SupplierCountryCodes.TryAdd(supplier, code);
@@ -274,7 +274,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     {
                         dbLocality.Id = dbNotSuppliersLocality.Id;
                         dbLocality.CountryId = dbNotSuppliersLocality.CountryId;
-                        dbLocality.Names = MultiLanguageHelpers.Merge(dbLocality.Names, dbNotSuppliersLocality.Names);
+                        dbLocality.Names = MultiLanguageHelpers.MergeMultilingualStrings(dbLocality.Names, dbNotSuppliersLocality.Names);
                         dbLocality.SupplierLocalityCodes =
                             new Dictionary<Suppliers, string>(dbNotSuppliersLocality.SupplierLocalityCodes);
                         dbLocality.SupplierLocalityCodes.TryAdd(supplier, locality.LocalityCode);
@@ -456,7 +456,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         dbLocalityZone.Id = dbNotSuppliersZone.LocalityZone.Id;
                         dbLocalityZone.LocalityId = dbNotSuppliersZone.LocalityZone.LocalityId;
                         dbLocalityZone.Names =
-                            MultiLanguageHelpers.Merge(dbLocalityZone.Names, dbNotSuppliersZone.LocalityZone.Names);
+                            MultiLanguageHelpers.MergeMultilingualStrings(dbLocalityZone.Names, dbNotSuppliersZone.LocalityZone.Names);
                         dbLocalityZone.SupplierLocalityZoneCodes =
                             new Dictionary<Suppliers, string>(dbNotSuppliersZone.LocalityZone
                                 .SupplierLocalityZoneCodes);
