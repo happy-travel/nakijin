@@ -443,6 +443,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     var defaultLocalityName =
                         location.Locality.GetValueOrDefault(Constants.DefaultLanguageCode);
 
+                    if (!defaultLocalityName.IsValid())
+                        return (country.Id, localityId, localityZoneId);;
+
                     localityId = countryLocalities[defaultLocalityName];
 
                     if (location.LocalityZone != null!)
@@ -450,7 +453,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         var defaultLocalityZoneName =
                             location.LocalityZone.GetValueOrDefault(Constants.DefaultLanguageCode);
 
-                        localityZoneId = countryLocalityZones[(localityId.Value, defaultLocalityZoneName)];
+                        if (defaultLocalityZoneName.IsValid())
+                            localityZoneId = countryLocalityZones[(localityId.Value, defaultLocalityZoneName)];
                     }
                 }
 
