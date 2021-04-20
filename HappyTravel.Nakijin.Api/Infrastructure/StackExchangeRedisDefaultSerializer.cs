@@ -3,7 +3,7 @@ using StackExchange.Redis.Extensions.Core;
 
 namespace HappyTravel.Nakijin.Api.Infrastructure
 {
-    public class DefaultSerializer: ISerializer
+    public class StackExchangeRedisDefaultSerializer: ISerializer
     {
         public byte[] Serialize(object item)
             => JsonSerializer.SerializeToUtf8Bytes(item);

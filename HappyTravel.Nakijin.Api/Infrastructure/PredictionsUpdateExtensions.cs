@@ -23,34 +23,37 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             var token = configuration[configuration["Vault:Token"]];
             vaultClient.Login(token).GetAwaiter().GetResult();
             var redisOptions = vaultClient.Get(configuration["PredictionsUpdate:Redis"]).GetAwaiter().GetResult();
-            string redisEndpoint;
-            string stream;
+            string endpoint;
+            string port;
+            string streamName;
             if (environment.IsLocal())
             {
-                redisEndpoint = configuration["PredictionsUpdate:Redis:Endpoint"];
-                stream = configuration["PredictionsUpdate:Redis:Stream"];
+                endpoint = configuration["PredictionsUpdate:Redis:Endpoint"];
+                port = configuration["PredictionsUpdate:Redis:Port"];
+                streamName = configuration["PredictionsUpdate:Redis:StreamName"];
             }
             else
             {
-                redisEndpoint = redisOptions["endpoint"];
-                stream = redisOptions["stream"];
+                endpoint = redisOptions["endpoint"];
+                port = redisOptions["port"];
+                streamName = redisOptions["streamName"];
             }
             
-            services.AddStackExchangeRedisExtensions<DefaultSerializer>(s 
+            services.AddStackExchangeRedisExtensions<StackExchangeRedisDefaultSerializer>(s 
                 => new ()
                 {
                     Hosts = new []
                     {
                         new RedisHost
                         {
-                            Host = redisEndpoint,
-                            Port = 6379
+                            Host = endpoint,
+                            Port = int.Parse(port)
                         }
                     }
                 });
             services.Configure<PredictionUpdateOptions>(o =>
             {
-                o.Stream = stream;
+                o.StreamName = streamName;
             });
             
             services.AddSingleton<IPredictionsUpdateService, PredictionsUpdateService>();

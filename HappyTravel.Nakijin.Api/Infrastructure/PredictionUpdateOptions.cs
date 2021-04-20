@@ -2,6 +2,6 @@
 {
     public class PredictionUpdateOptions
     {
-        public string Stream { get; set; } = string.Empty;
+        public string StreamName { get; set; } = string.Empty;
     }
 }
