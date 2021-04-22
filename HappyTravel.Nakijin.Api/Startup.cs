@@ -60,7 +60,7 @@ namespace HappyTravel.Nakijin.Api
             services.ConfigureServiceOptions(Configuration, vaultClient)
                 .AddServices();
 
-
+            var redisEndpoint = EnvironmentVariableHelper.Get("Redis:Endpoint", Configuration);
             services.AddHealthChecks()
                 .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck))
                 .AddRedis(EnvironmentVariableHelper.Get("Redis:Endpoint", Configuration));
@@ -139,6 +139,7 @@ namespace HappyTravel.Nakijin.Api
 
             services.AddTransient<ILocationMappingInfoService, LocationMappingInfoService>();
             services.AddTransient<ILocationMappingFactory, LocationMappingFactory>();
+            services.AddStaticDataPublicationService(vaultClient, Configuration, _environment);
         }
 
 

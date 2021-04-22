@@ -131,6 +131,10 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
                 new EventId(90501, "EmptyCoordinatesInAccommodation"),
                 $"ERROR | AccommodationMapper: {{message}}");
             
+            LocationsPublishedOccured = LoggerMessage.Define<string>(LogLevel.Information,
+                new EventId(90502, "LocationsPublished"),
+                $"INFORMATION | PredictionsUpdateService: {{message}}");
+            
         }
     
                 
@@ -226,6 +230,9 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
                 
          public static void LogEmptyCoordinatesInAccommodation(this ILogger logger, string message)
             => EmptyCoordinatesInAccommodationOccured(logger, message, null);
+                
+         public static void LogLocationsPublished(this ILogger logger, string message)
+            => LocationsPublishedOccured(logger, message, null);
     
     
         
@@ -290,5 +297,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
         private static readonly Action<ILogger, string, Exception> SameAccommodationInOneSupplierErrorOccured;
         
         private static readonly Action<ILogger, string, Exception> EmptyCoordinatesInAccommodationOccured;
+        
+        private static readonly Action<ILogger, string, Exception> LocationsPublishedOccured;
     }
 }
