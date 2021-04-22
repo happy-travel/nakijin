@@ -1,4 +1,4 @@
-﻿namespace HappyTravel.Nakijin.Api.Models.PredictionsUpdate
+﻿namespace HappyTravel.Nakijin.Api.Models.StaticDataPublications
 {
     public enum UpdateEventTypes
     {

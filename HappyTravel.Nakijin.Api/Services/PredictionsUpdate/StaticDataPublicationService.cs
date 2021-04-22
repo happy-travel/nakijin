@@ -6,19 +6,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
-using HappyTravel.Nakijin.Api.Models.PredictionsUpdate;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using StackExchange.Redis.Extensions.Core.Abstractions;
 using HappyTravel.Nakijin.Api.Infrastructure.Logging;
+using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
 using Nito.AsyncEx;
 
 namespace HappyTravel.Nakijin.Api.Services.PredictionsUpdate
 {
-    public class PredictionsUpdateService: IPredictionsUpdateService
+    public class StaticDataPublicationService: IStaticDataPublicationService
     {
-        public PredictionsUpdateService(IRedisCacheClient redisCacheClient, ILogger<PredictionsUpdateService> logger,IOptions<PredictionUpdateOptions> updateOptions)
+        public StaticDataPublicationService(IRedisCacheClient redisCacheClient, ILogger<StaticDataPublicationService> logger,IOptions<StaticDataPublicationOptions> updateOptions)
         {
             _streamName = updateOptions.Value.StreamName;
             _logger = logger;
@@ -82,7 +82,7 @@ namespace HappyTravel.Nakijin.Api.Services.PredictionsUpdate
         
         private NameValueEntry Build(Location location, UpdateEventTypes type)
         {
-            var entry = new LocationEntry(type, location);
+            var entry = new LocationPublicationEntry(type, location);
             return new(location.HtId, JsonSerializer.Serialize(entry));
         }
         
@@ -102,6 +102,6 @@ namespace HappyTravel.Nakijin.Api.Services.PredictionsUpdate
         private readonly AsyncLock _mutex = new ();
         private readonly string _streamName;
         private readonly IDatabase _database;
-        private readonly ILogger<PredictionsUpdateService> _logger;
+        private readonly ILogger<StaticDataPublicationService> _logger;
     }
 }

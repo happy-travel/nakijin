@@ -1,6 +1,6 @@
 ﻿namespace HappyTravel.Nakijin.Api.Infrastructure
 {
-    public class PredictionUpdateOptions
+    public class StaticDataPublicationOptions
     {
         public string StreamName { get; set; } = string.Empty;
     }

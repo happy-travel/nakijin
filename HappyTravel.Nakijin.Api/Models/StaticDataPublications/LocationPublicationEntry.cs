@@ -1,10 +1,10 @@
 ﻿using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 
-namespace HappyTravel.Nakijin.Api.Models.PredictionsUpdate
+namespace HappyTravel.Nakijin.Api.Models.StaticDataPublications
 {
-    public readonly struct LocationEntry
+    public readonly struct LocationPublicationEntry
     {
-        public LocationEntry(UpdateEventTypes type, Location location)
+        public LocationPublicationEntry(UpdateEventTypes type, Location location)
         {
             Type = type;
             Location = location;

@@ -7,11 +7,10 @@ using StackExchange.Redis.Extensions.Core.Configuration;
 
 namespace HappyTravel.Nakijin.Api.Infrastructure
 {
-    public static class PredictionsUpdateExtensions
+    public static class StaticDataPublicationExtensions
     {
-        public static IServiceCollection AddPredictionsUpdate(this IServiceCollection services, VaultClient.VaultClient vaultClient, IConfiguration configuration, IWebHostEnvironment environment)
+        public static IServiceCollection AddStaticDataPublicationService(this IServiceCollection services, VaultClient.VaultClient vaultClient, IConfiguration configuration, IWebHostEnvironment environment)
         {
-            var redisOptions = vaultClient.Get(configuration["StaticDataPublication:Redis"]).GetAwaiter().GetResult();
             string endpoint;
             string port;
             string streamName;
@@ -23,6 +22,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             }
             else
             {
+                var redisOptions = vaultClient.Get(configuration["StaticDataPublication:Redis"]).GetAwaiter().GetResult();
                 endpoint = redisOptions["endpoint"];
                 port = redisOptions["port"];
                 streamName = redisOptions["streamName"];
@@ -40,12 +40,12 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
                         }
                     }
                 });
-            services.Configure<PredictionUpdateOptions>(o =>
+            services.Configure<StaticDataPublicationOptions>(o =>
             {
                 o.StreamName = streamName;
             });
             
-            services.AddSingleton<IPredictionsUpdateService, PredictionsUpdateService>();
+            services.AddSingleton<IStaticDataPublicationService, StaticDataPublicationService>();
             
             return services;
         }
