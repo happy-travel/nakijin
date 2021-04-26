@@ -69,7 +69,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         }
         
         /// <summary>
-        /// Cancels accommodation merging 
+        /// Cancels accommodation data calculation
         /// </summary>
         /// <returns></returns>
         [HttpPost("calculation/cancel")]
