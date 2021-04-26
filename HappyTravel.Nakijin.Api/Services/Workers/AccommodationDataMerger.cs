@@ -35,6 +35,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _tracerProvider = tracerProvider;
         }
 
+        
         public async Task Calculate(List<Suppliers> suppliers, CancellationToken cancellationToken)
         {
             var currentSpan = Tracer.CurrentSpan;
@@ -151,6 +152,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }
         }
 
+
         public async Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation)
         {
             var supplierAccommodations = await (from ac in _context.RawAccommodations
@@ -166,6 +168,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             return await Merge(accommodation, supplierAccommodations);
         }
 
+        
         private async Task CalculateBatch(List<RichAccommodationDetails> notCalculatedAccommodations,
             CancellationToken cancellationToken)
         {
