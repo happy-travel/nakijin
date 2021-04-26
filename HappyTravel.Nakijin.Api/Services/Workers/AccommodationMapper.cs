@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.Accommodations.Internals;
-using HappyTravel.Geography;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
@@ -77,6 +76,15 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
                     await _mappingsCache.Fill();
                     supplierAccommodationsMappingSpan.AddEvent("Reset accommodation mappings cache");
+
+                    _context.DataUpdateHistories.Add(new DataUpdateHistory
+                    {
+                        Supplier = supplier,
+                        Type = DataUpdateTypes.Mapping,
+                        UpdateTime = DateTime.UtcNow
+                    });
+
+                    await _context.SaveChangesAsync(cancellationToken);
                 }
                 catch (TaskCanceledException)
                 {
@@ -444,7 +452,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         location.Locality.GetValueOrDefault(Constants.DefaultLanguageCode);
 
                     if (!defaultLocalityName.IsValid())
-                        return (country.Id, localityId, localityZoneId);;
+                        return (country.Id, localityId, localityZoneId);
+
+                    ;
 
                     localityId = countryLocalities[defaultLocalityName];
 

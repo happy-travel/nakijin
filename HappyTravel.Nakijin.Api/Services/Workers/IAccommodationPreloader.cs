@@ -8,6 +8,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 {
     public interface IAccommodationPreloader
     {
-        Task Preload(List<Suppliers> suppliers, DateTime? modificationDate = null, CancellationToken cancellationToken = default);
+        Task Preload(List<Suppliers> suppliers, CancellationToken cancellationToken = default);
     }
 }
