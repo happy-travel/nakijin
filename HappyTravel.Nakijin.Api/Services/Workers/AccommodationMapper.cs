@@ -154,9 +154,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
         private async Task Map((string Code, int Id) country,
             List<Contracts.MultilingualAccommodation> accommodationsToMap,
-            Suppliers supplier, STRtree<AccommodationKeyData> countryAccommodationsTree,
-            Dictionary<string, AccommodationKeyData> activeCountryAccommodationsOfSupplier,
-            Dictionary<string, AccommodationKeyData> notActiveCountryAccommodationsOfSupplier,
+            Suppliers supplier, STRtree<SlimAccommodationData> countryAccommodationsTree,
+            Dictionary<string, SlimAccommodationData> activeCountryAccommodationsOfSupplier,
+            Dictionary<string, SlimAccommodationData> notActiveCountryAccommodationsOfSupplier,
             List<Tuple<int, int>> activeCountryUncertainMatchesOfSupplier, Dictionary<string, int> countryLocalities,
             Dictionary<(int LocalityId, string LocalityZoneName), int> countryLocalityZones,
             Dictionary<int, (int Id, HashSet<int> MappedHtIds)> htAccommodationMappings,
@@ -309,7 +309,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }
 
 
-            void Update(Contracts.MultilingualAccommodation accommodation, AccommodationKeyData matchedAccommodation)
+            void Update(Contracts.MultilingualAccommodation accommodation, SlimAccommodationData matchedAccommodation)
             {
                 var accommodationToUpdate = new RichAccommodationDetails
                 {
@@ -422,7 +422,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 dbAccommodation.Created = utcDate;
                 dbAccommodation.Modified = utcDate;
                 dbAccommodation.IsCalculated = true;
-                dbAccommodation.MappingData = _multilingualDataHelper.GetAccommodationDataForMapping(accommodation);
+                dbAccommodation.KeyData = _multilingualDataHelper.GetAccommodationKeyData(accommodation);
 
                 var locationIds = GetLocationIds(accommodation.Location);
                 dbAccommodation.CountryId = locationIds.CountryId;
@@ -478,8 +478,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         }
 
 
-        private List<AccommodationKeyData> GetNearest(Contracts.MultilingualAccommodation accommodation,
-            STRtree<AccommodationKeyData> tree)
+        private List<SlimAccommodationData> GetNearest(Contracts.MultilingualAccommodation accommodation,
+            STRtree<SlimAccommodationData> tree)
         {
             var accommodationEnvelope = new Envelope(accommodation.Location.Coordinates.Longitude - 0.01,
                 accommodation.Location.Coordinates.Longitude + 0.01,
@@ -488,37 +488,37 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         }
 
 
-        private (MatchingResults results, float score, AccommodationKeyData keyData) Match(
-            List<AccommodationKeyData> nearestAccommodations,
+        private (MatchingResults results, float score, SlimAccommodationData slimData) Match(
+            List<SlimAccommodationData> nearestAccommodations,
             in Contracts.MultilingualAccommodation accommodation)
         {
             var results =
-                new List<(AccommodationKeyData accommodationKeyData, float score)>(nearestAccommodations.Count);
+                new List<(SlimAccommodationData slimData, float score)>(nearestAccommodations.Count);
             foreach (var nearestAccommodation in nearestAccommodations)
             {
-                var score = ComparisonScoreCalculator.Calculate(nearestAccommodation.MappingData,
-                    _multilingualDataHelper.GetAccommodationDataForMapping(accommodation));
+                var score = ComparisonScoreCalculator.Calculate(nearestAccommodation.KeyData,
+                    _multilingualDataHelper.GetAccommodationKeyData(accommodation));
 
                 results.Add((nearestAccommodation, score));
             }
 
-            var (keyData, maxScore) = results.Aggregate((r1, r2) => r2.score > r1.score ? r2 : r1);
+            var (slimData, maxScore) = results.Aggregate((r1, r2) => r2.score > r1.score ? r2 : r1);
 
             if (MatchingMinimumScore <= maxScore)
-                return (MatchingResults.Match, maxScore, keyData);
+                return (MatchingResults.Match, maxScore, slimData);
 
             if (UncertainMatchingMinimumScore <= maxScore && maxScore < MatchingMinimumScore)
-                return (MatchingResults.Uncertain, maxScore, keyData);
+                return (MatchingResults.Uncertain, maxScore, slimData);
 
-            return (MatchingResults.NotMatch, maxScore, new AccommodationKeyData());
+            return (MatchingResults.NotMatch, maxScore, new SlimAccommodationData());
         }
 
 
-        private async Task<List<(string SupplierCode, AccommodationKeyData AccommodationKeyData)>>
+        private async Task<List<(string SupplierCode, SlimAccommodationData AccommodationKeyData)>>
             GeCountryAccommodationBySupplier(string countryCode, Suppliers supplier)
         {
-            var countryAccommodations = new List<AccommodationKeyData>();
-            var accommodations = new List<AccommodationKeyData>();
+            var countryAccommodations = new List<SlimAccommodationData>();
+            var accommodations = new List<SlimAccommodationData>();
             var skip = 0;
             do
             {
@@ -529,7 +529,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         .OrderBy(ac => ac.Id)
                         .Skip(skip)
                         .Take(_batchSize)
-                        .Select(ac => new AccommodationKeyData
+                        .Select(ac => new SlimAccommodationData
                         {
                             HtId = ac.Id,
                             SupplierAccommodationCodes = ac.SupplierAccommodationCodes,
@@ -546,11 +546,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         }
 
 
-        private async Task<STRtree<AccommodationKeyData>> GetCountryAccommodationsTree(string countryCode,
+        private async Task<STRtree<SlimAccommodationData>> GetCountryAccommodationsTree(string countryCode,
             Suppliers supplier)
         {
-            var countryAccommodations = new List<AccommodationKeyData>();
-            var accommodations = new List<AccommodationKeyData>();
+            var countryAccommodations = new List<SlimAccommodationData>();
+            var accommodations = new List<SlimAccommodationData>();
             var skip = 0;
             do
             {
@@ -561,10 +561,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         .OrderBy(ac => ac.Id)
                         .Skip(skip)
                         .Take(_batchSize)
-                        .Select(ac => new AccommodationKeyData
+                        .Select(ac => new SlimAccommodationData
                         {
                             HtId = ac.Id,
-                            MappingData = ac.MappingData,
+                            KeyData = ac.KeyData,
                             SupplierAccommodationCodes = ac.SupplierAccommodationCodes
                         })
                         .ToListAsync();
@@ -575,14 +575,14 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             } while (accommodations.Count > 0);
 
             if (!countryAccommodations.Any() || countryAccommodations.Count == 1)
-                return new STRtree<AccommodationKeyData>();
+                return new STRtree<SlimAccommodationData>();
 
-            var tree = new STRtree<AccommodationKeyData>(countryAccommodations.Count);
+            var tree = new STRtree<SlimAccommodationData>(countryAccommodations.Count);
             foreach (var ac in countryAccommodations)
             {
-                if (!ac.MappingData.Coordinates.IsEmpty())
-                    tree.Insert(new Point(ac.MappingData.Coordinates.Longitude,
-                        ac.MappingData.Coordinates.Latitude).EnvelopeInternal, ac);
+                if (!ac.KeyData.Coordinates.IsEmpty())
+                    tree.Insert(new Point(ac.KeyData.Coordinates.Longitude,
+                        ac.KeyData.Coordinates.Latitude).EnvelopeInternal, ac);
             }
 
             tree.Build();

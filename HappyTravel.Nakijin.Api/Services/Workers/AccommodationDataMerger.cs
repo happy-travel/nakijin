@@ -86,15 +86,15 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         dbAccommodation.IsCalculated = true;
                         dbAccommodation.CalculatedAccommodation = calculatedData;
                         dbAccommodation.HasDirectContract = calculatedData.HasDirectContract;
-                        dbAccommodation.MappingData =
-                            _multilingualDataHelper.GetAccommodationDataForMapping(calculatedData);
+                        dbAccommodation.KeyData =
+                            _multilingualDataHelper.GetAccommodationKeyData(calculatedData);
                         dbAccommodation.Modified = DateTime.UtcNow;
                         _context.Accommodations.Attach(dbAccommodation);
                         _context.Entry(dbAccommodation).Property(p => p.CalculatedAccommodation).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.HasDirectContract).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.IsCalculated).IsModified = true;
                         _context.Entry(dbAccommodation).Property(p => p.Modified).IsModified = true;
-                        _context.Entry(dbAccommodation).Property(p => p.MappingData).IsModified = true;
+                        _context.Entry(dbAccommodation).Property(p => p.KeyData).IsModified = true;
                     }
 
                     await _context.SaveChangesAsync(cancellationToken);

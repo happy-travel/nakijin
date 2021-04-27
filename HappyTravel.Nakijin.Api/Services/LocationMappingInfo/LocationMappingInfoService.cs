@@ -170,20 +170,20 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
                 .Select(alc => new
                 {
                     alc.accommodation.Id,
-                    alc.accommodation.MappingData,
+                    alc.accommodation.KeyData,
                     alc.accommodation.CountryCode,
                 })
                 .ToListAsync(cancellationToken);
            
             return accommodations.Select(alc =>
                 {
-                    var accommodation = alc.MappingData.DefaultName;
-                    var locality = alc.MappingData.DefaultLocalityName;
-                    var country = alc.MappingData.DefaultCountryName;
+                    var accommodation = alc.KeyData.DefaultName;
+                    var locality = alc.KeyData.DefaultLocalityName;
+                    var country = alc.KeyData.DefaultCountryName;
                     var htId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, alc.Id);
                     
                     return new Location(htId, accommodation, locality, country, alc.CountryCode,
-                        alc.MappingData.Coordinates, 0,
+                        alc.KeyData.Coordinates, 0,
                         PredictionSources.Interior, AccommodationMapperLocationTypes.Accommodation,
                         LocationTypes.Accommodation);
                 })

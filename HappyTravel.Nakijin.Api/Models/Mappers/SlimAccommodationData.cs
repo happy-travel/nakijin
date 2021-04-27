@@ -6,11 +6,11 @@ using HappyTravel.Nakijin.Data.Models.Accommodations;
 
 namespace HappyTravel.Nakijin.Api.Models.Mappers
 {
-    public class AccommodationKeyData
+    public class SlimAccommodationData
     {
         public int HtId { get; set; }
         
-        public AccommodationMappingData MappingData { get; set; }
+        public AccommodationKeyData KeyData { get; set; }
         
         public Dictionary<Suppliers,string> SupplierAccommodationCodes { get; set; } = new Dictionary<Suppliers, string>();
 

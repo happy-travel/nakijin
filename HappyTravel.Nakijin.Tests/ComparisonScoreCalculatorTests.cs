@@ -1,9 +1,3 @@
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.EdoContracts.Accommodations.Enums;
-using HappyTravel.EdoContracts.Accommodations.Internals;
-using HappyTravel.Geography;
 using Xunit;
 using HappyTravel.Nakijin.Api.Services.Workers;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
@@ -17,7 +11,7 @@ namespace HappyTravel.Nakijin.Tests
         [Fact]
         public void CalculatedScoreMustBeLarger()
         {
-            var accommodation = JsonConvert.DeserializeObject<AccommodationMappingData>(@"{
+            var accommodation = JsonConvert.DeserializeObject<AccommodationKeyData>(@"{
             ""rating"": 0,
             ""address"": ""Jumeirah Beach Roads, Madinat Jumeirah Resort, Al Sufouh, Dubai, United Arab Emirates"",
             ""contactInfo"": {
@@ -35,7 +29,7 @@ namespace HappyTravel.Nakijin.Tests
             ""defaultLocalityName"": ""Dubai"",
             ""defaultLocalityZoneName"": ""Jumeirah Umm Suqueim""
         }");
-            var nearestAccommodation = JsonConvert.DeserializeObject<AccommodationMappingData>(@"{
+            var nearestAccommodation = JsonConvert.DeserializeObject<AccommodationKeyData>(@"{
     ""rating"": ""FiveStars"",
             ""address"": ""Jumeirah Beach Road, Madinat Jumeirah Resorts, Al Sufouh - PO Box 75157"",
             ""contactInfo"": {

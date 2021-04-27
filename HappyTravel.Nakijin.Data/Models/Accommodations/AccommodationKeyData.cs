@@ -4,7 +4,7 @@ using HappyTravel.Geography;
 
 namespace HappyTravel.Nakijin.Data.Models.Accommodations
 {
-    public class AccommodationMappingData
+    public class AccommodationKeyData
     {
         public string DefaultName { get; set; }
         public GeoPoint Coordinates { get; set; }
