@@ -87,7 +87,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// <param name="suppliers"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [HttpPost("preload")]
+        [HttpPost("preloading/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult Preload([FromBody] List<Suppliers> suppliers, CancellationToken cancellationToken = default)
         {
@@ -119,7 +119,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// </summary>
         /// <param name="suppliers"></param>
         /// <returns></returns>
-        [HttpPost("map")]
+        [HttpPost("mapping/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MapAccommodations([FromBody] List<Suppliers> suppliers)
         {
@@ -151,7 +151,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// Merges accommodations
         /// </summary>
         /// <returns></returns>
-        [HttpPost("merge")]
+        [HttpPost("merging/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MergeAccommodationsData()
         {
@@ -182,7 +182,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// Calculates accommodations data
         /// </summary>
         /// <returns></returns>
-        [HttpPost("calculate")]
+        [HttpPost("calculation/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult CalculateAccommodationsData([FromBody]List<Suppliers> suppliers)
         {

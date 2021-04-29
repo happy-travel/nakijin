@@ -23,12 +23,13 @@ namespace HappyTravel.Nakijin.Api.Controllers
             _serviceProvider = serviceProvider;
         }
 
+        
         /// <summary>
         /// Maps locations (countries, localities, locality zones) of suppliers with existing locations.
         /// </summary>
         /// <param name="suppliers"></param>
         /// <returns></returns>
-        [HttpPost("locations/map")]
+        [HttpPost("locations/mapping/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MapLocations([FromBody] List<Suppliers> suppliers)
         {

@@ -46,7 +46,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
 
-           
+
             foreach (var supplier in suppliers)
             {
                 try
@@ -54,16 +54,15 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     var modificationDate = await _context.DataUpdateHistories
                         .Where(dh => dh.Supplier == supplier)
                         .OrderByDescending(dh => dh.UpdateTime)
-                        .Select(dh=> dh.UpdateTime)
+                        .Select(dh => dh.UpdateTime)
                         .FirstOrDefaultAsync(cancellationToken);
 
-                   using var supplierAccommodationsPreloadingSpan = tracer.StartActiveSpan(
+                    using var supplierAccommodationsPreloadingSpan = tracer.StartActiveSpan(
                         $"{nameof(Preload)} accommodations of {supplier.ToString()}", SpanKind.Internal, currentSpan);
 
                     cancellationToken.ThrowIfCancellationRequested();
-                    await Preload(supplier, modificationDate,
-                        cancellationToken);
-                    
+                    await Preload(supplier, modificationDate, cancellationToken);
+
                     _context.DataUpdateHistories.Add(new DataUpdateHistory
                     {
                         Supplier = supplier,
