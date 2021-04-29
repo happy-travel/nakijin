@@ -19,17 +19,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 
         public async Task PublishAdded(AccommodationData addedAccommodation)
         {
-            var convertedAccommodationAdded = new Location(
-                HtId.Create(AccommodationMapperLocationTypes.Accommodation, addedAccommodation.Id),
-                addedAccommodation.Name,
-                addedAccommodation.LocalityName,
-                addedAccommodation.CountryName,
-                addedAccommodation.CountryCode,
-                addedAccommodation.Coordinates,
-                distanceInMeters: 0,
-                PredictionSources.Interior,
-                AccommodationMapperLocationTypes.Accommodation,
-                LocationTypes.Accommodation);
+            var convertedAccommodationAdded = ConvertToLocation(addedAccommodation);
 
             await _staticDataPublicationService.Publish(convertedAccommodationAdded, UpdateEventTypes.Add);
         }
@@ -37,17 +27,8 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 
         public async Task PublishRemoved(int id)
         {
-            var convertedAccommodationRemoved = new Location(
-                HtId.Create(AccommodationMapperLocationTypes.Accommodation, id),
-                name: string.Empty,
-                locality: string.Empty,
-                country: string.Empty,
-                countryCode: string.Empty,
-                GeoPointExtension.OriginGeoPoint,
-                distanceInMeters: 0,
-                PredictionSources.Interior,
-                AccommodationMapperLocationTypes.Accommodation,
-                LocationTypes.Accommodation);
+            var convertedAccommodationRemoved = ConvertToLocation(id);
+
             await _staticDataPublicationService.Publish(convertedAccommodationRemoved, UpdateEventTypes.Remove);
         }
 
@@ -57,17 +38,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
             if (!addedAccommodations.Any())
                 return;
 
-            var convertedAccommodationsAdded = addedAccommodations.Select(ac => new Location(
-                HtId.Create(AccommodationMapperLocationTypes.Accommodation, ac.Id),
-                ac.Name,
-                ac.LocalityName,
-                ac.CountryName,
-                ac.CountryCode,
-                ac.Coordinates,
-                distanceInMeters: 0,
-                PredictionSources.Interior,
-                AccommodationMapperLocationTypes.Accommodation,
-                LocationTypes.Accommodation)).ToList();
+            var convertedAccommodationsAdded = addedAccommodations.Select(ConvertToLocation).ToList();
 
             await _staticDataPublicationService.Publish(convertedAccommodationsAdded, UpdateEventTypes.Add);
         }
@@ -78,20 +49,36 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
             if (!removedAccommodations.Any())
                 return;
 
-            var convertedAccommodations = removedAccommodations.Select(ac
-                => new Location(HtId.Create(AccommodationMapperLocationTypes.Accommodation, ac),
-                    name: string.Empty,
-                    locality: string.Empty,
-                    country: string.Empty,
-                    countryCode: string.Empty,
-                    GeoPointExtension.OriginGeoPoint,
-                    distanceInMeters: 0,
-                    PredictionSources.Interior,
-                    AccommodationMapperLocationTypes.Accommodation,
-                    LocationTypes.Accommodation)).ToList();
+            var convertedAccommodations = removedAccommodations.Select(ConvertToLocation).ToList();
 
             await _staticDataPublicationService.Publish(convertedAccommodations, UpdateEventTypes.Remove);
         }
+
+        private static Location ConvertToLocation(AccommodationData accommodation)
+            => new Location(
+                HtId.Create(AccommodationMapperLocationTypes.Accommodation, accommodation.Id),
+                accommodation.Name,
+                accommodation.LocalityName,
+                accommodation.CountryName,
+                accommodation.CountryCode,
+                accommodation.Coordinates,
+                distanceInMeters: 0,
+                PredictionSources.Interior,
+                AccommodationMapperLocationTypes.Accommodation,
+                LocationTypes.Accommodation);
+
+
+        private static Location ConvertToLocation(int id)
+            => new Location(HtId.Create(AccommodationMapperLocationTypes.Accommodation, id),
+                name: string.Empty,
+                locality: string.Empty,
+                country: string.Empty,
+                countryCode: string.Empty,
+                GeoPointExtension.OriginGeoPoint,
+                distanceInMeters: 0,
+                PredictionSources.Interior,
+                AccommodationMapperLocationTypes.Accommodation,
+                LocationTypes.Accommodation);
 
 
         private readonly IStaticDataPublicationService _staticDataPublicationService;
