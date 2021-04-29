@@ -9,6 +9,7 @@ namespace HappyTravel.Nakijin.Api.Models.StaticDataPublications
             Code = code;
         }
 
+        
         public int Id { get; }
         public string Name { get; }
         public string Code { get; }

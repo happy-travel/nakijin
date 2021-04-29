@@ -10,6 +10,7 @@ namespace HappyTravel.Nakijin.Api.Models.StaticDataPublications
             CountryCode = countryCode;
         }
         
+        
         public int Id { get; }
         public string Name { get; }
         public string CountryName { get; }

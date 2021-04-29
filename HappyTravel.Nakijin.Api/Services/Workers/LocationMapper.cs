@@ -160,7 +160,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             await _locationsChangePublisher.PublishAddedCountries(newCountries
                 .Distinct(new CountryComparer())
-                .Select(c => new CountryData(c.Id, c.Names.En, c.Code)).ToList());
+                .Select(c => new CountryData(c.Id, c.Names.En, c.Code))
+                .ToList());
+
             await _locationsChangePublisher.PublishRemovedCountries(countryPairsChanged.Keys.ToList());
 
             _logger.LogMappingCountriesFinish(
@@ -318,9 +320,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 await ChangeLocalityDependencies(changedLocalityPairs);
 
                 await _locationsChangePublisher.PublishRemovedLocalities(changedLocalityPairs.Keys.ToList());
-                await _locationsChangePublisher.PublishAddedLocalities(newLocalities.Distinct(new LocalityComparer())
-                    .Select(l => new LocalityData(l.Id, l.Names.En,
-                        country.Name, country.Code)).ToList());
+                await _locationsChangePublisher.PublishAddedLocalities(newLocalities
+                    .Distinct(new LocalityComparer())
+                    .Select(l => new LocalityData(l.Id, l.Names.En, country.Name, country.Code))
+                    .ToList());
 
                 await _context.SaveChangesAsync(cancellationToken);
 

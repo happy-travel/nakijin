@@ -15,6 +15,7 @@ namespace HappyTravel.Nakijin.Api.Models.StaticDataPublications
             Coordinates = coordinates;
         }
 
+        
         public int Id { get; }
         public string Name { get; }
         public string LocalityName { get; }
