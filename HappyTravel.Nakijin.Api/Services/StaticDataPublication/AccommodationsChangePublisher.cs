@@ -16,7 +16,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
             _staticDataPublicationService = staticDataPublicationService;
         }
 
-        
+
         public async Task PublishAdded(AccommodationData addedAccommodation)
         {
             var convertedAccommodationAdded = new Location(
@@ -26,7 +26,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 addedAccommodation.CountryName,
                 addedAccommodation.CountryCode,
                 addedAccommodation.Coordinates,
-                0,
+                distanceInMeters: 0,
                 PredictionSources.Interior,
                 AccommodationMapperLocationTypes.Accommodation,
                 LocationTypes.Accommodation);
@@ -39,12 +39,12 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
         {
             var convertedAccommodationRemoved = new Location(
                 HtId.Create(AccommodationMapperLocationTypes.Accommodation, id),
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                string.Empty,
+                name: string.Empty,
+                locality: string.Empty,
+                country: string.Empty,
+                countryCode: string.Empty,
                 GeoPointExtension.OriginGeoPoint,
-                0,
+                distanceInMeters: 0,
                 PredictionSources.Interior,
                 AccommodationMapperLocationTypes.Accommodation,
                 LocationTypes.Accommodation);
@@ -64,7 +64,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 ac.CountryName,
                 ac.CountryCode,
                 ac.Coordinates,
-                0,
+                distanceInMeters: 0,
                 PredictionSources.Interior,
                 AccommodationMapperLocationTypes.Accommodation,
                 LocationTypes.Accommodation)).ToList();
@@ -80,12 +80,12 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 
             var convertedAccommodations = removedAccommodations.Select(ac
                 => new Location(HtId.Create(AccommodationMapperLocationTypes.Accommodation, ac),
-                    string.Empty,
-                    string.Empty,
-                    string.Empty,
-                    string.Empty,
+                    name: string.Empty,
+                    locality: string.Empty,
+                    country: string.Empty,
+                    countryCode: string.Empty,
                     GeoPointExtension.OriginGeoPoint,
-                    0,
+                    distanceInMeters: 0,
                     PredictionSources.Interior,
                     AccommodationMapperLocationTypes.Accommodation,
                     LocationTypes.Accommodation)).ToList();

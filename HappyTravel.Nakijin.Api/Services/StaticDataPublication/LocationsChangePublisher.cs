@@ -26,12 +26,12 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 
             var convertedCountries = addedCountries.Select(c => new Location(
                 HtId.Create(AccommodationMapperLocationTypes.Country, c.Id),
-                string.Empty,
-                string.Empty,
-                c.Name,
+                name: string.Empty,
+                locality: string.Empty,
+                country: c.Name,
                 c.Code,
                 GeoPointExtension.OriginGeoPoint,
-                0,
+                distanceInMeters: 0,
                 PredictionSources.Interior,
                 AccommodationMapperLocationTypes.Country,
                 LocationTypes.Location)).ToList();
@@ -47,12 +47,12 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 
             var convertedCountries = removedCountries.Select(c => new Location(
                 HtId.Create(AccommodationMapperLocationTypes.Country, c),
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                string.Empty,
+                name: string.Empty,
+                locality: string.Empty,
+                country: string.Empty,
+                countryCode: string.Empty,
                 GeoPointExtension.OriginGeoPoint,
-                0,
+                distanceInMeters: 0,
                 PredictionSources.Interior,
                 AccommodationMapperLocationTypes.Country,
                 LocationTypes.Location)).ToList();
@@ -69,12 +69,12 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
             var convertedLocalities = addedLocalities.Select(l
                 => new Location(
                     HtId.Create(AccommodationMapperLocationTypes.Locality, l.Id),
-                    l.Name,
+                    name: string.Empty,
                     l.Name,
                     l.CountryName,
                     l.CountryCode,
                     GeoPointExtension.OriginGeoPoint,
-                    0,
+                    distanceInMeters: 0,
                     PredictionSources.Interior,
                     AccommodationMapperLocationTypes.Locality,
                     LocationTypes.Location)).ToList();
@@ -91,12 +91,12 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
             var convertedLocalities = removedLocalities.Select(l
                 => new Location(
                     HtId.Create(AccommodationMapperLocationTypes.Locality, l),
-                    string.Empty,
-                    string.Empty,
-                    string.Empty,
-                    string.Empty,
+                    name: string.Empty,
+                    locality: string.Empty,
+                    country: string.Empty,
+                    countryCode: string.Empty,
                     GeoPointExtension.OriginGeoPoint,
-                    0,
+                    distanceInMeters: 0,
                     PredictionSources.Interior,
                     AccommodationMapperLocationTypes.Locality,
                     LocationTypes.Location)).ToList();
@@ -118,7 +118,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                     lz.CountryName,
                     lz.CountryCode,
                     GeoPointExtension.OriginGeoPoint,
-                    0,
+                    distanceInMeters: 0,
                     PredictionSources.Interior,
                     AccommodationMapperLocationTypes.LocalityZone,
                     LocationTypes.Location)).ToList();
@@ -135,11 +135,11 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
             var convertedLocalityZones = removedLocalityZones.Select(lz
                 => new Location(
                     HtId.Create(AccommodationMapperLocationTypes.LocalityZone, lz), string.Empty,
-                    string.Empty,
-                    string.Empty,
-                    string.Empty,
+                    locality: string.Empty,
+                    country: string.Empty,
+                    countryCode: string.Empty,
                     GeoPointExtension.OriginGeoPoint,
-                    0,
+                    distanceInMeters: 0,
                     PredictionSources.Interior,
                     AccommodationMapperLocationTypes.LocalityZone,
                     LocationTypes.Location)).ToList();
