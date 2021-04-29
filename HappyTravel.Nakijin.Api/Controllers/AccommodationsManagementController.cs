@@ -67,7 +67,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
             _accommodationDataMergeTokenSource.Cancel();
             return Ok();
         }
-        
+
+
         /// <summary>
         /// Cancels accommodation data calculation
         /// </summary>
@@ -99,17 +100,18 @@ namespace HappyTravel.Nakijin.Api.Controllers
             var scope = _serviceProvider.CreateScope();
 
             Task.Factory.StartNew(async () =>
-            {
-                try
                 {
-                    var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
-                    await preloader.Preload(suppliers, _accommodationPreloaderTokenSource.Token);
-                }
-                finally
-                {
-                    scope.Dispose();
-                }
-            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    try
+                    {
+                        var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
+                        await preloader.Preload(suppliers, _accommodationPreloaderTokenSource.Token);
+                    }
+                    finally
+                    {
+                        scope.Dispose();
+                    }
+                },
+                cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             return Accepted();
         }
 
@@ -131,17 +133,18 @@ namespace HappyTravel.Nakijin.Api.Controllers
             var scope = _serviceProvider.CreateScope();
 
             Task.Factory.StartNew(async () =>
-            {
-                try
                 {
-                    var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                    await mapper.MapAccommodations(suppliers, _accommodationMappingTokenSource.Token);
-                }
-                finally
-                {
-                    scope.Dispose();
-                }
-            }, _accommodationMappingTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    try
+                    {
+                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                        await mapper.MapAccommodations(suppliers, _accommodationMappingTokenSource.Token);
+                    }
+                    finally
+                    {
+                        scope.Dispose();
+                    }
+                },
+                _accommodationMappingTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             return Accepted();
         }
@@ -161,30 +164,31 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
             _accommodationDataMergeTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
             var scope = _serviceProvider.CreateScope();
-            
+
             Task.Factory.StartNew(async () =>
-            {
-                try
                 {
-                    var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
-                    await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
-                }
-                finally
-                {
-                    scope.Dispose();
-                }
-            }, _accommodationDataMergeTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    try
+                    {
+                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                        await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
+                    }
+                    finally
+                    {
+                        scope.Dispose();
+                    }
+                },
+                _accommodationDataMergeTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             return Accepted();
         }
-        
+
         /// <summary>
         /// Calculates accommodations data
         /// </summary>
         /// <returns></returns>
         [HttpPost("calculation/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult CalculateAccommodationsData([FromBody]List<Suppliers> suppliers)
+        public IActionResult CalculateAccommodationsData([FromBody] List<Suppliers> suppliers)
         {
             // Prevent situation when done more than one Calculate requests.
             if (_accommodationsDataCalculatorTokenSource.Token.CanBeCanceled)
@@ -192,19 +196,20 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
             _accommodationsDataCalculatorTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
             var scope = _serviceProvider.CreateScope();
-            
+
             Task.Factory.StartNew(async () =>
-            {
-                try
                 {
-                    var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
-                    await accommodationService.Calculate(suppliers,_accommodationsDataCalculatorTokenSource.Token);
-                }
-                finally
-                {
-                    scope.Dispose();
-                }
-            }, _accommodationsDataCalculatorTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    try
+                    {
+                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                        await accommodationService.Calculate(suppliers, _accommodationsDataCalculatorTokenSource.Token);
+                    }
+                    finally
+                    {
+                        scope.Dispose();
+                    }
+                },
+                _accommodationsDataCalculatorTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             return Accepted();
         }
