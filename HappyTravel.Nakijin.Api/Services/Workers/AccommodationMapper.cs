@@ -175,10 +175,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             foreach (var accommodation in accommodationsToMap)
             {
                 var normalized = _multilingualDataHelper.NormalizeAccommodation(accommodation);
-                if (normalized.Location.Coordinates.IsEmpty())
+                if (normalized.Location.Coordinates.IsEmpty() || !normalized.Location.Coordinates.IsValid())
                 {
                     _logger.LogEmptyCoordinatesInAccommodation(
-                        $"{supplier.ToString()} have the accommodation with empty coordinates, which code is {accommodation.SupplierCode}");
+                        $"{supplier.ToString()} have the accommodation with not valid coordinates, which code is {accommodation.SupplierCode}");
                     AddOrChangeActivity(normalized, false);
                     continue;
                 }
@@ -216,7 +216,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _context.AddRange(uncertainAccommodationsToAdd);
             await _context.SaveChangesAsync(cancellationToken);
 
-            foreach (var acc in accommodationsToAdd)
+            foreach (var acc in accommodationsToAdd.Where(a => a.IsActive))
                 addedAccommodations.Add(new AccommodationData(acc.Id, acc.KeyData.DefaultName,
                     acc.KeyData.DefaultLocalityName, acc.KeyData.DefaultCountryName, acc.CountryCode,
                     acc.KeyData.Coordinates));
@@ -600,7 +600,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             var tree = new STRtree<SlimAccommodationData>(countryAccommodations.Count);
             foreach (var ac in countryAccommodations)
             {
-                if (!ac.KeyData.Coordinates.IsEmpty())
+                if (!ac.KeyData.Coordinates.IsEmpty() && ac.KeyData.Coordinates.IsValid())
                     tree.Insert(new Point(ac.KeyData.Coordinates.Longitude,
                         ac.KeyData.Coordinates.Latitude).EnvelopeInternal, ac);
             }
