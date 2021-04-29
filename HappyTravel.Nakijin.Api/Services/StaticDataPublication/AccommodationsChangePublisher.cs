@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.GeoData.Enums;
-using HappyTravel.Geography;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
@@ -17,6 +16,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
             _staticDataPublicationService = staticDataPublicationService;
         }
 
+        
         public async Task PublishAdded(AccommodationData addedAccommodation)
         {
             var convertedAccommodationAdded = new Location(
