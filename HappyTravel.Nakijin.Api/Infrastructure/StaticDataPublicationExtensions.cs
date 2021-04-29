@@ -46,6 +46,9 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             });
             
             services.AddSingleton<IStaticDataPublicationService, StaticDataPublicationService>();
+
+            services.AddSingleton<AccommodationsChangePublisher>();
+            services.AddSingleton<LocationsChangePublisher>();
             
             return services;
         }

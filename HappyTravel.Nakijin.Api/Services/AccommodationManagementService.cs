@@ -7,7 +7,7 @@ using HappyTravel.Nakijin.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.EdoContracts.Accommodations.Internals;
+using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Api.Services.Workers;
 
@@ -16,11 +16,13 @@ namespace HappyTravel.Nakijin.Api.Services
     public class AccommodationManagementService : IAccommodationManagementService
     {
         public AccommodationManagementService(NakijinContext context,
-            IAccommodationsDataMerger accommodationsDataMerger, AccommodationMappingsCache mappingsCache)
+            IAccommodationsDataMerger accommodationsDataMerger, AccommodationMappingsCache mappingsCache,
+            AccommodationsChangePublisher accommodationsChangePublisher)
         {
             _context = context;
             _accommodationsDataMerger = accommodationsDataMerger;
             _mappingsCache = mappingsCache;
+            _accommodationsChangePublisher = accommodationsChangePublisher;
         }
 
 
@@ -43,9 +45,11 @@ namespace HappyTravel.Nakijin.Api.Services
 
             _context.Update(uncertainMatch);
             await _context.SaveChangesAsync();
-            
+
             await _mappingsCache.Fill();
             
+            await _accommodationsChangePublisher.PublishRemoved(uncertainMatch.SecondHtId);
+
             return Result.Success();
         }
 
@@ -60,6 +64,8 @@ namespace HappyTravel.Nakijin.Api.Services
             await _context.SaveChangesAsync();
 
             await _mappingsCache.Fill();
+
+            await _accommodationsChangePublisher.PublishRemoved(htIdToMatch);
             
             return Result.Success();
         }
@@ -195,6 +201,7 @@ namespace HappyTravel.Nakijin.Api.Services
         }
 
 
+        private readonly AccommodationsChangePublisher _accommodationsChangePublisher;
         private readonly IAccommodationsDataMerger _accommodationsDataMerger;
         private readonly NakijinContext _context;
         private readonly AccommodationMappingsCache _mappingsCache;

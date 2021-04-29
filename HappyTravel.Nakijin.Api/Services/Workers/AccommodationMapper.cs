@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.Accommodations.Internals;
-using HappyTravel.Geography;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
@@ -14,6 +13,8 @@ using HappyTravel.Nakijin.Api.Infrastructure.Logging;
 using HappyTravel.Nakijin.Api.Models;
 using HappyTravel.Nakijin.Api.Models.Mappers;
 using HappyTravel.Nakijin.Api.Models.Mappers.Enums;
+using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
+using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -44,7 +45,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         public AccommodationMapper(NakijinContext context,
             ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
             MultilingualDataHelper multilingualDataHelper, AccommodationMappingsCache mappingsCache,
-            TracerProvider tracerProvider)
+            TracerProvider tracerProvider, AccommodationsChangePublisher accommodationsChangePublisher)
         {
             _context = context;
             _logger = loggerFactory.CreateLogger<AccommodationMapper>();
@@ -52,6 +53,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _multilingualDataHelper = multilingualDataHelper;
             _tracerProvider = tracerProvider;
             _mappingsCache = mappingsCache;
+            _accommodationsChangePublisher = accommodationsChangePublisher;
         }
 
         public async Task MapAccommodations(List<Suppliers> suppliers, CancellationToken cancellationToken)
@@ -163,6 +165,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             TelemetrySpan mappingSpan,
             CancellationToken cancellationToken)
         {
+            var removedAccommodations = new List<int>();
+            var addedAccommodations = new List<AccommodationData>();
+
             var accommodationsToAdd = new List<RichAccommodationDetails>();
             var uncertainAccommodationsToAdd = new List<AccommodationUncertainMatches>();
             var utcDate = DateTime.UtcNow;
@@ -210,6 +215,14 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _context.AddRange(accommodationsToAdd);
             _context.AddRange(uncertainAccommodationsToAdd);
             await _context.SaveChangesAsync(cancellationToken);
+
+            foreach (var acc in accommodationsToAdd)
+                addedAccommodations.Add(new AccommodationData(acc.Id, acc.KeyData.DefaultName,
+                    acc.KeyData.DefaultLocalityName, acc.KeyData.DefaultCountryName, acc.CountryCode,
+                    acc.KeyData.Coordinates));
+
+            await _accommodationsChangePublisher.PublishAdded(addedAccommodations);
+            await _accommodationsChangePublisher.PublishRemoved(removedAccommodations);
 
             mappingSpan.AddEvent("Save batch changes to db");
 
@@ -279,6 +292,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     _context.Entry(accommodationToUpdate).Property(ac => ac.IsActive).IsModified = true;
                     _context.Entry(accommodationToUpdate).Property(ac => ac.Modified).IsModified = true;
 
+                    var keyData = _multilingualDataHelper.GetAccommodationKeyData(accommodation);
+
+                    addedAccommodations.Add(new AccommodationData(existingNotActive.HtId, keyData.DefaultName,
+                        keyData.DefaultLocalityName, keyData.DefaultCountryName, country.Code, keyData.Coordinates));
+
                     return;
                 }
 
@@ -299,12 +317,12 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     _context.Entry(accommodationToUpdate).Property(ac => ac.IsActive).IsModified = true;
                     _context.Entry(accommodationToUpdate).Property(ac => ac.Modified).IsModified = true;
 
+                    removedAccommodations.Add(existingActive.HtId);
                     return;
                 }
 
 
                 var dbAccommodation = GetDbAccommodation(accommodation, isActive);
-
                 accommodationsToAdd.Add(dbAccommodation);
             }
 
@@ -352,6 +370,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         Modified = utcDate,
                         IsActive = false
                     };
+
+                    removedAccommodations.Add(existingAccommodation.HtId);
 
                     // TODO: merge two manual corrected data 
 
@@ -444,7 +464,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         location.Locality.GetValueOrDefault(Constants.DefaultLanguageCode);
 
                     if (!defaultLocalityName.IsValid())
-                        return (country.Id, localityId, localityZoneId);;
+                        return (country.Id, localityId, localityZoneId);
 
                     localityId = countryLocalities[defaultLocalityName];
 
@@ -641,6 +661,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 .ToDictionaryAsync(m => m.HtId, m => (m.Id, m.MappedHtIds));
 
         private readonly int _batchSize;
+        private readonly AccommodationsChangePublisher _accommodationsChangePublisher;
         private readonly ILogger<AccommodationMapper> _logger;
         private readonly MultilingualDataHelper _multilingualDataHelper;
         private readonly NakijinContext _context;

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
 
-namespace HappyTravel.Nakijin.Api.Services.PredictionsUpdate
+namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 {
     public interface IStaticDataPublicationService
     {

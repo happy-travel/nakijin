@@ -14,6 +14,8 @@ using Microsoft.Extensions.Options;
 using HappyTravel.MultiLanguage;
 using HappyTravel.Nakijin.Api.Comparers;
 using HappyTravel.Nakijin.Api.Infrastructure.Logging;
+using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
+using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using OpenTelemetry.Trace;
 
@@ -23,13 +25,15 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
     {
         public LocationMapper(NakijinContext context, ILocationNameNormalizer locationNameNormalizer,
             IOptions<StaticDataLoadingOptions> options,
-            ILoggerFactory loggerFactory, TracerProvider tracerProvider)
+            ILoggerFactory loggerFactory, TracerProvider tracerProvider,
+            LocationsChangePublisher locationsChangePublisher)
         {
             _context = context;
             _dbCommandTimeOut = options.Value.DbCommandTimeOut;
             _locationNameNormalizer = locationNameNormalizer;
             _logger = loggerFactory.CreateLogger<LocationMapper>();
             _tracerProvider = tracerProvider;
+            _locationsChangePublisher = locationsChangePublisher;
         }
 
 
@@ -146,11 +150,18 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }
 
             // TODO: Remove Distinct ( in connectors may be the same data in different forms normalized or not that is why needed distinct here )
+
             _context.UpdateRange(countriesToUpdate.Distinct(new CountryComparer()));
             _context.AddRange(newCountries.Distinct(new CountryComparer()));
             await ChangeCountryDependencies(countryPairsChanged);
 
             await _context.SaveChangesAsync(cancellationToken);
+
+
+            await _locationsChangePublisher.PublishAddedCountries(newCountries
+                .Distinct(new CountryComparer())
+                .Select(c => new CountryData(c.Id, c.Names.En, c.Code)).ToList());
+            await _locationsChangePublisher.PublishRemovedCountries(countryPairsChanged.Keys.ToList());
 
             _logger.LogMappingCountriesFinish(
                 $"Finished Mapping countries of {supplier.ToString()}.");
@@ -306,6 +317,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 _context.AddRange(newLocalities.Distinct(new LocalityComparer()));
                 await ChangeLocalityDependencies(changedLocalityPairs);
 
+                await _locationsChangePublisher.PublishRemovedLocalities(changedLocalityPairs.Keys.ToList());
+                await _locationsChangePublisher.PublishAddedLocalities(newLocalities.Distinct(new LocalityComparer())
+                    .Select(l => new LocalityData(l.Id, l.Names.En,
+                        country.Name, country.Code)).ToList());
+
                 await _context.SaveChangesAsync(cancellationToken);
 
                 _context.ChangeTracker.Entries()
@@ -456,7 +472,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         dbLocalityZone.Id = dbNotSuppliersZone.LocalityZone.Id;
                         dbLocalityZone.LocalityId = dbNotSuppliersZone.LocalityZone.LocalityId;
                         dbLocalityZone.Names =
-                            MultiLanguageHelpers.MergeMultilingualStrings(dbLocalityZone.Names, dbNotSuppliersZone.LocalityZone.Names);
+                            MultiLanguageHelpers.MergeMultilingualStrings(dbLocalityZone.Names,
+                                dbNotSuppliersZone.LocalityZone.Names);
                         dbLocalityZone.SupplierLocalityZoneCodes =
                             new Dictionary<Suppliers, string>(dbNotSuppliersZone.LocalityZone
                                 .SupplierLocalityZoneCodes);
@@ -492,6 +509,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 await ChangeLocalityZoneDependencies(changedLocalityZonesPairs);
 
                 await _context.SaveChangesAsync(cancellationToken);
+
+                await _locationsChangePublisher.PublishRemovedLocalityZones(changedLocalityZonesPairs.Keys.ToList());
+                await _locationsChangePublisher.PublishAddedLocalityZones(localityZonesToAdd
+                    .Distinct(new LocalityZoneComparer())
+                    .Select(lz => new LocalityZoneData(lz.Id, lz.Names.En,
+                        countryLocalities.First(l => l.Id == lz.LocalityId).Names.En, country.Name, country.Code))
+                    .ToList());
 
                 _context.ChangeTracker.Entries()
                     .Where(e => e.Entity != null)
@@ -649,8 +673,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         }
 
 
-        private Task<List<(string Code, int Id)>> GetCountries()
-            => _context.Countries.Where(c => c.IsActive).Select(c => ValueTuple.Create(c.Code, c.Id)).ToListAsync();
+        private Task<List<(string Code, int Id, string Name)>> GetCountries()
+            => _context.Countries.Where(c => c.IsActive).Select(c => ValueTuple.Create(c.Code, c.Id, c.Names.En))
+                .ToListAsync();
 
 
         private const string DefaultLanguageCode = "en";
@@ -659,5 +684,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         private readonly ILogger<LocationMapper> _logger;
         private readonly int _dbCommandTimeOut;
         private readonly TracerProvider _tracerProvider;
+        private readonly LocationsChangePublisher _locationsChangePublisher;
     }
 }
