@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.GeoData.Enums;
 using HappyTravel.Geography;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 
@@ -33,6 +34,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
             await _staticDataPublicationService.Publish(convertedAccommodationAdded, UpdateEventTypes.Add);
         }
 
+
         public async Task PublishRemoved(int id)
         {
             var convertedAccommodationRemoved = new Location(
@@ -41,7 +43,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 string.Empty,
                 string.Empty,
                 string.Empty,
-                new GeoPoint(0, 0),
+                GeoPointExtension.OriginGeoPoint,
                 0,
                 PredictionSources.Interior,
                 AccommodationMapperLocationTypes.Accommodation,
@@ -82,7 +84,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                     string.Empty,
                     string.Empty,
                     string.Empty,
-                    new GeoPoint(0, 0),
+                    GeoPointExtension.OriginGeoPoint,
                     0,
                     PredictionSources.Interior,
                     AccommodationMapperLocationTypes.Accommodation,
