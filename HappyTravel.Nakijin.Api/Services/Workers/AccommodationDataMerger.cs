@@ -203,11 +203,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     _multilingualDataHelper.GetAccommodationDataForMapping(calculatedData);
                 dbAccommodation.Modified = DateTime.UtcNow;
                 _context.Accommodations.Attach(dbAccommodation);
-                _context.Entry(dbAccommodation).Property(p => p.CalculatedAccommodation).IsModified = true;
-                _context.Entry(dbAccommodation).Property(p => p.HasDirectContract).IsModified = true;
-                _context.Entry(dbAccommodation).Property(p => p.IsCalculated).IsModified = true;
-                _context.Entry(dbAccommodation).Property(p => p.Modified).IsModified = true;
-                _context.Entry(dbAccommodation).Property(p => p.MappingData).IsModified = true;
+
+                var dbEntry = _context.Entry(dbAccommodation);
+                dbEntry.Property(p => p.CalculatedAccommodation).IsModified = true;
+                dbEntry.Property(p => p.HasDirectContract).IsModified = true;
+                dbEntry.Property(p => p.IsCalculated).IsModified = true;
+                dbEntry.Property(p => p.Modified).IsModified = true;
+                dbEntry.Property(p => p.MappingData).IsModified = true;
             }
 
             await _context.SaveChangesAsync(cancellationToken);
