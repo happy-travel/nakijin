@@ -23,12 +23,13 @@ namespace HappyTravel.Nakijin.Api.Controllers
             _serviceProvider = serviceProvider;
         }
 
+
         /// <summary>
         /// Maps locations (countries, localities, locality zones) of suppliers with existing locations.
         /// </summary>
         /// <param name="suppliers"></param>
         /// <returns></returns>
-        [HttpPost("locations/map")]
+        [HttpPost("locations/mapping/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MapLocations([FromBody] List<Suppliers> suppliers)
         {
@@ -37,19 +38,20 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
             _locationsMapperTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
             var scope = _serviceProvider.CreateScope();
-            
+
             Task.Factory.StartNew(async () =>
-            {
-                try
                 {
-                    var locationService = scope.ServiceProvider.GetRequiredService<ILocationMapper>();
-                    await locationService.MapLocations(suppliers, _locationsMapperTokenSource.Token);
-                }
-                finally
-                {
-                    scope.Dispose();
-                }
-            }, _locationsMapperTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    try
+                    {
+                        var locationService = scope.ServiceProvider.GetRequiredService<ILocationMapper>();
+                        await locationService.MapLocations(suppliers, _locationsMapperTokenSource.Token);
+                    }
+                    finally
+                    {
+                        scope.Dispose();
+                    }
+                },
+                _locationsMapperTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             return Accepted();
         }

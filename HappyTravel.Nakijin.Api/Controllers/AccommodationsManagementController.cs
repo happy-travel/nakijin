@@ -12,7 +12,6 @@ using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace HappyTravel.Nakijin.Api.Controllers
 {
@@ -35,7 +34,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// Cancels preloading
         /// </summary>
         /// <returns></returns>
-        [HttpPost("preload/cancel")]
+        [HttpPost("preloading/cancel")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         public IActionResult CancelAccommodationPreloading()
         {
@@ -48,7 +47,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// Cancels accommodation mapping
         /// </summary>
         /// <returns></returns>
-        [HttpPost("map/cancel")]
+        [HttpPost("mapping/cancel")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         public IActionResult CancelAccommodationMapping()
         {
@@ -61,7 +60,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// Cancels accommodation merging 
         /// </summary>
         /// <returns></returns>
-        [HttpPost("merge/cancel")]
+        [HttpPost("merging/cancel")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         public IActionResult CancelAccommodationDataMerge()
         {
@@ -71,16 +70,27 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
 
         /// <summary>
+        /// Cancels accommodation data calculation
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("calculation/cancel")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        public IActionResult CancelAccommodationDataCalculation()
+        {
+            _accommodationsDataCalculatorTokenSource.Cancel();
+            return Ok();
+        }
+
+
+        /// <summary>
         /// Loads raw accommodation data 
         /// </summary>
         /// <param name="suppliers"></param>
-        /// <param name="modificationDate"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        [HttpPost("preload")]
+        [HttpPost("preloading/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult Preload([FromBody] List<Suppliers> suppliers, [FromQuery(Name = "modification-date")]
-            DateTime? modificationDate, CancellationToken cancellationToken = default)
+        public IActionResult Preload([FromBody] List<Suppliers> suppliers, CancellationToken cancellationToken = default)
         {
             // Prevent situation when done more than one Preload requests.
             if (_accommodationPreloaderTokenSource.Token.CanBeCanceled)
@@ -90,17 +100,18 @@ namespace HappyTravel.Nakijin.Api.Controllers
             var scope = _serviceProvider.CreateScope();
 
             Task.Factory.StartNew(async () =>
-            {
-                try
                 {
-                    var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
-                    await preloader.Preload(suppliers, modificationDate, _accommodationPreloaderTokenSource.Token);
-                }
-                finally
-                {
-                    scope.Dispose();
-                }
-            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    try
+                    {
+                        var preloader = scope.ServiceProvider.GetRequiredService<IAccommodationPreloader>();
+                        await preloader.Preload(suppliers, _accommodationPreloaderTokenSource.Token);
+                    }
+                    finally
+                    {
+                        scope.Dispose();
+                    }
+                },
+                cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             return Accepted();
         }
 
@@ -110,7 +121,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// </summary>
         /// <param name="suppliers"></param>
         /// <returns></returns>
-        [HttpPost("map")]
+        [HttpPost("mapping/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MapAccommodations([FromBody] List<Suppliers> suppliers)
         {
@@ -122,17 +133,18 @@ namespace HappyTravel.Nakijin.Api.Controllers
             var scope = _serviceProvider.CreateScope();
 
             Task.Factory.StartNew(async () =>
-            {
-                try
                 {
-                    var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                    await mapper.MapAccommodations(suppliers, _accommodationMappingTokenSource.Token);
-                }
-                finally
-                {
-                    scope.Dispose();
-                }
-            }, _accommodationMappingTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    try
+                    {
+                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                        await mapper.MapAccommodations(suppliers, _accommodationMappingTokenSource.Token);
+                    }
+                    finally
+                    {
+                        scope.Dispose();
+                    }
+                },
+                _accommodationMappingTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             return Accepted();
         }
@@ -142,7 +154,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// Merges accommodations
         /// </summary>
         /// <returns></returns>
-        [HttpPost("merge")]
+        [HttpPost("merging/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
         public IActionResult MergeAccommodationsData()
         {
@@ -152,19 +164,52 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
             _accommodationDataMergeTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
             var scope = _serviceProvider.CreateScope();
-            
+
             Task.Factory.StartNew(async () =>
-            {
-                try
                 {
-                    var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
-                    await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
-                }
-                finally
+                    try
+                    {
+                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                        await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
+                    }
+                    finally
+                    {
+                        scope.Dispose();
+                    }
+                },
+                _accommodationDataMergeTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+            return Accepted();
+        }
+
+        /// <summary>
+        /// Calculates accommodations data
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("calculation/start")]
+        [ProducesResponseType((int) HttpStatusCode.Accepted)]
+        public IActionResult CalculateAccommodationsData([FromBody] List<Suppliers> suppliers)
+        {
+            // Prevent situation when done more than one Calculate requests.
+            if (_accommodationsDataCalculatorTokenSource.Token.CanBeCanceled)
+                _accommodationsDataCalculatorTokenSource.Cancel();
+
+            _accommodationsDataCalculatorTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
+            var scope = _serviceProvider.CreateScope();
+
+            Task.Factory.StartNew(async () =>
                 {
-                    scope.Dispose();
-                }
-            }, _accommodationDataMergeTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    try
+                    {
+                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                        await accommodationService.Calculate(suppliers, _accommodationsDataCalculatorTokenSource.Token);
+                    }
+                    finally
+                    {
+                        scope.Dispose();
+                    }
+                },
+                _accommodationsDataCalculatorTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             return Accepted();
         }
@@ -276,6 +321,9 @@ namespace HappyTravel.Nakijin.Api.Controllers
             new CancellationTokenSource(TimeSpan.FromDays(1));
 
         private static CancellationTokenSource _accommodationPreloaderTokenSource =
+            new CancellationTokenSource(TimeSpan.FromDays(1));
+
+        private static CancellationTokenSource _accommodationsDataCalculatorTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));
 
 

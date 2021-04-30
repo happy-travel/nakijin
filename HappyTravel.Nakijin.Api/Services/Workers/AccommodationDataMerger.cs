@@ -35,6 +35,84 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _tracerProvider = tracerProvider;
         }
 
+        
+        public async Task Calculate(List<Suppliers> suppliers, CancellationToken cancellationToken)
+        {
+            var currentSpan = Tracer.CurrentSpan;
+            var tracer = _tracerProvider.GetTracer(nameof(AccommodationDataMerger));
+            _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
+
+            foreach (var supplier in suppliers)
+            {
+                try
+                {
+                    using var supplierAccommodationsDataCalculatingSpan = tracer.StartActiveSpan(
+                        $"{nameof(Calculate)} accommodations of supplier {supplier.ToString()}",
+                        SpanKind.Internal, currentSpan);
+
+                    _logger.LogCalculatingAccommodationsDataStart(
+                        $"Started calculation accommodations data of supplier {supplier.ToString()}");
+
+                    // TODO: uncomment when ef core will support work with dictionaries (EF core 6) or change dictionary SupplierAccommodationCodes to JsonDocument
+
+                    // var lastUpdatedDate = await _context.DataUpdateHistories.Where(dh => dh.Supplier == supplier)
+                    //     .OrderByDescending(dh => dh.UpdateTime)
+                    //     .Select(dh => dh.UpdateTime)
+                    //     .FirstOrDefaultAsync(cancellationToken);
+
+                    //var changedSupplierHotelCodes = new List<string>();
+                    var notCalculatedAccommodations = new List<RichAccommodationDetails>();
+                    var skip = 0;
+                    do
+                    {
+                        // changedSupplierHotelCodes = await _context.RawAccommodations
+                        //     .Where(ac => ac.Supplier == supplier && ac.Modified >= lastUpdatedDate)
+                        //     .OrderBy(ac => ac.SupplierAccommodationId)
+                        //     .Skip(skip)
+                        //     .Take(_options.MergingBatchSize)
+                        //     .Select(ac => ac.SupplierAccommodationId)
+                        //     .ToListAsync(cancellationToken);
+                        //
+                        //  var notCalculatedAccommodations = await _context.Accommodations
+                        // .Where(ac => changedSupplierHotelCodes.Contains(ac.SupplierAccommodationCodes[supplier]))
+                        //     .ToListAsync(cancellationToken);
+
+                        notCalculatedAccommodations = await _context
+                            .Accommodations.Where(ac
+                                => ac.IsActive && EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
+                                    supplier.ToString().ToLower()))
+                            .Skip(skip)
+                            .Take(_options.MergingBatchSize)
+                            .ToListAsync(cancellationToken);
+
+                        skip += notCalculatedAccommodations.Count;
+
+                        await CalculateBatch(notCalculatedAccommodations, cancellationToken);
+                    } while (notCalculatedAccommodations.Count > 0 /*changedSupplierHotelCodes.Count > 0*/);
+
+                    _context.DataUpdateHistories.Add(new DataUpdateHistory
+                    {
+                        Supplier = supplier,
+                        Type = DataUpdateTypes.DataCalculation,
+                        UpdateTime = DateTime.UtcNow
+                    });
+
+                    await _context.SaveChangesAsync(cancellationToken);
+                    _logger.LogCalculatingAccommodationsDataFinish(
+                        $"Finished calculation of supplier {supplier.ToString()} data.");
+                }
+                catch (TaskCanceledException)
+                {
+                    _logger.LogCalculatingAccommodationsDataCancel(
+                        $"Calculating data of supplier {supplier.ToString()} was cancelled by client request");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogCalculatingAccommodationsDataError(ex);
+                }
+            }
+        }
+
 
         public async Task MergeAll(CancellationToken cancellationToken)
         {
@@ -59,51 +137,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         .Take(_options.MergingBatchSize)
                         .ToListAsync(cancellationToken);
 
-                    var supplierAccommodationIds = notCalculatedAccommodations
-                        .SelectMany(ac => ac.SupplierAccommodationCodes).Select(ac => ac.Value).ToList();
-
-                    var rawAccommodations = await _context.RawAccommodations.Where(ra
-                            => supplierAccommodationIds.Contains(ra.SupplierAccommodationId))
-                        .Select(ra => new RawAccommodation
-                        {
-                            Accommodation = ra.Accommodation,
-                            Supplier = ra.Supplier,
-                            SupplierAccommodationId = ra.SupplierAccommodationId
-                        })
-                        .ToListAsync(cancellationToken);
-
-                    foreach (var ac in notCalculatedAccommodations)
-                    {
-                        var supplierAccommodations = (from ra in rawAccommodations
-                            join sa in ac.SupplierAccommodationCodes on ra.SupplierAccommodationId equals sa.Value
-                            where ra.Supplier == sa.Key
-                            select ra).ToList();
-
-                        var calculatedData = await Merge(ac, supplierAccommodations);
-
-                        var dbAccommodation = new RichAccommodationDetails();
-                        dbAccommodation.Id = ac.Id;
-                        dbAccommodation.IsCalculated = true;
-                        dbAccommodation.CalculatedAccommodation = calculatedData;
-                        dbAccommodation.HasDirectContract = calculatedData.HasDirectContract;
-                        dbAccommodation.MappingData =
-                            _multilingualDataHelper.GetAccommodationDataForMapping(calculatedData);
-                        dbAccommodation.Modified = DateTime.UtcNow;
-                        _context.Accommodations.Attach(dbAccommodation);
-                        _context.Entry(dbAccommodation).Property(p => p.CalculatedAccommodation).IsModified = true;
-                        _context.Entry(dbAccommodation).Property(p => p.HasDirectContract).IsModified = true;
-                        _context.Entry(dbAccommodation).Property(p => p.IsCalculated).IsModified = true;
-                        _context.Entry(dbAccommodation).Property(p => p.Modified).IsModified = true;
-                        _context.Entry(dbAccommodation).Property(p => p.MappingData).IsModified = true;
-                    }
-
-                    await _context.SaveChangesAsync(cancellationToken);
-
-                    _context.ChangeTracker.Entries()
-                        .Where(e => e.Entity != null)
-                        .Where(e => e.State != EntityState.Detached)
-                        .ToList()
-                        .ForEach(e => e.State = EntityState.Detached);
+                    await CalculateBatch(notCalculatedAccommodations, cancellationToken);
                 } while (notCalculatedAccommodations.Count > 0);
 
                 _logger.LogMergingAccommodationsDataFinish($"Finished merging accommodations data");
@@ -118,6 +152,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }
         }
 
+
         public async Task<MultilingualAccommodation> Merge(RichAccommodationDetails accommodation)
         {
             var supplierAccommodations = await (from ac in _context.RawAccommodations
@@ -131,6 +166,59 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 .ToListAsync();
 
             return await Merge(accommodation, supplierAccommodations);
+        }
+
+        
+        private async Task CalculateBatch(List<RichAccommodationDetails> notCalculatedAccommodations,
+            CancellationToken cancellationToken)
+        {
+            var supplierAccommodationIds = notCalculatedAccommodations
+                .SelectMany(ac => ac.SupplierAccommodationCodes).Select(ac => ac.Value).ToList();
+
+            var rawAccommodations = await _context.RawAccommodations.Where(ra
+                    => supplierAccommodationIds.Contains(ra.SupplierAccommodationId))
+                .Select(ra => new RawAccommodation
+                {
+                    Accommodation = ra.Accommodation,
+                    Supplier = ra.Supplier,
+                    SupplierAccommodationId = ra.SupplierAccommodationId
+                })
+                .ToListAsync(cancellationToken);
+
+            foreach (var ac in notCalculatedAccommodations)
+            {
+                var supplierAccommodations = (from ra in rawAccommodations
+                    join sa in ac.SupplierAccommodationCodes on ra.SupplierAccommodationId equals sa.Value
+                    where ra.Supplier == sa.Key
+                    select ra).ToList();
+
+                var calculatedData = await Merge(ac, supplierAccommodations);
+
+                var dbAccommodation = new RichAccommodationDetails();
+                dbAccommodation.Id = ac.Id;
+                dbAccommodation.IsCalculated = true;
+                dbAccommodation.CalculatedAccommodation = calculatedData;
+                dbAccommodation.HasDirectContract = calculatedData.HasDirectContract;
+                dbAccommodation.MappingData =
+                    _multilingualDataHelper.GetAccommodationDataForMapping(calculatedData);
+                dbAccommodation.Modified = DateTime.UtcNow;
+                _context.Accommodations.Attach(dbAccommodation);
+
+                var dbEntry = _context.Entry(dbAccommodation);
+                dbEntry.Property(p => p.CalculatedAccommodation).IsModified = true;
+                dbEntry.Property(p => p.HasDirectContract).IsModified = true;
+                dbEntry.Property(p => p.IsCalculated).IsModified = true;
+                dbEntry.Property(p => p.Modified).IsModified = true;
+                dbEntry.Property(p => p.MappingData).IsModified = true;
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _context.ChangeTracker.Entries()
+                .Where(e => e.Entity != null)
+                .Where(e => e.State != EntityState.Detached)
+                .ToList()
+                .ForEach(e => e.State = EntityState.Detached);
         }
 
 
