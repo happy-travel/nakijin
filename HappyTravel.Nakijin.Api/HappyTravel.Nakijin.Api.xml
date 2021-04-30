@@ -53,12 +53,17 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.Preload(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers},System.Nullable{System.DateTime},System.Threading.CancellationToken)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.CancelAccommodationDataCalculation">
+            <summary>
+            Cancels accommodation merging 
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.Preload(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers},System.Threading.CancellationToken)">
             <summary>
             Loads raw accommodation data 
             </summary>
             <param name="suppliers"></param>
-            <param name="modificationDate"></param>
             <param name="cancellationToken"></param>
             <returns></returns>
         </member>
@@ -72,6 +77,12 @@
         <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.MergeAccommodationsData">
             <summary>
             Merges accommodations
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.CalculateAccommodationsData(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers})">
+            <summary>
+            Calculates accommodations data
             </summary>
             <returns></returns>
         </member>

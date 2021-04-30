@@ -79,6 +79,15 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
                     await _mappingsCache.Fill();
                     supplierAccommodationsMappingSpan.AddEvent("Reset accommodation mappings cache");
+
+                    _context.DataUpdateHistories.Add(new DataUpdateHistory
+                    {
+                        Supplier = supplier,
+                        Type = DataUpdateTypes.Mapping,
+                        UpdateTime = DateTime.UtcNow
+                    });
+
+                    await _context.SaveChangesAsync(cancellationToken);
                 }
                 catch (TaskCanceledException)
                 {

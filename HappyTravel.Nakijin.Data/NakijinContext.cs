@@ -188,6 +188,14 @@ namespace HappyTravel.Nakijin.Data
                 ha.Property(p => p.Created).IsRequired();
                 ha.Property(p => p.MappedHtIds).HasColumnType("jsonb").IsRequired();
             });
+
+            builder.Entity<DataUpdateHistory>(uh =>
+            {
+                uh.HasKey(p => p.Id);
+                uh.Property(p => p.Type).IsRequired();
+                uh.Property(p => p.Supplier).IsRequired();
+                uh.Property(p => p.UpdateTime).IsRequired();
+            });
         }
 
 
@@ -199,5 +207,6 @@ namespace HappyTravel.Nakijin.Data
         public virtual DbSet<AccommodationUncertainMatches> AccommodationUncertainMatches { get; set; }
         public virtual DbSet<StaticData> StaticDatas { get; set; }
         public virtual DbSet<HtAccommodationMapping> HtAccommodationMappings { get; set; }
+        public virtual DbSet<DataUpdateHistory> DataUpdateHistories { get; set; }
     }
 }
