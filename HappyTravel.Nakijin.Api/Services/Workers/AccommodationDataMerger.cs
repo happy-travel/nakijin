@@ -199,8 +199,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 dbAccommodation.IsCalculated = true;
                 dbAccommodation.CalculatedAccommodation = calculatedData;
                 dbAccommodation.HasDirectContract = calculatedData.HasDirectContract;
-                dbAccommodation.MappingData =
-                    _multilingualDataHelper.GetAccommodationDataForMapping(calculatedData);
+                dbAccommodation.KeyData =
+                    _multilingualDataHelper.GetAccommodationKeyData(calculatedData);
                 dbAccommodation.Modified = DateTime.UtcNow;
                 _context.Accommodations.Attach(dbAccommodation);
 
@@ -209,7 +209,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 dbEntry.Property(p => p.HasDirectContract).IsModified = true;
                 dbEntry.Property(p => p.IsCalculated).IsModified = true;
                 dbEntry.Property(p => p.Modified).IsModified = true;
-                dbEntry.Property(p => p.MappingData).IsModified = true;
+                dbEntry.Property(p => p.KeyData).IsModified = true;
             }
 
             await _context.SaveChangesAsync(cancellationToken);

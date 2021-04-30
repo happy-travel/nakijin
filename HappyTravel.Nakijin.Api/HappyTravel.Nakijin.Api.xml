@@ -55,7 +55,7 @@
         </member>
         <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.CancelAccommodationDataCalculation">
             <summary>
-            Cancels accommodation merging 
+            Cancels accommodation data calculation
             </summary>
             <returns></returns>
         </member>
