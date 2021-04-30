@@ -513,12 +513,12 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
                 await _context.SaveChangesAsync(cancellationToken);
 
-                await _locationsChangePublisher.PublishRemovedLocalityZones(changedLocalityZonesPairs.Keys.ToList());
-                await _locationsChangePublisher.PublishAddedLocalityZones(localityZonesToAdd
-                    .Distinct(new LocalityZoneComparer())
-                    .Select(lz => new LocalityZoneData(lz.Id, lz.Names.En,
-                        countryLocalities.First(l => l.Id == lz.LocalityId).Names.En, country.Name, country.Code))
-                    .ToList());
+                // await _locationsChangePublisher.PublishRemovedLocalityZones(changedLocalityZonesPairs.Keys.ToList());
+                // await _locationsChangePublisher.PublishAddedLocalityZones(localityZonesToAdd
+                //     .Distinct(new LocalityZoneComparer())
+                //     .Select(lz => new LocalityZoneData(lz.Id, lz.Names.En,
+                //         countryLocalities.First(l => l.Id == lz.LocalityId).Names.En, country.Name, country.Code))
+                //     .ToList());
 
                 _context.ChangeTracker.Entries()
                     .Where(e => e.Entity != null)
