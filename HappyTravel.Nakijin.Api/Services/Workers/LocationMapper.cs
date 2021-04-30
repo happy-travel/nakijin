@@ -318,14 +318,15 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 _context.UpdateRange(localitiesToUpdate.Distinct(new LocalityComparer()));
                 _context.AddRange(newLocalities.Distinct(new LocalityComparer()));
                 await ChangeLocalityDependencies(changedLocalityPairs);
-
+                
+                await _context.SaveChangesAsync(cancellationToken);
+                
                 await _locationsChangePublisher.PublishRemovedLocalities(changedLocalityPairs.Keys.ToList());
                 await _locationsChangePublisher.PublishAddedLocalities(newLocalities
                     .Distinct(new LocalityComparer())
                     .Select(l => new LocalityData(l.Id, l.Names.En, country.Name, country.Code))
                     .ToList());
 
-                await _context.SaveChangesAsync(cancellationToken);
 
                 _context.ChangeTracker.Entries()
                     .Where(e => e.Entity != null)
