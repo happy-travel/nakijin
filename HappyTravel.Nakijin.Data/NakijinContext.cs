@@ -61,10 +61,10 @@ namespace HappyTravel.Nakijin.Data
                 a.Property(p => p.CountryId).IsRequired();
                 a.Property(p => p.LocalityId);
                 a.Property(p => p.LocalityZoneId);
-                a.Property(p => p.MappingData)
+                a.Property(p => p.KeyData)
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),
-                        c => JsonConvert.DeserializeObject<AccommodationMappingData>(c))
+                        c => JsonConvert.DeserializeObject<AccommodationKeyData>(c))
                     .IsRequired();
                 a.Property(p => p.CalculatedAccommodation).IsRequired()
                     .HasColumnType("jsonb")

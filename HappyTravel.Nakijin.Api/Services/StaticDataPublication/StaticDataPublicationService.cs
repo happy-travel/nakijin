@@ -5,16 +5,16 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.Nakijin.Api.Infrastructure;
+using HappyTravel.Nakijin.Api.Infrastructure.Logging;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
+using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Nito.AsyncEx;
 using StackExchange.Redis;
 using StackExchange.Redis.Extensions.Core.Abstractions;
-using HappyTravel.Nakijin.Api.Infrastructure.Logging;
-using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
-using Nito.AsyncEx;
 
-namespace HappyTravel.Nakijin.Api.Services.PredictionsUpdate
+namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 {
     public class StaticDataPublicationService: IStaticDataPublicationService
     {

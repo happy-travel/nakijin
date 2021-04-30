@@ -91,8 +91,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }
         }
         
-        public  AccommodationMappingData GetAccommodationDataForMapping(Contracts.MultilingualAccommodation accommodation)
-            => new AccommodationMappingData
+        public  AccommodationKeyData GetAccommodationKeyData(Contracts.MultilingualAccommodation accommodation)
+            => new AccommodationKeyData
             {
                 DefaultName = accommodation.Name.En,
                 DefaultCountryName = accommodation.Location.Country.En,

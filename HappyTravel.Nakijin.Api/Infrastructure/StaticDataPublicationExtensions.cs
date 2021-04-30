@@ -1,5 +1,5 @@
 ﻿using HappyTravel.Nakijin.Api.Infrastructure.Environments;
-using HappyTravel.Nakijin.Api.Services.PredictionsUpdate;
+using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,6 +46,9 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             });
             
             services.AddSingleton<IStaticDataPublicationService, StaticDataPublicationService>();
+
+            services.AddSingleton<AccommodationsChangePublisher>();
+            services.AddSingleton<LocationsChangePublisher>();
             
             return services;
         }

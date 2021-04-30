@@ -11,7 +11,7 @@ namespace HappyTravel.Nakijin.Data.Models.Accommodations
         public int? LocalityId { get; set; }
         public int? LocalityZoneId { get; set; }
         public string CountryCode { get; set; }
-        public AccommodationMappingData MappingData { get; set; }
+        public AccommodationKeyData KeyData { get; set; }
         public MultilingualAccommodation CalculatedAccommodation { get; set; }
         
         public bool HasDirectContract { get; set; }

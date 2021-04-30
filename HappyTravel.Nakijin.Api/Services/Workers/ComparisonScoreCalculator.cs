@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Contracts = HappyTravel.EdoContracts.Accommodations.Internals;
@@ -11,8 +10,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
     public static class ComparisonScoreCalculator
     {
         // Considering that accommodations always have default(En) value
-        public static float Calculate(in AccommodationMappingData nearestAccommodation,
-            in AccommodationMappingData accommodation)
+        public static float Calculate(in AccommodationKeyData nearestAccommodation,
+            in AccommodationKeyData accommodation)
         {
             float score = NameScore * GetNamesScore(nearestAccommodation, accommodation);
 
@@ -34,8 +33,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         }
 
 
-        private static float GetNamesScore(in AccommodationMappingData nearestAccommodation,
-            in AccommodationMappingData accommodation)
+        private static float GetNamesScore(in AccommodationKeyData nearestAccommodation,
+            in AccommodationKeyData accommodation)
         {
             var locationsNamesToIgnore =
                 GetLocationsNamesForIgnoreOnNameComparision(nearestAccommodation, accommodation);
@@ -63,8 +62,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         }
 
         private static List<string> GetLocationsNamesForIgnoreOnNameComparision(
-            in AccommodationMappingData nearestAccommodation,
-            in AccommodationMappingData accommodation)
+            in AccommodationKeyData nearestAccommodation,
+            in AccommodationKeyData accommodation)
         {
             var result = new List<string>();
 
@@ -84,8 +83,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     : value.Split(" ").ToList();
         }
 
-        private static float GetAddressScore(in AccommodationMappingData nearestAccommodation,
-            in AccommodationMappingData accommodation)
+        private static float GetAddressScore(in AccommodationKeyData nearestAccommodation,
+            in AccommodationKeyData accommodation)
         {
             return AddressScore * StringComparisonHelper.GetEqualityCoefficient(
                 nearestAccommodation.Address,
