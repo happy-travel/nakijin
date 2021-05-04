@@ -80,8 +80,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         //TODO: remove raw sql when ef core will support queries with dictionaries
                         var notCalculatedAccommodations = await _context.Accommodations
                             .FromSqlRaw(
-                                @$"SELECT * FROM ""Accommodations"" a 
-                                   WHERE a.""SupplierAccommodationCodes""->> {{{changedSupplierHotelCodes.Count}}} 
+                                @$"SELECT * FROM ""{nameof(_context.Accommodations)}"" a 
+                                   WHERE a.""{nameof(RichAccommodationDetails.SupplierAccommodationCodes)}""->> {{{changedSupplierHotelCodes.Count}}} 
                                    in ({string.Join(',', changedSupplierHotelCodes.Select((_, index) => $"{{{index}}}"))})",
                                 parameters.Select(p => (object) p).ToArray())
                             .ToListAsync(cancellationToken);
@@ -489,6 +489,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             return manualCorrectedData;
         }
 
+
         private MultiLanguage<T> MergeMultilingualData<T>(List<Suppliers> suppliersPriority,
             Dictionary<Suppliers, MultiLanguage<T>?> suppliersData, MultiLanguage<T> manualCorrectedData,
             Func<T, bool> defaultChecker)
@@ -515,6 +516,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             return result;
         }
 
+
         private bool MergeBoolData(IEnumerable<bool> data)
         {
             foreach (var boolItem in data)
@@ -523,6 +525,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             return false;
         }
+
 
         private readonly TracerProvider _tracerProvider;
         private readonly StaticDataLoadingOptions _options;

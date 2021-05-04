@@ -82,6 +82,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
             return Ok(accommodations);
         }
 
+
         /// <summary>
         ///   Gets date of last modified accommodation.
         /// </summary>

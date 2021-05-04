@@ -87,12 +87,10 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// Loads raw accommodation data 
         /// </summary>
         /// <param name="suppliers"></param>
-        /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [HttpPost("preloading/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult Preload([FromBody] List<Suppliers> suppliers,
-            CancellationToken cancellationToken = default)
+        public IActionResult Preload([FromBody] List<Suppliers> suppliers)
         {
             // Prevent situation when done more than one Preload requests.
             if (_accommodationPreloaderTokenSource.Token.CanBeCanceled)
@@ -113,7 +111,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
                         scope.Dispose();
                     }
                 },
-                cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                _accommodationPreloaderTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             return Accepted();
         }
 
@@ -139,8 +137,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
                     try
                     {
                         var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                        await mapper.MapAccommodations(suppliers, MappingTypes.Full,
-                            _accommodationMappingTokenSource.Token);
+                        await mapper.MapAccommodations(suppliers, MappingTypes.Full, _accommodationMappingTokenSource.Token);
                     }
                     finally
                     {
@@ -174,8 +171,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
                     try
                     {
                         var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                        await mapper.MapAccommodations(suppliers, MappingTypes.Incremental,
-                            _accommodationMappingTokenSource.Token);
+                        await mapper.MapAccommodations(suppliers, MappingTypes.Incremental, _accommodationMappingTokenSource.Token);
                     }
                     finally
                     {
@@ -207,8 +203,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var accommodationService =
-                            scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
                         await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
                     }
                     finally
@@ -220,6 +215,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
             return Accepted();
         }
+
 
         /// <summary>
         /// Calculates accommodations data
@@ -240,8 +236,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var accommodationService =
-                            scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
                         await accommodationService.Calculate(suppliers, _accommodationsDataCalculatorTokenSource.Token);
                     }
                     finally
@@ -285,8 +280,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         public async Task<IActionResult> AddSuppliersPriority(int accommodationId,
             [FromBody] Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriorities)
         {
-            var (_, isFailure, error) =
-                await _accommodationManagementService.AddSuppliersPriority(accommodationId, suppliersPriorities);
+            var (_, isFailure, error) = await _accommodationManagementService.AddSuppliersPriority(accommodationId, suppliersPriorities);
 
             if (isFailure)
                 return BadRequest(error);
@@ -353,6 +347,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
             return Ok();
         }
+
 
         private static CancellationTokenSource _accommodationDataMergeTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));
