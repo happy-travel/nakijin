@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.Nakijin.Api.Models.Mappers.Enums;
 using HappyTravel.Nakijin.Api.Services;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Api.Services.Workers;
@@ -90,7 +91,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// <returns></returns>
         [HttpPost("preloading/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult Preload([FromBody] List<Suppliers> suppliers, CancellationToken cancellationToken = default)
+        public IActionResult Preload([FromBody] List<Suppliers> suppliers,
+            CancellationToken cancellationToken = default)
         {
             // Prevent situation when done more than one Preload requests.
             if (_accommodationPreloaderTokenSource.Token.CanBeCanceled)
@@ -121,9 +123,9 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// </summary>
         /// <param name="suppliers"></param>
         /// <returns></returns>
-        [HttpPost("mapping/start")]
+        [HttpPost("full-mapping/start")]
         [ProducesResponseType((int) HttpStatusCode.Accepted)]
-        public IActionResult MapAccommodations([FromBody] List<Suppliers> suppliers)
+        public IActionResult MapAccommodationsFully([FromBody] List<Suppliers> suppliers)
         {
             // Prevent situation when done more than one Map requests.
             if (_accommodationMappingTokenSource.Token.CanBeCanceled)
@@ -137,7 +139,43 @@ namespace HappyTravel.Nakijin.Api.Controllers
                     try
                     {
                         var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                        await mapper.MapAccommodations(suppliers, _accommodationMappingTokenSource.Token);
+                        await mapper.MapAccommodations(suppliers, MappingTypes.Full,
+                            _accommodationMappingTokenSource.Token);
+                    }
+                    finally
+                    {
+                        scope.Dispose();
+                    }
+                },
+                _accommodationMappingTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+            return Accepted();
+        }
+
+
+        /// <summary>
+        /// Maps accommodations 
+        /// </summary>
+        /// <param name="suppliers"></param>
+        /// <returns></returns>
+        [HttpPost("incremental-mapping/start")]
+        [ProducesResponseType((int) HttpStatusCode.Accepted)]
+        public IActionResult MapAccommodationsIncrementally([FromBody] List<Suppliers> suppliers)
+        {
+            // Prevent situation when done more than one Map requests.
+            if (_accommodationMappingTokenSource.Token.CanBeCanceled)
+                _accommodationMappingTokenSource.Cancel();
+
+            _accommodationMappingTokenSource = new CancellationTokenSource(TimeSpan.FromDays(1));
+            var scope = _serviceProvider.CreateScope();
+
+            Task.Factory.StartNew(async () =>
+                {
+                    try
+                    {
+                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                        await mapper.MapAccommodations(suppliers, MappingTypes.Incremental,
+                            _accommodationMappingTokenSource.Token);
                     }
                     finally
                     {
@@ -169,7 +207,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                        var accommodationService =
+                            scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
                         await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
                     }
                     finally
@@ -201,7 +240,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                        var accommodationService =
+                            scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
                         await accommodationService.Calculate(suppliers, _accommodationsDataCalculatorTokenSource.Token);
                     }
                     finally

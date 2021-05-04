@@ -56,7 +56,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _accommodationsChangePublisher = accommodationsChangePublisher;
         }
 
-        public async Task MapAccommodations(List<Suppliers> suppliers, CancellationToken cancellationToken)
+        public async Task MapAccommodations(List<Suppliers> suppliers, MappingTypes mappingType,
+            CancellationToken cancellationToken)
         {
             var currentSpan = Tracer.CurrentSpan;
             var tracer = _tracerProvider.GetTracer(nameof(AccommodationMapper));
@@ -72,7 +73,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         $"Started mapping of {supplier.ToString()} accommodations");
 
                     cancellationToken.ThrowIfCancellationRequested();
-                    await MapAccommodations(supplier, supplierAccommodationsMappingSpan, tracer, cancellationToken);
+                    await MapAccommodations(supplier, mappingType, supplierAccommodationsMappingSpan, tracer,
+                        cancellationToken);
 
                     _logger.LogMappingAccommodationsFinish(
                         $"Finished mapping of {supplier.ToString()} accommodations");
@@ -101,10 +103,18 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }
         }
 
-        private async Task MapAccommodations(Suppliers supplier, TelemetrySpan mappingSpan, Tracer tracer,
+        private async Task MapAccommodations(Suppliers supplier, MappingTypes mappingType, TelemetrySpan mappingSpan,
+            Tracer tracer,
             CancellationToken cancellationToken)
         {
             var htAccommodationMappings = await GetHtAccommodationMappings();
+
+            var lastMappingDate = mappingType switch
+            {
+                MappingTypes.Full => DateTime.MinValue,
+                MappingTypes.Incremental => await GetLastMappingDate(supplier, cancellationToken),
+                _ => DateTime.MinValue
+            };
 
             foreach (var country in await GetCountries(supplier))
             {
@@ -145,7 +155,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     accommodationDetails = await GetAccommodationsForMapping(country.Code, supplier, skip,
-                        _batchSize, cancellationToken);
+                        _batchSize, lastMappingDate, cancellationToken);
                     countryAccommodationsMappingSpan.AddEvent(
                         $"Got supplier's specified country accommodations batch skip = {skip}, top = {_batchSize}");
 
@@ -493,11 +503,12 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
 
         private async Task<List<Contracts.MultilingualAccommodation>> GetAccommodationsForMapping(string countryCode,
-            Suppliers supplier, int skip, int take, CancellationToken cancellationToken)
+            Suppliers supplier, int skip, int take, DateTime lastUpdatedDate, CancellationToken cancellationToken)
         {
             var accommodations = await (from ac in _context.RawAccommodations
                 where ac.Supplier == supplier
                     && ac.CountryCode == countryCode
+                    && ac.Modified > lastUpdatedDate
                 select ac).OrderBy(ac => ac.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
 
             return accommodations.Select(ac
@@ -668,6 +679,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     MappedHtIds = m.MappedHtIds
                 })
                 .ToDictionaryAsync(m => m.HtId, m => (m.Id, m.MappedHtIds));
+
+
+        private Task<DateTime> GetLastMappingDate(Suppliers supplier, CancellationToken cancellationToken)
+            => _context.DataUpdateHistories.Where(h => h.Supplier == supplier && h.Type == DataUpdateTypes.Mapping)
+                .OrderByDescending(h => h.UpdateTime)
+                .Select(h => h.UpdateTime).FirstOrDefaultAsync(cancellationToken);
+
 
         private readonly int _batchSize;
         private readonly AccommodationsChangePublisher _accommodationsChangePublisher;
