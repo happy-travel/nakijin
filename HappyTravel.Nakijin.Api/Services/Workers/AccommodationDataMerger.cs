@@ -53,7 +53,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     _logger.LogCalculatingAccommodationsDataStart(
                         $"Started calculation accommodations data of supplier {supplier.ToString()}");
 
-                    var lastUpdatedDate = await _context.DataUpdateHistories.Where(dh => dh.Supplier == supplier)
+                    var lastUpdatedDate = await _context.DataUpdateHistories.Where(dh
+                            => dh.Supplier == supplier && dh.Type == DataUpdateTypes.DataCalculation)
                         .OrderByDescending(dh => dh.UpdateTime)
                         .Select(dh => dh.UpdateTime)
                         .FirstOrDefaultAsync(cancellationToken);
