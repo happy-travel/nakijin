@@ -192,6 +192,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     continue;
                 }
 
+                if (string.IsNullOrEmpty(normalized.Name.En))
+                {
+                    _logger.LogEmptyDefaultNameOfAccommodation($"{supplier.ToString()} have the accommodation with empty default name, which code is {accommodation.SupplierCode}");
+                    AddOrChangeActivity(normalized, false);
+                    continue;
+                }
+
                 // TODO: Try get nearest from db 
                 var nearestAccommodations = GetNearest(normalized, countryAccommodationsTree);
                 if (!nearestAccommodations.Any())
