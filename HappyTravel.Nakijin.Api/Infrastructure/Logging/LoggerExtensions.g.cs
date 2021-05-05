@@ -143,8 +143,12 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
                 new EventId(90500, "SameAccommodationInOneSupplierError"),
                 $"ERROR | AccommodationMapper: {{message}}");
             
-            EmptyCoordinatesInAccommodationOccured = LoggerMessage.Define<string>(LogLevel.Error,
-                new EventId(90501, "EmptyCoordinatesInAccommodation"),
+            NotValidCoordinatesInAccommodationOccured = LoggerMessage.Define<string>(LogLevel.Error,
+                new EventId(90501, "NotValidCoordinatesInAccommodation"),
+                $"ERROR | AccommodationMapper: {{message}}");
+            
+            NotValidDefaultNameOfAccommodationOccured = LoggerMessage.Define<string>(LogLevel.Error,
+                new EventId(90502, "NotValidDefaultNameOfAccommodation"),
                 $"ERROR | AccommodationMapper: {{message}}");
             
             LocationsPublishedOccured = LoggerMessage.Define<string>(LogLevel.Information,
@@ -256,8 +260,11 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
          public static void LogSameAccommodationInOneSupplierError(this ILogger logger, string message)
             => SameAccommodationInOneSupplierErrorOccured(logger, message, null);
                 
-         public static void LogEmptyCoordinatesInAccommodation(this ILogger logger, string message)
-            => EmptyCoordinatesInAccommodationOccured(logger, message, null);
+         public static void LogNotValidCoordinatesInAccommodation(this ILogger logger, string message)
+            => NotValidCoordinatesInAccommodationOccured(logger, message, null);
+                
+         public static void LogNotValidDefaultNameOfAccommodation(this ILogger logger, string message)
+            => NotValidDefaultNameOfAccommodationOccured(logger, message, null);
                 
          public static void LogLocationsPublished(this ILogger logger, string message)
             => LocationsPublishedOccured(logger, message, null);
@@ -332,7 +339,9 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
         
         private static readonly Action<ILogger, string, Exception> SameAccommodationInOneSupplierErrorOccured;
         
-        private static readonly Action<ILogger, string, Exception> EmptyCoordinatesInAccommodationOccured;
+        private static readonly Action<ILogger, string, Exception> NotValidCoordinatesInAccommodationOccured;
+        
+        private static readonly Action<ILogger, string, Exception> NotValidDefaultNameOfAccommodationOccured;
         
         private static readonly Action<ILogger, string, Exception> LocationsPublishedOccured;
     }
