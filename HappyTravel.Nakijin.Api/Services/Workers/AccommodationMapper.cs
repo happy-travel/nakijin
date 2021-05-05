@@ -186,15 +186,15 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 var normalized = _multilingualDataHelper.NormalizeAccommodation(accommodation);
                 if (normalized.Location.Coordinates.IsEmpty() || !normalized.Location.Coordinates.IsValid())
                 {
-                    _logger.LogEmptyCoordinatesInAccommodation(
+                    _logger.LogNotValidCoordinatesInAccommodation(
                         $"{supplier.ToString()} have the accommodation with not valid coordinates, which code is {accommodation.SupplierCode}");
                     AddOrChangeActivity(normalized, false);
                     continue;
                 }
 
-                if (string.IsNullOrEmpty(normalized.Name.En))
+                if (!normalized.Name.En.IsValid())
                 {
-                    _logger.LogEmptyDefaultNameOfAccommodation($"{supplier.ToString()} have the accommodation with empty default name, which code is {accommodation.SupplierCode}");
+                    _logger.LogNotValidDefaultNameOfAccommodation($"{supplier.ToString()} have the accommodation with not valid default name, which code is {accommodation.SupplierCode}");
                     AddOrChangeActivity(normalized, false);
                     continue;
                 }
