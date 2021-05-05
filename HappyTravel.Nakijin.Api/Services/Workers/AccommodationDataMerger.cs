@@ -77,7 +77,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         var parameters = new List<string>(changedSupplierHotelCodes);
                         parameters.Add(supplier.ToString().ToLower());
 
-                        //TODO: remove raw sql when ef core will support queries with dictionaries
+                        // TODO: remove raw sql when ef core will support queries with dictionaries
                         var notCalculatedAccommodations = await _context.Accommodations
                             .FromSqlRaw(
                                 @$"SELECT * FROM ""{nameof(_context.Accommodations)}"" a 
