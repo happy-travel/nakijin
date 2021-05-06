@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using HappyTravel.MultiLanguage;
 using HappyTravel.Nakijin.Api.Infrastructure.Logging;
 using HappyTravel.Nakijin.Data.Models.Mappers;
+using Microsoft.EntityFrameworkCore.Metadata;
 using OpenTelemetry.Trace;
 
 namespace HappyTravel.Nakijin.Api.Services.Workers
@@ -35,7 +36,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _tracerProvider = tracerProvider;
         }
 
-        
+
         public async Task Calculate(List<Suppliers> suppliers, CancellationToken cancellationToken)
         {
             var currentSpan = Tracer.CurrentSpan;
@@ -53,42 +54,48 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     _logger.LogCalculatingAccommodationsDataStart(
                         $"Started calculation accommodations data of supplier {supplier.ToString()}");
 
-                    // TODO: uncomment when ef core will support work with dictionaries (EF core 6) or change dictionary SupplierAccommodationCodes to JsonDocument
+                    var lastUpdatedDate = await _context.DataUpdateHistories.Where(dh
+                            => dh.Supplier == supplier && dh.Type == DataUpdateTypes.DataCalculation)
+                        .OrderByDescending(dh => dh.UpdateTime)
+                        .Select(dh => dh.UpdateTime)
+                        .FirstOrDefaultAsync(cancellationToken);
 
-                    // var lastUpdatedDate = await _context.DataUpdateHistories.Where(dh => dh.Supplier == supplier)
-                    //     .OrderByDescending(dh => dh.UpdateTime)
-                    //     .Select(dh => dh.UpdateTime)
-                    //     .FirstOrDefaultAsync(cancellationToken);
-
-                    //var changedSupplierHotelCodes = new List<string>();
-                    var notCalculatedAccommodations = new List<RichAccommodationDetails>();
+                    var changedSupplierHotelCodes = new List<string>();
                     var skip = 0;
                     do
                     {
-                        // changedSupplierHotelCodes = await _context.RawAccommodations
-                        //     .Where(ac => ac.Supplier == supplier && ac.Modified >= lastUpdatedDate)
-                        //     .OrderBy(ac => ac.SupplierAccommodationId)
-                        //     .Skip(skip)
-                        //     .Take(_options.MergingBatchSize)
-                        //     .Select(ac => ac.SupplierAccommodationId)
-                        //     .ToListAsync(cancellationToken);
-                        //
-                        //  var notCalculatedAccommodations = await _context.Accommodations
-                        // .Where(ac => changedSupplierHotelCodes.Contains(ac.SupplierAccommodationCodes[supplier]))
-                        //     .ToListAsync(cancellationToken);
-
-                        notCalculatedAccommodations = await _context
-                            .Accommodations.Where(ac
-                                => ac.IsActive && EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
-                                    supplier.ToString().ToLower()))
+                        changedSupplierHotelCodes = await _context.RawAccommodations
+                            .Where(ac => ac.Supplier == supplier && ac.Modified >= lastUpdatedDate)
+                            .OrderBy(ac => ac.SupplierAccommodationId)
                             .Skip(skip)
                             .Take(_options.MergingBatchSize)
+                            .Select(ac => ac.SupplierAccommodationId)
+                            .ToListAsync(cancellationToken);
+
+                        if (changedSupplierHotelCodes.Count == 0)
+                            break;
+
+                        var entityType = _context.Model.FindEntityType(typeof(RichAccommodationDetails))!;
+                        var tableName = entityType.GetTableName()!;
+                        var columnName = entityType.GetProperty(nameof(RichAccommodationDetails.SupplierAccommodationCodes))
+                            .GetColumnName(StoreObjectIdentifier.Table(tableName, null))!;
+
+                        var parameters = new List<string>(changedSupplierHotelCodes);
+                        parameters.Add(supplier.ToString().ToLower());
+
+                        // TODO: remove raw sql when ef core will support queries with dictionaries
+                        var notCalculatedAccommodations = await _context.Accommodations
+                            .FromSqlRaw(
+                                @$"SELECT * FROM ""{tableName}"" a 
+                                   WHERE a.""{columnName}""->> {{{changedSupplierHotelCodes.Count}}} 
+                                   in ({string.Join(',', changedSupplierHotelCodes.Select((_, index) => $"{{{index}}}"))})",
+                                parameters.Select(p => (object) p).ToArray())
                             .ToListAsync(cancellationToken);
 
                         skip += notCalculatedAccommodations.Count;
 
                         await CalculateBatch(notCalculatedAccommodations, cancellationToken);
-                    } while (notCalculatedAccommodations.Count > 0 /*changedSupplierHotelCodes.Count > 0*/);
+                    } while (changedSupplierHotelCodes.Count > 0);
 
                     _context.DataUpdateHistories.Add(new DataUpdateHistory
                     {
@@ -168,7 +175,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             return await Merge(accommodation, supplierAccommodations);
         }
 
-        
+
         private async Task CalculateBatch(List<RichAccommodationDetails> notCalculatedAccommodations,
             CancellationToken cancellationToken)
         {
@@ -488,6 +495,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             return manualCorrectedData;
         }
 
+
         private MultiLanguage<T> MergeMultilingualData<T>(List<Suppliers> suppliersPriority,
             Dictionary<Suppliers, MultiLanguage<T>?> suppliersData, MultiLanguage<T> manualCorrectedData,
             Func<T, bool> defaultChecker)
@@ -514,6 +522,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             return result;
         }
 
+
         private bool MergeBoolData(IEnumerable<bool> data)
         {
             foreach (var boolItem in data)
@@ -522,6 +531,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             return false;
         }
+
 
         private readonly TracerProvider _tracerProvider;
         private readonly StaticDataLoadingOptions _options;
