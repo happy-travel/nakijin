@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using HappyTravel.MultiLanguage;
 using HappyTravel.Nakijin.Api.Infrastructure.Logging;
 using HappyTravel.Nakijin.Data.Models.Mappers;
+using Microsoft.EntityFrameworkCore.Metadata;
 using OpenTelemetry.Trace;
 
 namespace HappyTravel.Nakijin.Api.Services.Workers
@@ -74,14 +75,19 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         if (changedSupplierHotelCodes.Count == 0)
                             break;
 
+                        var entityType = _context.Model.FindEntityType(typeof(RichAccommodationDetails))!;
+                        var tableName = entityType.GetTableName()!;
+                        var columnName = entityType.GetProperty(nameof(RichAccommodationDetails.SupplierAccommodationCodes))
+                            .GetColumnName(StoreObjectIdentifier.Table(tableName, null))!;
+
                         var parameters = new List<string>(changedSupplierHotelCodes);
                         parameters.Add(supplier.ToString().ToLower());
 
                         // TODO: remove raw sql when ef core will support queries with dictionaries
                         var notCalculatedAccommodations = await _context.Accommodations
                             .FromSqlRaw(
-                                @$"SELECT * FROM ""{nameof(_context.Accommodations)}"" a 
-                                   WHERE a.""{nameof(RichAccommodationDetails.SupplierAccommodationCodes)}""->> {{{changedSupplierHotelCodes.Count}}} 
+                                @$"SELECT * FROM ""{tableName}"" a 
+                                   WHERE a.""{columnName}""->> {{{changedSupplierHotelCodes.Count}}} 
                                    in ({string.Join(',', changedSupplierHotelCodes.Select((_, index) => $"{{{index}}}"))})",
                                 parameters.Select(p => (object) p).ToArray())
                             .ToListAsync(cancellationToken);

@@ -59,12 +59,11 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.Preload(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers},System.Threading.CancellationToken)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.Preload(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers})">
             <summary>
             Loads raw accommodation data 
             </summary>
             <param name="suppliers"></param>
-            <param name="cancellationToken"></param>
             <returns></returns>
         </member>
         <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.MapAccommodationsFully(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers})">

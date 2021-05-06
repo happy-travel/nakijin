@@ -113,7 +113,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             {
                 MappingTypes.Full => DateTime.MinValue,
                 MappingTypes.Incremental => await GetLastMappingDate(supplier, cancellationToken),
-                _ => DateTime.MinValue
+                _ => throw new NotSupportedException()
             };
 
             foreach (var country in await GetCountries(supplier))
