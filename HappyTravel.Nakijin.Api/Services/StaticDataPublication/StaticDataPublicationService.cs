@@ -43,7 +43,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 foreach (var batchOfLocations in Split(locations, batchSize))
                 {
                     await _database.StreamAddAsync(_streamName, Build(batchOfLocations, type));
-                    _logger.LogLocationsPublished( $"{batchOfLocations} locations have been published");
+                    _logger.LogLocationsPublished( $"{batchOfLocations.Count} locations have been published");
                 }
             }
         }
