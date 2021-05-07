@@ -239,8 +239,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _context.AddRange(uncertainAccommodationsToAdd);
             await _context.SaveChangesAsync(cancellationToken);
 
-            var accommodationsToPublish = accommodationsToAdd.
-                Where(a => a.IsActive)
+            var accommodationsToPublish = accommodationsToAdd
+                .Where(a => a.IsActive)
                 .Union(accommodationsFromUncertainToPublish);
 
             foreach (var acc in accommodationsToPublish)
