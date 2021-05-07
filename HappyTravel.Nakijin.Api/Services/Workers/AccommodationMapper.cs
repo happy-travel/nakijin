@@ -56,6 +56,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _accommodationsChangePublisher = accommodationsChangePublisher;
         }
 
+
         public async Task MapAccommodations(List<Suppliers> suppliers, MappingTypes mappingType,
             CancellationToken cancellationToken)
         {
@@ -103,6 +104,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }
         }
 
+
         private async Task MapAccommodations(Suppliers supplier, MappingTypes mappingType, TelemetrySpan mappingSpan,
             Tracer tracer,
             CancellationToken cancellationToken)
@@ -128,7 +130,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 var countryAccommodationsTree = await GetCountryAccommodationsTree(country.Code, supplier);
                 countryAccommodationsMappingSpan.AddEvent("Constructed country accommodations tree");
 
-
                 var countryAccommodationsOfSupplier = await GeCountryAccommodationBySupplier(country.Code, supplier);
 
                 var notActiveCountryAccommodationsOfSupplier = countryAccommodationsOfSupplier
@@ -143,7 +144,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 var activeCountryUncertainMatchesOfSupplier =
                     await GetActiveCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country uncertain matches");
-
 
                 var countryLocalities = await GetLocalitiesByCountry(country.Id);
                 var countryLocalityZones = await GetLocalityZonesByCountry(country.Id);
@@ -237,12 +237,20 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             mappingSpan.AddEvent("Map of accommodations batch");
 
+            var accommodationsFromUncertainToPublish = uncertainAccommodationsToAdd
+                .Where(ac => ac.SecondHtId == 0)
+                .Select(ac => ac.SecondAccommodation)
+                .ToList();
 
             _context.AddRange(accommodationsToAdd);
             _context.AddRange(uncertainAccommodationsToAdd);
             await _context.SaveChangesAsync(cancellationToken);
 
-            foreach (var acc in accommodationsToAdd.Where(a => a.IsActive))
+            var accommodationsToPublish = accommodationsToAdd
+                .Where(a => a.IsActive)
+                .Union(accommodationsFromUncertainToPublish);
+
+            foreach (var acc in accommodationsToPublish)
                 addedAccommodations.Add(new AccommodationData(acc.Id, acc.KeyData.DefaultName,
                     acc.KeyData.DefaultLocalityName, acc.KeyData.DefaultCountryName, acc.CountryCode,
                     acc.KeyData.Coordinates));
@@ -346,7 +354,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     removedAccommodations.Add(existingActive.HtId);
                     return;
                 }
-
 
                 var dbAccommodation = GetDbAccommodation(accommodation, isActive);
                 accommodationsToAdd.Add(dbAccommodation);
@@ -584,7 +591,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         })
                         .ToListAsync();
 
-
                 skip += _batchSize;
                 countryAccommodations.AddRange(accommodations);
             } while (accommodations.Count > 0);
@@ -616,7 +622,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         })
                         .ToListAsync();
 
-
                 skip += _batchSize;
                 countryAccommodations.AddRange(accommodations);
             } while (accommodations.Count > 0);
@@ -636,6 +641,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             return tree;
         }
 
+
         private async Task<List<(string Code, int Id)>> GetCountries(Suppliers supplier)
         {
             var countries = await _context.Countries
@@ -648,6 +654,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             return countries;
         }
 
+
         private Task<List<Tuple<int, int>>> GetActiveCountryUncertainMatchesBySupplier(string countryCode,
             Suppliers supplier, CancellationToken cancellationToken)
             => (from um in _context.AccommodationUncertainMatches
@@ -658,6 +665,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         supplier.ToString().ToLower()) || EF.Functions.JsonExists(secondAc.SupplierAccommodationCodes,
                         supplier.ToString().ToLower()))
                 select new Tuple<int, int>(um.FirstHtId, um.SecondHtId)).ToListAsync(cancellationToken);
+
 
         private Task<Dictionary<string, int>> GetLocalitiesByCountry(int countryId)
             => _context.Localities.Where(l => l.CountryId == countryId && l.IsActive)
@@ -675,6 +683,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     LocalityZoneName = z.Names.En,
                     Id = z.Id
                 }).ToDictionaryAsync(z => (z.LocalityId, z.LocalityZoneName), z => z.Id);
+
 
         private Task<Dictionary<int, (int Id, HashSet<int> MappedHtIds)>> GetHtAccommodationMappings()
             => _context.HtAccommodationMappings
