@@ -34,11 +34,11 @@ namespace HappyTravel.Nakijin.Api.Services
             if (uncertainMatch == default)
                 return Result.Success();
 
-            var (_, isFailure, error) = await Match(uncertainMatch.FirstHtId, uncertainMatch.SecondHtId);
+            var (_, isFailure, error) = await Match(uncertainMatch.SourceHtId, uncertainMatch.HtIdToMatch);
             if (isFailure)
                 return Result.Failure(error);
 
-            await AddOrUpdateMappings(uncertainMatch.FirstHtId, uncertainMatch.SecondHtId);
+            await AddOrUpdateMappings(uncertainMatch.SourceHtId, uncertainMatch.HtIdToMatch);
 
             uncertainMatch.IsActive = false;
             uncertainMatch.Modified = DateTime.UtcNow;
@@ -48,7 +48,7 @@ namespace HappyTravel.Nakijin.Api.Services
 
             await _mappingsCache.Fill();
             
-            await _accommodationsChangePublisher.PublishRemoved(uncertainMatch.SecondHtId);
+            await _accommodationsChangePublisher.PublishRemoved(uncertainMatch.HtIdToMatch);
 
             return Result.Success();
         }

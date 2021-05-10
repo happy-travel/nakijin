@@ -238,8 +238,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             mappingSpan.AddEvent("Map of accommodations batch");
 
             var accommodationsFromUncertainToPublish = uncertainAccommodationsToAdd
-                .Where(ac => ac.SecondHtId == 0)
-                .Select(ac => ac.SecondAccommodation)
+                .Where(ac => ac.HtIdToMatch == 0)
+                .Select(ac => ac.AccommodationToMatch)
                 .ToList();
 
             _context.AddRange(accommodationsToAdd);
@@ -297,11 +297,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 uncertainAccommodationsToAdd.Add(new AccommodationUncertainMatches
                 {
                     Score = score,
-                    FirstHtId = existingHtId,
-                    SecondHtId = matchedHtId != 0 ? matchedHtId : 0,
+                    SourceHtId = existingHtId,
+                    HtIdToMatch = matchedHtId != 0 ? matchedHtId : 0,
                     Created = utcDate,
                     Modified = utcDate,
-                    SecondAccommodation = matchedHtId == 0 ? GetDbAccommodation(accommodation, true) : null,
+                    AccommodationToMatch = matchedHtId == 0 ? GetDbAccommodation(accommodation, true) : null,
                     IsActive = true
                 });
             }
@@ -658,13 +658,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         private Task<List<Tuple<int, int>>> GetActiveCountryUncertainMatchesBySupplier(string countryCode,
             Suppliers supplier, CancellationToken cancellationToken)
             => (from um in _context.AccommodationUncertainMatches
-                join firstAc in _context.Accommodations on um.FirstHtId equals firstAc.Id
-                join secondAc in _context.Accommodations on um.SecondHtId equals secondAc.Id
-                where um.IsActive && firstAc.CountryCode == countryCode && secondAc.CountryCode == countryCode &&
-                    (EF.Functions.JsonExists(firstAc.SupplierAccommodationCodes,
-                        supplier.ToString().ToLower()) || EF.Functions.JsonExists(secondAc.SupplierAccommodationCodes,
+                join sourceAc in _context.Accommodations on um.SourceHtId equals sourceAc.Id
+                join acToMatch in _context.Accommodations on um.HtIdToMatch equals acToMatch.Id
+                where um.IsActive && sourceAc.CountryCode == countryCode && acToMatch.CountryCode == countryCode &&
+                    (EF.Functions.JsonExists(sourceAc.SupplierAccommodationCodes,
+                        supplier.ToString().ToLower()) || EF.Functions.JsonExists(acToMatch.SupplierAccommodationCodes,
                         supplier.ToString().ToLower()))
-                select new Tuple<int, int>(um.FirstHtId, um.SecondHtId)).ToListAsync(cancellationToken);
+                select new Tuple<int, int>(um.SourceHtId, um.HtIdToMatch)).ToListAsync(cancellationToken);
 
 
         private Task<Dictionary<string, int>> GetLocalitiesByCountry(int countryId)

@@ -29,7 +29,7 @@ namespace HappyTravel.Nakijin.Data.Models.Accommodations
         public DateTime Modified { get; set; }
 
 
-        public virtual ICollection<AccommodationUncertainMatches> FirstUncertainMatches { get; set; }
-        public virtual ICollection<AccommodationUncertainMatches> SecondUncertainMatches { get; set; }
+        public virtual ICollection<AccommodationUncertainMatches> SourceAccommodationUncertainMatches { get; set; }
+        public virtual ICollection<AccommodationUncertainMatches> AccommodationToMatchUncertainMatches { get; set; }
     }
 }

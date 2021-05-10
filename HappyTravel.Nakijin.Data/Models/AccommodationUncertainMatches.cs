@@ -7,14 +7,14 @@ namespace HappyTravel.Nakijin.Data.Models
     public class AccommodationUncertainMatches
     {
         public int Id { get; set; }
-        public int FirstHtId { get; set; }
-        public int SecondHtId { get; set; }
+        public int SourceHtId { get; set; }
+        public int HtIdToMatch { get; set; }
         public float Score { get; set; }
         public bool IsActive { get; set; }
         public DateTime Created { get; set; }
         public  DateTime Modified { get; set; }
         
-        public virtual RichAccommodationDetails FirstAccommodation { get; set; }
-        public virtual RichAccommodationDetails SecondAccommodation { get; set; }
+        public virtual RichAccommodationDetails SourceAccommodation { get; set; }
+        public virtual RichAccommodationDetails AccommodationToMatch { get; set; }
     }
 }
