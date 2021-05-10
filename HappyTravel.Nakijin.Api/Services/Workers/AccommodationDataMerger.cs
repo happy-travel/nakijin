@@ -251,11 +251,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             var accommodationWithManualCorrection = accommodation.AccommodationWithManualCorrections;
 
             var name = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.Name],
-                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Name),
+                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Name)!,
                 accommodationWithManualCorrection.Name, string.IsNullOrEmpty);
 
             var category = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.Category],
-                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Category),
+                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Category)!,
                 accommodationWithManualCorrection.Category, string.IsNullOrEmpty);
 
             var rating = MergeData(suppliersPriority[AccommodationDataTypes.Rating],
@@ -271,22 +271,22 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             var photos = MergeData(suppliersPriority[AccommodationDataTypes.Photos],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Photos),
-                accommodationWithManualCorrection.Photos, p => p == null || !p.Any());
+                accommodationWithManualCorrection.Photos, p => p == null! || !p.Any());
 
             var textualDescriptions = MergeData(suppliersPriority[AccommodationDataTypes.TextualDescriptions],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.TextualDescriptions),
                 accommodationWithManualCorrection.TextualDescriptions,
-                p => p == null || !p.Any());
+                p => p == null! || !p.Any());
 
             var additionalInfo = MergeMultilingualData(suppliersPriority[AccommodationDataTypes.AdditionalInfo],
-                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.AdditionalInfo),
-                accommodationWithManualCorrection.AdditionalInfo, p => p == null || !p.Any());
+                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.AdditionalInfo)!,
+                accommodationWithManualCorrection.AdditionalInfo, p => p == null! || !p.Any());
 
             var accommodationAmenities = MergeMultilingualData(
                 suppliersPriority[AccommodationDataTypes.AccommodationAmenities],
-                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.AccommodationAmenities),
+                supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.AccommodationAmenities)!,
                 accommodationWithManualCorrection.AccommodationAmenities,
-                p => p == null || !p.Any());
+                p => p == null! || !p.Any());
 
             var scheduleInfo = MergeScheduleInfo(suppliersPriority[AccommodationDataTypes.Schedule],
                 supplierAccommodationDetails, accommodationWithManualCorrection);
@@ -324,13 +324,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         {
             var address = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
-                    d => d.Value.Location.Address),
+                    d => d.Value.Location.Address)!,
                 accommodationWithManualCorrection.Location.Address, string.IsNullOrEmpty);
 
             // TODO: Get country, locality, localityZone from db 
             var country = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
-                    d => d.Value.Location.Country),
+                    d => d.Value.Location.Country)!,
                 accommodationWithManualCorrection.Location.Country, string.IsNullOrEmpty);
             var locality = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
@@ -349,7 +349,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             var pointOfInterests = MergeData(suppliersPriority, supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.PointsOfInterests),
                 accommodationWithManualCorrection.Location.PointsOfInterests,
-                poi => poi == null || !poi.Any());
+                poi => poi == null! || !poi.Any());
 
             var locationDescriptionCode = MergeData(suppliersPriority, supplierAccommodationDetails.ToDictionary(
                     d => d.Key,
@@ -383,20 +383,16 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         {
             var contactInfo = new ContactInfo(new List<string>(), new List<string>(), new List<string>(),
                 new List<string>());
-            if (accommodationWithManualCorrection.Contacts.Phones != null &&
-                accommodationWithManualCorrection.Contacts.Phones.Any())
+            if (accommodationWithManualCorrection.Contacts.Phones.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Phones);
 
-            if (accommodationWithManualCorrection.Contacts.Emails != null &&
-                accommodationWithManualCorrection.Contacts.Emails.Any())
+            if (accommodationWithManualCorrection.Contacts.Emails.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Emails);
 
-            if (accommodationWithManualCorrection.Contacts.WebSites != null &&
-                accommodationWithManualCorrection.Contacts.WebSites.Any())
+            if (accommodationWithManualCorrection.Contacts.WebSites.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.WebSites);
 
-            if (accommodationWithManualCorrection.Contacts.Faxes != null &&
-                accommodationWithManualCorrection.Contacts.Faxes.Any())
+            if ( accommodationWithManualCorrection.Contacts.Faxes.Any())
                 contactInfo.Phones.AddRange(accommodationWithManualCorrection.Contacts.Faxes);
 
             foreach (var supplier in suppliersPriority)
@@ -497,7 +493,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
 
         private MultiLanguage<T> MergeMultilingualData<T>(List<Suppliers> suppliersPriority,
-            Dictionary<Suppliers, MultiLanguage<T>?> suppliersData, MultiLanguage<T> manualCorrectedData,
+            Dictionary<Suppliers, MultiLanguage<T>?> suppliersData, MultiLanguage<T>? manualCorrectedData,
             Func<T, bool> defaultChecker)
         {
             var result = new MultiLanguage<T>();
@@ -508,7 +504,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
                 var languageCode = LanguagesHelper.GetLanguageCode((Languages) language);
                 var selectedLanguageData = suppliersData.Where(sd => sd.Value != null).ToDictionary(d => d.Key,
-                    d => d.Value.GetValueOrDefault(languageCode));
+                    d => d.Value!.GetValueOrDefault(languageCode));
 
                 var manualCorrectedValue = manualCorrectedData != null
                     ? manualCorrectedData.GetValueOrDefault(languageCode)

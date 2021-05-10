@@ -15,7 +15,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         {
             float score = NameScore * GetNamesScore(nearestAccommodation, accommodation);
 
-            if (score == NameScore
+            if (score .Equals(NameScore)
                 && nearestAccommodation.DefaultLocalityName != null
                 && accommodation.DefaultLocalityName != null
                 && String.Equals(nearestAccommodation.DefaultLocalityName, accommodation.DefaultLocalityName,
@@ -116,8 +116,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 GetComparisonResult(nearestAccommodationContactInfo.WebSites, accommodationContactInfo.WebSites),
                 GetComparisonResult(nearestAccommodationContactInfo.Faxes, accommodationContactInfo.Faxes),
                 GetComparisonResult(
-                    nearestAccommodationContactInfo.Phones.Select(ph => ph?.ToNormalizedPhoneNumber()).ToList(),
-                    accommodationContactInfo.Phones.Select(p => p?.ToNormalizedPhoneNumber()).ToList())
+                    nearestAccommodationContactInfo.Phones.Select(ph => ph?.ToNormalizedPhoneNumber()).ToList()!,
+                    accommodationContactInfo.Phones.Select(p => p?.ToNormalizedPhoneNumber()).ToList()!)
             };
 
             if (contactInfoComparisonResults.Any(c => !c.isAnyEmpty && c.areContains) &&
