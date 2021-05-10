@@ -1,5 +1,6 @@
 using Xunit;
 using HappyTravel.Nakijin.Api.Services.Workers;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Newtonsoft.Json;
 

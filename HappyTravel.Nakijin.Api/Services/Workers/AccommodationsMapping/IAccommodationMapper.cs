@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using HappyTravel.Nakijin.Api.Models.Mappers.Enums;
 using HappyTravel.Nakijin.Data.Models;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
 {
     public interface IAccommodationMapper
     {

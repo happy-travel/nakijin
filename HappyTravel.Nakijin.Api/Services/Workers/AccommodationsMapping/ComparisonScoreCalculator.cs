@@ -5,7 +5,7 @@ using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Contracts = HappyTravel.EdoContracts.Accommodations.Internals;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
 {
     public static class ComparisonScoreCalculator
     {

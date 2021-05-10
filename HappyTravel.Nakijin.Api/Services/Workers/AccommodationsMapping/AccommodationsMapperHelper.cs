@@ -6,7 +6,7 @@ using NetTopologySuite.Geometries;
 using NetTopologySuite.Index.Strtree;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
 {
     public class AccommodationsMapperHelper
     {

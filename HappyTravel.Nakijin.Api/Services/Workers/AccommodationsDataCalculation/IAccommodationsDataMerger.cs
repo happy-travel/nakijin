@@ -5,7 +5,7 @@ using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsDataCalculation
 {
     public interface IAccommodationsDataMerger
     {

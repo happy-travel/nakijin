@@ -9,6 +9,8 @@ using HappyTravel.Nakijin.Api.Models.Mappers.Enums;
 using HappyTravel.Nakijin.Api.Services;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Api.Services.Workers;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationsDataCalculation;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

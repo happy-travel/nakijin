@@ -9,6 +9,9 @@ using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Api.Infrastructure.Environments;
 using HappyTravel.Nakijin.Api.Services;
 using HappyTravel.Nakijin.Api.Services.Workers;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationsDataCalculation;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping;
+using HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping;
 using IdentityModel.Client;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
@@ -32,7 +35,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
         {
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
             services.AddTransient<IAccommodationMapper, AccommodationMapper>();
-            services.AddTransient<IAccommodationsDataMerger, AccommodationDataMerger>();
+            services.AddTransient<IAccommodationsDataMerger, AccommodationsDataMerger>();
             services.AddTransient<ILocationMapper, LocationMapper>();
             services.AddTransient<IAccommodationManagementService, AccommodationManagementService>();
             services.AddTransient<ISuppliersPriorityService, SuppliersPriorityService>();
@@ -73,7 +76,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
                 builder
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
                     .AddSource(nameof(AccommodationMapper), nameof(LocationMapper), nameof(AccommodationPreloader),
-                        nameof(AccommodationDataMerger))
+                        nameof(AccommodationsDataMerger))
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRedisInstrumentation(connection)

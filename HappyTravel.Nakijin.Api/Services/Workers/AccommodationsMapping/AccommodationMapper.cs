@@ -23,7 +23,7 @@ using NetTopologySuite.Index.Strtree;
 using Newtonsoft.Json;
 using OpenTelemetry.Trace;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
 {
     /*
         1. Get accommodations by a country
