@@ -11,7 +11,6 @@ using HappyTravel.LocationNameNormalizer.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using HappyTravel.MultiLanguage;
 using HappyTravel.Nakijin.Api.Comparers;
 using HappyTravel.Nakijin.Api.Infrastructure.Logging;
 using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
@@ -26,7 +25,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         public LocationMapper(NakijinContext context, ILocationNameNormalizer locationNameNormalizer,
             IOptions<StaticDataLoadingOptions> options,
             ILoggerFactory loggerFactory, TracerProvider tracerProvider,
-            LocationsChangePublisher locationsChangePublisher)
+            LocationsChangePublisher locationsChangePublisher, MultilingualDataHelper multilingualDataHelper)
         {
             _context = context;
             _dbCommandTimeOut = options.Value.DbCommandTimeOut;
@@ -34,6 +33,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _logger = loggerFactory.CreateLogger<LocationMapper>();
             _tracerProvider = tracerProvider;
             _locationsChangePublisher = locationsChangePublisher;
+            _multilingualDataHelper = multilingualDataHelper;
         }
 
 
@@ -75,6 +75,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }
         }
 
+
         private async Task MapCountries(Suppliers supplier, TelemetrySpan parentSpan,
             CancellationToken cancellationToken)
         {
@@ -115,7 +116,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 var dbCountry = new Country
                 {
                     Code = code,
-                    Names = NormalizeCountryMultiLingualNames(country.Names),
+                    Names = _multilingualDataHelper.NormalizeCountryMultiLingualNames(country.Names),
                     IsActive = true,
                     Modified = utcDate
                 };
@@ -156,7 +157,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             await ChangeCountryDependencies(countryPairsChanged);
 
             await _context.SaveChangesAsync(cancellationToken);
-
 
             await _locationsChangePublisher.PublishAddedCountries(newCountries
                 .Distinct(new CountryComparer())
@@ -255,7 +255,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
                 localities = localities.GroupBy(l => l.LocalityNames.En).Select(l => l.First()).ToList();
 
-
                 var localitiesToUpdate = new List<Locality>();
                 var newLocalities = new List<Locality>();
                 var utcDate = DateTime.UtcNow;
@@ -279,7 +278,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
                     var dbLocality = new Locality
                     {
-                        Names = NormalizeLocalityMultilingualNames(defaultCountryName, locality.LocalityNames),
+                        Names = _multilingualDataHelper.NormalizeLocalityMultilingualNames(defaultCountryName, locality.LocalityNames),
                         IsActive = true,
                         Modified = utcDate
                     };
@@ -318,15 +317,14 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 _context.UpdateRange(localitiesToUpdate.Distinct(new LocalityComparer()));
                 _context.AddRange(newLocalities.Distinct(new LocalityComparer()));
                 await ChangeLocalityDependencies(changedLocalityPairs);
-                
+
                 await _context.SaveChangesAsync(cancellationToken);
-                
+
                 await _locationsChangePublisher.PublishRemovedLocalities(changedLocalityPairs.Keys.ToList());
                 await _locationsChangePublisher.PublishAddedLocalities(newLocalities
                     .Distinct(new LocalityComparer())
                     .Select(l => new LocalityData(l.Id, l.Names.En, country.Name, country.Code))
                     .ToList());
-
 
                 _context.ChangeTracker.Entries()
                     .Where(e => e.Entity != null)
@@ -339,7 +337,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 _logger.LogMappingLocalitiesOfSpecifiedCountryFinish(
                     $"Finished Mapping localities of {supplier.ToString()} of country {country.Code}");
             }
-
 
             _logger.LogMappingLocalitiesFinish(
                 $"Finished Mapping localities of {supplier.ToString()}.");
@@ -393,6 +390,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }
         }
 
+
         private async Task MapLocalityZones(Suppliers supplier, TelemetrySpan parentSpan,
             CancellationToken cancellationToken)
         {
@@ -419,7 +417,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 var suppliersLocalityZones = dbNormalizedLocalityZones
                     .Where(l => l.LocalityZone.SupplierLocalityZoneCodes.ContainsKey(supplier)).ToList();
 
-
                 var localityZonesToMap = await _context.RawAccommodations
                     .Where(ac => ac.Supplier == supplier && ac.LocalityZoneNames != null &&
                         ac.CountryCode == country.Code)
@@ -433,7 +430,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                             LocalityZoneCode = ac.SupplierLocalityZoneCode
                         })
                     .Distinct().ToListAsync(cancellationToken);
-
 
                 localityZonesToMap = localityZonesToMap
                     .GroupBy(lz => new {LocalityName = lz.LocalityNames.En, LocalityZoneName = lz.LocalityZoneNames.En})
@@ -466,7 +462,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
                     var dbLocalityZone = new LocalityZone
                     {
-                        Names = NormalizeLocalityZoneMultilingualNames(zone.LocalityZoneNames),
+                        Names = _multilingualDataHelper.NormalizeCountryMultiLingualNames(zone.LocalityZoneNames),
                         IsActive = true,
                         Modified = utcDate
                     };
@@ -506,7 +502,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                         localityZonesToAdd.Add(dbLocalityZone);
                     }
                 }
-
 
                 _context.UpdateRange(localityZonesToUpdate.Distinct(new LocalityZoneComparer()));
                 _context.AddRange(localityZonesToAdd.Distinct(new LocalityZoneComparer()));
@@ -567,42 +562,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         }
 
 
-        private MultiLanguage<string> NormalizeCountryMultiLingualNames(MultiLanguage<string> countryNames)
-        {
-            var normalized = new MultiLanguage<string>();
-            var allNames = countryNames.GetAll();
-
-            foreach (var name in allNames)
-                normalized.TrySetValue(name.languageCode, _locationNameNormalizer.GetNormalizedCountryName(name.value));
-
-            return normalized;
-        }
-
-        private MultiLanguage<string> NormalizeLocalityMultilingualNames(string defaultCountry,
-            MultiLanguage<string> localityNames)
-        {
-            var normalizedLocalityNames = new MultiLanguage<string>();
-            var allNames = localityNames.GetAll();
-
-            foreach (var name in allNames)
-                normalizedLocalityNames.TrySetValue(name.languageCode,
-                    _locationNameNormalizer.GetNormalizedLocalityName(defaultCountry, name.value));
-
-            return normalizedLocalityNames;
-        }
-
-        private MultiLanguage<string> NormalizeLocalityZoneMultilingualNames(MultiLanguage<string> localityZoneNames)
-        {
-            var normalizedLocalityZoneNames = new MultiLanguage<string>();
-            var allNames = localityZoneNames.GetAll();
-
-            foreach (var name in allNames)
-                normalizedLocalityZoneNames.TrySetValue(name.languageCode, name.value.ToNormalizedName());
-
-            return normalizedLocalityZoneNames;
-        }
-
-
         // TODO: Maybe will be added normalization of raw data (not final data)
         private async Task<List<Country>> GetNormalizedCountries()
         {
@@ -612,7 +571,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             {
                 var defaultName = country.Names.GetValueOrDefault(DefaultLanguageCode);
                 var code = _locationNameNormalizer.GetNormalizedCountryCode(defaultName, country.Code);
-                var normalizedNames = NormalizeCountryMultiLingualNames(country.Names);
+                var normalizedNames = _multilingualDataHelper.NormalizeCountryMultiLingualNames(country.Names);
                 normalizedCountries.Add(new Country
                 {
                     Id = country.Id,
@@ -626,6 +585,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             return normalizedCountries;
         }
+
 
         private async Task<List<Locality>> GetNormalizedLocalitiesByCountry(string countryCode,
             CancellationToken cancellationToken)
@@ -642,7 +602,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             return localities.Select(l => new Locality
             {
                 Id = l.Locality.Id,
-                Names = NormalizeLocalityMultilingualNames(l.CountryName, l.Locality.Names),
+                Names = _multilingualDataHelper.NormalizeLocalityMultilingualNames(l.CountryName, l.Locality.Names),
                 CountryId = l.Locality.CountryId,
                 SupplierLocalityCodes = l.Locality.SupplierLocalityCodes,
                 Created = l.Locality.Created,
@@ -650,9 +610,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             }).ToList();
         }
 
-        private async Task<List<(string DefaultLocality, LocalityZone LocalityZone)>>
-            GetNormalizedLocalityZonesByCountry(
-                string countryCode, CancellationToken cancellationToken)
+
+        private async Task<List<(string DefaultLocality, LocalityZone LocalityZone)>> GetNormalizedLocalityZonesByCountry(
+            string countryCode, CancellationToken cancellationToken)
         {
             var localityZones = await (from lz in _context.LocalityZones
                 join l in _context.Localities on lz.LocalityId equals l.Id
@@ -668,7 +628,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             {
                 Id = lz.Zone.Id,
                 LocalityId = lz.Zone.LocalityId,
-                Names = NormalizeLocalityZoneMultilingualNames(lz.Zone.Names),
+                Names = _multilingualDataHelper.NormalizeMultilingualNames(lz.Zone.Names),
                 SupplierLocalityZoneCodes = lz.Zone.SupplierLocalityZoneCodes,
                 Created = lz.Zone.Created,
                 Modified = lz.Zone.Modified,
@@ -689,5 +649,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         private readonly int _dbCommandTimeOut;
         private readonly TracerProvider _tracerProvider;
         private readonly LocationsChangePublisher _locationsChangePublisher;
+        private readonly MultilingualDataHelper _multilingualDataHelper;
     }
 }

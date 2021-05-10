@@ -204,12 +204,12 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
                 if (!normalized.Name.En.IsValid())
                 {
-                    _logger.LogNotValidDefaultNameOfAccommodation($"{supplier.ToString()} have the accommodation with not valid default name, which code is {accommodation.SupplierCode}");
+                    _logger.LogNotValidDefaultNameOfAccommodation(
+                        $"{supplier.ToString()} have the accommodation with not valid default name, which code is {accommodation.SupplierCode}");
                     AddOrChangeActivity(normalized, false);
                     continue;
                 }
 
-                // TODO: Try get nearest from db 
                 var nearestAccommodations = GetNearest(normalized, countryAccommodationsTree);
                 if (!nearestAccommodations.Any())
                 {
@@ -568,8 +568,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         }
 
 
-        private async Task<List<(string SupplierCode, SlimAccommodationData AccommodationKeyData)>>
-            GeCountryAccommodationBySupplier(string countryCode, Suppliers supplier)
+        private async Task<List<(string SupplierCode, SlimAccommodationData AccommodationKeyData)>> GeCountryAccommodationBySupplier(string countryCode,
+            Suppliers supplier)
         {
             var countryAccommodations = new List<SlimAccommodationData>();
             var accommodations = new List<SlimAccommodationData>();

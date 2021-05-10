@@ -22,7 +22,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             return new Contracts.MultilingualAccommodation
             (
                 accommodation.SupplierCode,
-                NormalizeMultilingualName(accommodation.Name)!,
+                NormalizeMultilingualNames(accommodation.Name)!,
                 accommodation.AccommodationAmenities,
                 accommodation.AdditionalInfo,
                 accommodation.Category,
@@ -30,7 +30,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 new MultilingualLocationInfo(
                     _locationNameNormalizer.GetNormalizedCountryCode(accommodation.Location.Country.En,
                         accommodation.Location.CountryCode),
-                    NormalizeMultilingualCountry(accommodation.Location),
+                    NormalizeCountryMultiLingualNames(accommodation.Location.Country),
                     accommodation.Location.Coordinates,
                     accommodation.Location.Address,
                     accommodation.Location.LocationDescriptionCode,
@@ -38,7 +38,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     accommodation.Location.SupplierLocalityCode,
                     NormalizeMultilingualLocality(accommodation.Location),
                     accommodation.Location.SupplierLocalityZoneCode,
-                    NormalizeMultilingualName(accommodation.Location.LocalityZone)
+                    NormalizeMultilingualNames(accommodation.Location.LocalityZone)
                 ),
                 accommodation.Photos,
                 accommodation.Rating,
@@ -49,49 +49,59 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             );
 
 
-            // TODO: remove locations normalization and get it from db
-            MultiLanguage<string> NormalizeMultilingualCountry(in MultilingualLocationInfo location)
-            {
-                var result = new MultiLanguage<string>();
-                var allValues = location.Country.GetAll();
-                foreach (var item in allValues)
-                    result.TrySetValue(item.languageCode, _locationNameNormalizer.GetNormalizedCountryName(item.value));
-
-                return result;
-            }
-
-
             MultiLanguage<string>? NormalizeMultilingualLocality(in MultilingualLocationInfo location)
             {
                 if (location.Locality == null)
                     return null;
 
-                var result = new MultiLanguage<string>();
                 var defaultCountry = location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
-                var allValues = location.Locality.GetAll();
-                foreach (var item in allValues)
-                    result.TrySetValue(item.languageCode,
-                        _locationNameNormalizer.GetNormalizedLocalityName(defaultCountry, item.value));
 
-                return result;
-            }
-
-
-            MultiLanguage<string>? NormalizeMultilingualName(in MultiLanguage<string>? name)
-            {
-                if (name == null)
-                    return null;
-
-                var result = new MultiLanguage<string>();
-                var allValues = name.GetAll();
-                foreach (var item in allValues)
-                    result.TrySetValue(item.languageCode, item.value.ToNormalizedName());
-
-                return result;
+                return NormalizeLocalityMultilingualNames(defaultCountry, location.Locality);
             }
         }
-        
-        public  AccommodationKeyData GetAccommodationKeyData(Contracts.MultilingualAccommodation accommodation)
+
+
+        public MultiLanguage<string> NormalizeCountryMultiLingualNames(MultiLanguage<string> countryNames)
+        {
+            var normalized = new MultiLanguage<string>();
+            var allNames = countryNames.GetAll();
+
+            foreach (var name in allNames)
+                normalized.TrySetValue(name.languageCode, _locationNameNormalizer.GetNormalizedCountryName(name.value));
+
+            return normalized;
+        }
+
+
+        public MultiLanguage<string> NormalizeLocalityMultilingualNames(string defaultCountry,
+            MultiLanguage<string> localityNames)
+        {
+            var normalizedLocalityNames = new MultiLanguage<string>();
+            var allNames = localityNames.GetAll();
+
+            foreach (var name in allNames)
+                normalizedLocalityNames.TrySetValue(name.languageCode,
+                    _locationNameNormalizer.GetNormalizedLocalityName(defaultCountry, name.value));
+
+            return normalizedLocalityNames;
+        }
+
+
+        public MultiLanguage<string>? NormalizeMultilingualNames(in MultiLanguage<string>? name)
+        {
+            if (name == null)
+                return null;
+
+            var result = new MultiLanguage<string>();
+            var allValues = name.GetAll();
+            foreach (var item in allValues)
+                result.TrySetValue(item.languageCode, item.value.ToNormalizedName());
+
+            return result;
+        }
+
+
+        public AccommodationKeyData GetAccommodationKeyData(Contracts.MultilingualAccommodation accommodation)
             => new AccommodationKeyData
             {
                 DefaultName = accommodation.Name.En,
@@ -103,6 +113,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 ContactInfo = accommodation.Contacts,
                 Coordinates = accommodation.Location.Coordinates
             };
+
 
         private readonly ILocationNameNormalizer _locationNameNormalizer;
     }
