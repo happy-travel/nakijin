@@ -45,7 +45,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         public AccommodationMapper(NakijinContext context,
             ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
             MultilingualDataHelper multilingualDataHelper, AccommodationMappingsCache mappingsCache,
-            TracerProvider tracerProvider, AccommodationsChangePublisher accommodationsChangePublisher)
+            TracerProvider tracerProvider, AccommodationsChangePublisher accommodationsChangePublisher, AccommodationsMapperHelper mapperHelper)
         {
             _context = context;
             _logger = loggerFactory.CreateLogger<AccommodationMapper>();
@@ -54,6 +54,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _tracerProvider = tracerProvider;
             _mappingsCache = mappingsCache;
             _accommodationsChangePublisher = accommodationsChangePublisher;
+            _mapperHelper = mapperHelper;
         }
 
 
@@ -210,14 +211,14 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     continue;
                 }
 
-                var nearestAccommodations = GetNearest(normalized, countryAccommodationsTree);
+                var nearestAccommodations = _mapperHelper.GetNearest(normalized, countryAccommodationsTree);
                 if (!nearestAccommodations.Any())
                 {
                     AddOrChangeActivity(normalized, true);
                     continue;
                 }
 
-                var (matchingResult, score, matchedAccommodation) = Match(nearestAccommodations, normalized);
+                var (matchingResult, score, matchedAccommodation) = _mapperHelper.Match(nearestAccommodations, normalized);
 
                 switch (matchingResult)
                 {
@@ -532,40 +533,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         }
 
 
-        private List<SlimAccommodationData> GetNearest(Contracts.MultilingualAccommodation accommodation,
-            STRtree<SlimAccommodationData> tree)
-        {
-            var accommodationEnvelope = new Envelope(accommodation.Location.Coordinates.Longitude - 0.01,
-                accommodation.Location.Coordinates.Longitude + 0.01,
-                accommodation.Location.Coordinates.Latitude - 0.01, accommodation.Location.Coordinates.Latitude + 0.01);
-            return tree.Query(accommodationEnvelope).ToList();
-        }
-
-
-        private (MatchingResults results, float score, SlimAccommodationData slimData) Match(
-            List<SlimAccommodationData> nearestAccommodations,
-            in Contracts.MultilingualAccommodation accommodation)
-        {
-            var results =
-                new List<(SlimAccommodationData slimData, float score)>(nearestAccommodations.Count);
-            foreach (var nearestAccommodation in nearestAccommodations)
-            {
-                var score = ComparisonScoreCalculator.Calculate(nearestAccommodation.KeyData,
-                    _multilingualDataHelper.GetAccommodationKeyData(accommodation));
-
-                results.Add((nearestAccommodation, score));
-            }
-
-            var (slimData, maxScore) = results.Aggregate((r1, r2) => r2.score > r1.score ? r2 : r1);
-
-            if (MatchingMinimumScore <= maxScore)
-                return (MatchingResults.Match, maxScore, slimData);
-
-            if (UncertainMatchingMinimumScore <= maxScore && maxScore < MatchingMinimumScore)
-                return (MatchingResults.Uncertain, maxScore, slimData);
-
-            return (MatchingResults.NotMatch, maxScore, new SlimAccommodationData());
-        }
+      
 
 
         private async Task<List<(string SupplierCode, SlimAccommodationData AccommodationKeyData)>> GeCountryAccommodationBySupplier(string countryCode,
@@ -710,8 +678,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         private readonly NakijinContext _context;
         private readonly TracerProvider _tracerProvider;
         private readonly AccommodationMappingsCache _mappingsCache;
+        private readonly AccommodationsMapperHelper _mapperHelper;
 
-        private const float UncertainMatchingMinimumScore = 1.5f;
-        private const float MatchingMinimumScore = 3f;
+
     }
 }
