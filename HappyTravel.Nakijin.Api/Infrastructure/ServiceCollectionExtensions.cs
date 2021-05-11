@@ -34,7 +34,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
-            services.AddTransient<IAccommodationMapper, AccommodationMapper>();
+            services.AddTransient<IAccommodationsMapper, AccommodationsMapper>();
             services.AddTransient<IAccommodationsDataMerger, AccommodationsDataMerger>();
             services.AddTransient<ILocationMapper, LocationMapper>();
             services.AddTransient<IAccommodationManagementService, AccommodationManagementService>();
@@ -75,7 +75,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             {
                 builder
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
-                    .AddSource(nameof(AccommodationMapper), nameof(LocationMapper), nameof(AccommodationPreloader),
+                    .AddSource(nameof(AccommodationsMapper), nameof(LocationMapper), nameof(AccommodationPreloader),
                         nameof(AccommodationsDataMerger))
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()

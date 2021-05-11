@@ -138,7 +138,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationsMapper>();
                         await mapper.MapAccommodations(suppliers, MappingTypes.Full, _accommodationMappingTokenSource.Token);
                     }
                     finally
@@ -172,7 +172,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationsMapper>();
                         await mapper.MapAccommodations(suppliers, MappingTypes.Incremental, _accommodationMappingTokenSource.Token);
                     }
                     finally

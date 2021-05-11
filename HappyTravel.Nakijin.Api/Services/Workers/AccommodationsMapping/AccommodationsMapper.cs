@@ -18,9 +18,7 @@ using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NetTopologySuite.Geometries;
 using NetTopologySuite.Index.Strtree;
-using Newtonsoft.Json;
 using OpenTelemetry.Trace;
 
 namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
@@ -40,21 +38,22 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
            Intermediate scores should be calibrated to achieve better matching
         5. If the score is sufficient, merge the new and the existing accommodation. Unmatched field became synonyms
     */
-    public class AccommodationMapper : IAccommodationMapper
+    public class AccommodationsMapper : IAccommodationsMapper
     {
-        public AccommodationMapper(NakijinContext context,
+        public AccommodationsMapper(NakijinContext context,
             ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
             MultilingualDataHelper multilingualDataHelper, AccommodationMappingsCache mappingsCache,
-            TracerProvider tracerProvider, AccommodationsChangePublisher accommodationsChangePublisher, AccommodationsMapperHelper mapperHelper)
+            TracerProvider tracerProvider, AccommodationsChangePublisher accommodationsChangePublisher, AccommodationsMapperHelper mapperHelper, IAccommodationsMapperDataRetrieveService accommodationsMapperDataRetrieveService)
         {
             _context = context;
-            _logger = loggerFactory.CreateLogger<AccommodationMapper>();
+            _logger = loggerFactory.CreateLogger<AccommodationsMapper>();
             _batchSize = options.Value.MappingBatchSize;
             _multilingualDataHelper = multilingualDataHelper;
             _tracerProvider = tracerProvider;
             _mappingsCache = mappingsCache;
             _accommodationsChangePublisher = accommodationsChangePublisher;
             _mapperHelper = mapperHelper;
+            _accommodationsMapperDataRetrieveService = accommodationsMapperDataRetrieveService;
         }
 
 
@@ -62,7 +61,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
             CancellationToken cancellationToken)
         {
             var currentSpan = Tracer.CurrentSpan;
-            var tracer = _tracerProvider.GetTracer(nameof(AccommodationMapper));
+            var tracer = _tracerProvider.GetTracer(nameof(AccommodationsMapper));
 
             foreach (var supplier in suppliers)
             {
@@ -110,16 +109,16 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
             Tracer tracer,
             CancellationToken cancellationToken)
         {
-            var htAccommodationMappings = await GetHtAccommodationMappings();
+            var htAccommodationMappings = await _accommodationsMapperDataRetrieveService.GetHtAccommodationMappings();
 
             var lastMappingDate = mappingType switch
             {
                 MappingTypes.Full => DateTime.MinValue,
-                MappingTypes.Incremental => await GetLastMappingDate(supplier, cancellationToken),
+                MappingTypes.Incremental => await _accommodationsMapperDataRetrieveService.GetLastMappingDate(supplier, cancellationToken),
                 _ => throw new NotSupportedException()
             };
 
-            foreach (var country in await GetCountries(supplier))
+            foreach (var country in await _accommodationsMapperDataRetrieveService.GetCountries(supplier))
             {
                 using var countryAccommodationsMappingSpan =
                     tracer.StartActiveSpan($"{nameof(MapAccommodations)} of country with code {country.Code}",
@@ -128,10 +127,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                 _logger.LogMappingAccommodationsOfSpecifiedCountryStart(
                     $"Started mapping of {supplier.ToString()} accommodations of country with code {country.Code}");
 
-                var countryAccommodationsTree = await GetCountryAccommodationsTree(country.Code, supplier);
+                var countryAccommodationsTree = await _accommodationsMapperDataRetrieveService.GetCountryAccommodationsTree(country.Code, supplier);
                 countryAccommodationsMappingSpan.AddEvent("Constructed country accommodations tree");
 
-                var countryAccommodationsOfSupplier = await GeCountryAccommodationBySupplier(country.Code, supplier);
+                var countryAccommodationsOfSupplier = await _accommodationsMapperDataRetrieveService.GeCountryAccommodationBySupplier(country.Code, supplier);
 
                 var notActiveCountryAccommodationsOfSupplier = countryAccommodationsOfSupplier
                     .Where(ac => !ac.AccommodationKeyData.IsActive)
@@ -143,11 +142,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country accommodations");
 
                 var activeCountryUncertainMatchesOfSupplier =
-                    await GetActiveCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
+                    await _accommodationsMapperDataRetrieveService.GetActiveCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country uncertain matches");
 
-                var countryLocalities = await GetLocalitiesByCountry(country.Id);
-                var countryLocalityZones = await GetLocalityZonesByCountry(country.Id);
+                var countryLocalities = await _accommodationsMapperDataRetrieveService.GetLocalitiesByCountry(country.Id);
+                var countryLocalityZones = await _accommodationsMapperDataRetrieveService.GetLocalityZonesByCountry(country.Id);
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country locations");
 
                 var accommodationDetails = new List<Contracts.MultilingualAccommodation>();
@@ -155,7 +154,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                 do
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    accommodationDetails = await GetAccommodationsForMapping(country.Code, supplier, skip,
+                    accommodationDetails = await _accommodationsMapperDataRetrieveService.GetAccommodationsForMapping(country.Code, supplier, skip,
                         _batchSize, lastMappingDate, cancellationToken);
                     countryAccommodationsMappingSpan.AddEvent(
                         $"Got supplier's specified country accommodations batch skip = {skip}, top = {_batchSize}");
@@ -517,169 +516,14 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
         }
 
 
-        private async Task<List<Contracts.MultilingualAccommodation>> GetAccommodationsForMapping(string countryCode,
-            Suppliers supplier, int skip, int take, DateTime lastUpdatedDate, CancellationToken cancellationToken)
-        {
-            var accommodations = await (from ac in _context.RawAccommodations
-                where ac.Supplier == supplier
-                    && ac.CountryCode == countryCode
-                    && ac.Modified > lastUpdatedDate
-                select ac).OrderBy(ac => ac.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
-
-            return accommodations.Select(ac
-                    => JsonConvert.DeserializeObject<Contracts.MultilingualAccommodation>(ac.Accommodation.RootElement
-                        .ToString()!))
-                .ToList();
-        }
-
-
-      
-
-
-        private async Task<List<(string SupplierCode, SlimAccommodationData AccommodationKeyData)>> GeCountryAccommodationBySupplier(string countryCode,
-            Suppliers supplier)
-        {
-            var countryAccommodations = new List<SlimAccommodationData>();
-            var accommodations = new List<SlimAccommodationData>();
-            var skip = 0;
-            do
-            {
-                accommodations =
-                    await _context.Accommodations.Where(ac
-                            => ac.CountryCode == countryCode && EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
-                                supplier.ToString().ToLower()))
-                        .OrderBy(ac => ac.Id)
-                        .Skip(skip)
-                        .Take(_batchSize)
-                        .Select(ac => new SlimAccommodationData
-                        {
-                            HtId = ac.Id,
-                            SupplierAccommodationCodes = ac.SupplierAccommodationCodes,
-                            IsActive = ac.IsActive
-                        })
-                        .ToListAsync();
-
-                skip += _batchSize;
-                countryAccommodations.AddRange(accommodations);
-            } while (accommodations.Count > 0);
-
-            return countryAccommodations.Select(ac => (ac.SupplierAccommodationCodes[supplier], ac)).ToList();
-        }
-
-
-        private async Task<STRtree<SlimAccommodationData>> GetCountryAccommodationsTree(string countryCode,
-            Suppliers supplier)
-        {
-            var countryAccommodations = new List<SlimAccommodationData>();
-            var accommodations = new List<SlimAccommodationData>();
-            var skip = 0;
-            do
-            {
-                accommodations =
-                    await _context.Accommodations.Where(ac
-                            => ac.CountryCode == countryCode && !EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
-                                supplier.ToString().ToLower()) && ac.IsActive)
-                        .OrderBy(ac => ac.Id)
-                        .Skip(skip)
-                        .Take(_batchSize)
-                        .Select(ac => new SlimAccommodationData
-                        {
-                            HtId = ac.Id,
-                            KeyData = ac.KeyData,
-                            SupplierAccommodationCodes = ac.SupplierAccommodationCodes
-                        })
-                        .ToListAsync();
-
-                skip += _batchSize;
-                countryAccommodations.AddRange(accommodations);
-            } while (accommodations.Count > 0);
-
-            if (!countryAccommodations.Any() || countryAccommodations.Count == 1)
-                return new STRtree<SlimAccommodationData>();
-
-            var tree = new STRtree<SlimAccommodationData>(countryAccommodations.Count);
-            foreach (var ac in countryAccommodations)
-            {
-                if (!ac.KeyData.Coordinates.IsEmpty() && ac.KeyData.Coordinates.IsValid())
-                    tree.Insert(new Point(ac.KeyData.Coordinates.Longitude,
-                        ac.KeyData.Coordinates.Latitude).EnvelopeInternal, ac);
-            }
-
-            tree.Build();
-            return tree;
-        }
-
-
-        private async Task<List<(string Code, int Id)>> GetCountries(Suppliers supplier)
-        {
-            var countries = await _context.Countries
-                .Where(c => c.IsActive && EF.Functions.JsonExists(c.SupplierCountryCodes,
-                    supplier.ToString().ToLower()))
-                .OrderBy(c => c.Code)
-                .Select(c => ValueTuple.Create(c.Code, c.Id))
-                .ToListAsync();
-
-            return countries;
-        }
-
-
-        private Task<List<Tuple<int, int>>> GetActiveCountryUncertainMatchesBySupplier(string countryCode,
-            Suppliers supplier, CancellationToken cancellationToken)
-            => (from um in _context.AccommodationUncertainMatches
-                join sourceAc in _context.Accommodations on um.SourceHtId equals sourceAc.Id
-                join acToMatch in _context.Accommodations on um.HtIdToMatch equals acToMatch.Id
-                where um.IsActive && sourceAc.CountryCode == countryCode && acToMatch.CountryCode == countryCode &&
-                    (EF.Functions.JsonExists(sourceAc.SupplierAccommodationCodes,
-                        supplier.ToString().ToLower()) || EF.Functions.JsonExists(acToMatch.SupplierAccommodationCodes,
-                        supplier.ToString().ToLower()))
-                select new Tuple<int, int>(um.SourceHtId, um.HtIdToMatch)).ToListAsync(cancellationToken);
-
-
-        private Task<Dictionary<string, int>> GetLocalitiesByCountry(int countryId)
-            => _context.Localities.Where(l => l.CountryId == countryId && l.IsActive)
-                .Select(l => new {Name = l.Names.En, l.Id}).ToDictionaryAsync(l => l.Name, l => l.Id);
-
-
-        private Task<Dictionary<(int LocalityId, string LocalityZoneName), int>> GetLocalityZonesByCountry(
-            int countryId)
-            => (from z in _context.LocalityZones
-                join l in _context.Localities on z.LocalityId equals l.Id
-                where z.IsActive && l.IsActive && l.CountryId == countryId
-                select new
-                {
-                    LocalityId = l.Id,
-                    LocalityZoneName = z.Names.En,
-                    Id = z.Id
-                }).ToDictionaryAsync(z => (z.LocalityId, z.LocalityZoneName), z => z.Id);
-
-
-        private Task<Dictionary<int, (int Id, HashSet<int> MappedHtIds)>> GetHtAccommodationMappings()
-            => _context.HtAccommodationMappings
-                .Where(m => m.IsActive)
-                .Select(m => new
-                {
-                    Id = m.Id,
-                    HtId = m.HtId,
-                    MappedHtIds = m.MappedHtIds
-                })
-                .ToDictionaryAsync(m => m.HtId, m => (m.Id, m.MappedHtIds));
-
-
-        private Task<DateTime> GetLastMappingDate(Suppliers supplier, CancellationToken cancellationToken)
-            => _context.DataUpdateHistories.Where(h => h.Supplier == supplier && h.Type == DataUpdateTypes.Mapping)
-                .OrderByDescending(h => h.UpdateTime)
-                .Select(h => h.UpdateTime).FirstOrDefaultAsync(cancellationToken);
-
-
         private readonly int _batchSize;
         private readonly AccommodationsChangePublisher _accommodationsChangePublisher;
-        private readonly ILogger<AccommodationMapper> _logger;
+        private readonly ILogger<AccommodationsMapper> _logger;
         private readonly MultilingualDataHelper _multilingualDataHelper;
+        private readonly IAccommodationsMapperDataRetrieveService _accommodationsMapperDataRetrieveService;
         private readonly NakijinContext _context;
         private readonly TracerProvider _tracerProvider;
         private readonly AccommodationMappingsCache _mappingsCache;
         private readonly AccommodationsMapperHelper _mapperHelper;
-
-
     }
 }

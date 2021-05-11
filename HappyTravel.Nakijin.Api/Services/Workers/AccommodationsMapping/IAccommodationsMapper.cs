@@ -6,7 +6,7 @@ using HappyTravel.Nakijin.Data.Models;
 
 namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
 {
-    public interface IAccommodationMapper
+    public interface IAccommodationsMapper
     {
         Task MapAccommodations(List<Suppliers> suppliers, MappingTypes mappingType, CancellationToken token);
     }
