@@ -5,7 +5,7 @@ using HappyTravel.Nakijin.Data.Models;
 
 namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
 {
-    public interface ILocationMapper
+    public interface ILocationsMapper
     {
         Task MapLocations(List<Suppliers> suppliers, CancellationToken token = default);
     }

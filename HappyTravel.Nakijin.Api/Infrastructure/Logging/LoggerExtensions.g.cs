@@ -49,43 +49,43 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
             
             MappingCountriesStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90104, "MappingCountriesStart"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | CountriesMapper: {{message}}");
             
             MappingCountriesFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90105, "MappingCountriesFinish"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | CountriesMapper: {{message}}");
             
             MappingLocalitiesStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90106, "MappingLocalitiesStart"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalitiesMapper: {{message}}");
             
             MappingLocalitiesFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90107, "MappingLocalitiesFinish"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalitiesMapper: {{message}}");
             
             MappingLocalitiesOfSpecifiedCountryStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90108, "MappingLocalitiesOfSpecifiedCountryStart"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalitiesMapper: {{message}}");
             
             MappingLocalitiesOfSpecifiedCountryFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90109, "MappingLocalitiesOfSpecifiedCountryFinish"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalitiesMapper: {{message}}");
             
             MappingLocalityZonesStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90110, "MappingLocalityZonesStart"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalityZonesMapper: {{message}}");
             
             MappingLocalityZonesFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90110, "MappingLocalityZonesFinish"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalityZonesMapper: {{message}}");
             
             MappingLocalityZonesOfSpecifiedCountryStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90111, "MappingLocalityZonesOfSpecifiedCountryStart"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalityZonesMapper: {{message}}");
             
             MappingLocalityZonesOfSpecifiedCountryFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90112, "MappingLocalityZonesOfSpecifiedCountryFinish"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalityZonesMapper: {{message}}");
             
             MergingAccommodationsDataStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90200, "MergingAccommodationsDataStart"),
