@@ -110,7 +110,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
 
             _context.UpdateRange(countriesToUpdate.Distinct(new CountryComparer()));
             _context.AddRange(newCountries.Distinct(new CountryComparer()));
-            await ChangeCountryDependencies(countryPairsChanged);
+            await ChangeCountryDependencies(countryPairsChanged, cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -123,53 +123,54 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
 
             _logger.LogMappingCountriesFinish(
                 $"Finished Mapping countries of {supplier.ToString()}.");
+        }
 
 
-            async Task ChangeCountryDependencies(Dictionary<int, int> countryChangedPairs)
+        private async Task ChangeCountryDependencies(Dictionary<int, int> countryChangedPairs, CancellationToken cancellationToken)
+        {
+            var utcDate = DateTime.UtcNow;
+            var dbLocalities = await _context.Localities
+                .Where(l => countryChangedPairs.Keys.Contains(l.CountryId))
+                .Select(l => new
+                {
+                    LocalityId = l.Id,
+                    CountryId = l.CountryId
+                }).ToListAsync(cancellationToken);
+
+            var localities = dbLocalities.Select(l => new Locality
             {
-                var dbLocalities = await _context.Localities
-                    .Where(l => countryChangedPairs.Keys.Contains(l.CountryId))
-                    .Select(l => new
-                    {
-                        LocalityId = l.Id,
-                        CountryId = l.CountryId
-                    }).ToListAsync(cancellationToken);
+                Id = l.LocalityId,
+                CountryId = countryChangedPairs[l.CountryId],
+                Modified = utcDate
+            });
 
-                var localities = dbLocalities.Select(l => new Locality
+            foreach (var locality in localities)
+            {
+                _context.Attach(locality);
+                _context.Entry(locality).Property(l => l.CountryId).IsModified = true;
+                _context.Entry(locality).Property(l => l.Modified).IsModified = true;
+            }
+
+            var dbAccommodations = await _context.Accommodations
+                .Where(ac => countryChangedPairs.Keys.Contains(ac.CountryId))
+                .Select(ac => new
                 {
-                    Id = l.LocalityId,
-                    CountryId = countryChangedPairs[l.CountryId],
-                    Modified = utcDate
-                });
+                    AccommodationId = ac.Id,
+                    CountryId = ac.CountryId
+                }).ToListAsync(cancellationToken);
 
-                foreach (var locality in localities)
-                {
-                    _context.Attach(locality);
-                    _context.Entry(locality).Property(l => l.CountryId).IsModified = true;
-                    _context.Entry(locality).Property(l => l.Modified).IsModified = true;
-                }
+            var accommodations = dbAccommodations.Select(ac => new RichAccommodationDetails
+            {
+                Id = ac.AccommodationId,
+                CountryId = countryChangedPairs[ac.CountryId],
+                Modified = utcDate
+            }).ToList();
 
-                var dbAccommodations = await _context.Accommodations
-                    .Where(ac => countryChangedPairs.Keys.Contains(ac.CountryId))
-                    .Select(ac => new
-                    {
-                        AccommodationId = ac.Id,
-                        CountryId = ac.CountryId
-                    }).ToListAsync(cancellationToken);
-
-                var accommodations = dbAccommodations.Select(ac => new RichAccommodationDetails
-                {
-                    Id = ac.AccommodationId,
-                    CountryId = countryChangedPairs[ac.CountryId],
-                    Modified = utcDate
-                }).ToList();
-
-                foreach (var accommodation in accommodations)
-                {
-                    _context.Attach(accommodation);
-                    _context.Entry(accommodation).Property(l => l.CountryId).IsModified = true;
-                    _context.Entry(accommodation).Property(l => l.Modified).IsModified = true;
-                }
+            foreach (var accommodation in accommodations)
+            {
+                _context.Attach(accommodation);
+                _context.Entry(accommodation).Property(l => l.CountryId).IsModified = true;
+                _context.Entry(accommodation).Property(l => l.Modified).IsModified = true;
             }
         }
 

@@ -130,7 +130,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
                 // TODO: Remove Distinct 
                 _context.UpdateRange(localitiesToUpdate.Distinct(new LocalityComparer()));
                 _context.AddRange(newLocalities.Distinct(new LocalityComparer()));
-                await ChangeLocalityDependencies(changedLocalityPairs);
+                await ChangeLocalityDependencies(changedLocalityPairs, cancellationToken);
 
                 await _context.SaveChangesAsync(cancellationToken);
 
@@ -154,53 +154,53 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
 
             _logger.LogMappingLocalitiesFinish(
                 $"Finished Mapping localities of {supplier.ToString()}.");
+        }
 
 
-            async Task ChangeLocalityDependencies(Dictionary<int, int> localityChangedPairs)
+        private async Task ChangeLocalityDependencies(Dictionary<int, int> localityChangedPairs, CancellationToken cancellationToken)
+        {
+            var utcDate = DateTime.UtcNow;
+            var dbLocalityZones = await _context.LocalityZones
+                .Where(lz => localityChangedPairs.Keys.Contains(lz.LocalityId)).Select(lz => new
+                {
+                    LocalityZoneId = lz.Id,
+                    LocalityId = lz.LocalityId
+                }).ToListAsync(cancellationToken);
+
+            var localityZones = dbLocalityZones.Select(lz => new LocalityZone
             {
-                var utcDate = DateTime.UtcNow;
-                var dbLocalityZones = await _context.LocalityZones
-                    .Where(lz => localityChangedPairs.Keys.Contains(lz.LocalityId)).Select(lz => new
-                    {
-                        LocalityZoneId = lz.Id,
-                        LocalityId = lz.LocalityId
-                    }).ToListAsync(cancellationToken);
+                Id = lz.LocalityZoneId,
+                LocalityId = localityChangedPairs[lz.LocalityId],
+                Modified = utcDate
+            }).ToList();
 
-                var localityZones = dbLocalityZones.Select(lz => new LocalityZone
+            foreach (var localityZone in localityZones)
+            {
+                _context.Attach(localityZone);
+                _context.Entry(localityZone).Property(lz => lz.LocalityId).IsModified = true;
+                _context.Entry(localityZone).Property(lz => lz.Modified).IsModified = true;
+            }
+
+            var dbAccommodations = await _context.Accommodations
+                .Where(ac => ac.LocalityId != null && localityChangedPairs.Keys.Contains(ac.LocalityId.Value))
+                .Select(ac => new
                 {
-                    Id = lz.LocalityZoneId,
-                    LocalityId = localityChangedPairs[lz.LocalityId],
-                    Modified = utcDate
-                }).ToList();
+                    AccommodationId = ac.Id,
+                    LocalityId = ac.LocalityId
+                }).ToListAsync(cancellationToken);
 
-                foreach (var localityZone in localityZones)
-                {
-                    _context.Attach(localityZone);
-                    _context.Entry(localityZone).Property(lz => lz.LocalityId).IsModified = true;
-                    _context.Entry(localityZone).Property(lz => lz.Modified).IsModified = true;
-                }
+            var accommodations = dbAccommodations.Select(ac => new RichAccommodationDetails
+            {
+                Id = ac.AccommodationId,
+                LocalityId = localityChangedPairs[ac.LocalityId!.Value],
+                Modified = utcDate
+            }).ToList();
 
-                var dbAccommodations = await _context.Accommodations
-                    .Where(ac => ac.LocalityId != null && localityChangedPairs.Keys.Contains(ac.LocalityId.Value))
-                    .Select(ac => new
-                    {
-                        AccommodationId = ac.Id,
-                        LocalityId = ac.LocalityId
-                    }).ToListAsync(cancellationToken);
-
-                var accommodations = dbAccommodations.Select(ac => new RichAccommodationDetails
-                {
-                    Id = ac.AccommodationId,
-                    LocalityId = localityChangedPairs[ac.LocalityId!.Value],
-                    Modified = utcDate
-                }).ToList();
-
-                foreach (var accommodation in accommodations)
-                {
-                    _context.Attach(accommodation);
-                    _context.Entry(accommodation).Property(l => l.LocalityId).IsModified = true;
-                    _context.Entry(accommodation).Property(l => l.Modified).IsModified = true;
-                }
+            foreach (var accommodation in accommodations)
+            {
+                _context.Attach(accommodation);
+                _context.Entry(accommodation).Property(l => l.LocalityId).IsModified = true;
+                _context.Entry(accommodation).Property(l => l.Modified).IsModified = true;
             }
         }
 
