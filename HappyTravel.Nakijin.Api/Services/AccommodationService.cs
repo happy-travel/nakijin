@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.EdoContracts.Accommodations.Internals;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
@@ -25,7 +26,7 @@ namespace HappyTravel.Nakijin.Api.Services
         public async Task<Result<Accommodation>> Get(Suppliers supplier, string supplierAccommodationCode,
             string languageCode)
         {
-            var searchJson = "{" + $"\"{supplier.ToString().ToLower()}\":\"{supplierAccommodationCode}\"" + "}";
+            var searchJson = "{" + $"\"{supplier.ToString().FirstCharToLower()}\":\"{supplierAccommodationCode}\"" + "}";
             var accommodation = await _context.Accommodations
                 .Where(ac => ac.IsActive && EF.Functions.JsonContains(ac.SupplierAccommodationCodes, searchJson))
                 .Select(ac => new
@@ -79,7 +80,7 @@ namespace HappyTravel.Nakijin.Api.Services
         public async Task<List<Accommodation>> Get(int skip, int top, IEnumerable<Suppliers> suppliersFilter,
             bool? hasDirectContractFilter, string languageCode)
         {
-            var suppliersKeys = suppliersFilter.Select(s => s.ToString().ToLower()).ToArray();
+            var suppliersKeys = suppliersFilter.Select(s => s.ToString().FirstCharToLower()).ToArray();
             var accommodationsQuery = _context.Accommodations
                 .Where(ac => ac.IsActive);
 
