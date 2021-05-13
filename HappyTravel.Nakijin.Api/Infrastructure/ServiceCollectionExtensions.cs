@@ -36,7 +36,9 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
             services.AddTransient<IAccommodationsMapper, AccommodationsMapper>();
             services.AddTransient<IAccommodationsMapperDataRetrieveService, AccommodationsMapperDataRetrieveService>();
+            services.AddTransient<AccommodationsMapperHelper>();
             services.AddTransient<IAccommodationsDataMerger, AccommodationsDataMerger>();
+            services.AddTransient<AccommodationsMergerHelper>();
             services.AddTransient<ILocationsMapper, LocationsMapper>();
             services.AddTransient<ICountriesMapper, CountriesMapper>();
             services.AddTransient<ILocalitiesMapper, LocalitiesMapper>();
