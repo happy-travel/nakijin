@@ -52,7 +52,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                 accommodations =
                     await _context.Accommodations.Where(ac
                             => ac.CountryCode == countryCode && EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
-                                supplier.ToString().ToLower()))
+                                supplier.ToString().FirstCharToLower()))
                         .OrderBy(ac => ac.Id)
                         .Skip(skip)
                         .Take(_batchSize)
@@ -83,7 +83,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                 accommodations =
                     await _context.Accommodations.Where(ac
                             => ac.CountryCode == countryCode && !EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
-                                supplier.ToString().ToLower()) && ac.IsActive)
+                                supplier.ToString().FirstCharToLower()) && ac.IsActive)
                         .OrderBy(ac => ac.Id)
                         .Skip(skip)
                         .Take(_batchSize)
@@ -119,7 +119,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
         {
             var countries = await _context.Countries
                 .Where(c => c.IsActive && EF.Functions.JsonExists(c.SupplierCountryCodes,
-                    supplier.ToString().ToLower()))
+                    supplier.ToString().FirstCharToLower()))
                 .OrderBy(c => c.Code)
                 .Select(c => ValueTuple.Create(c.Code, c.Id))
                 .ToListAsync();
@@ -135,8 +135,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                 join acToMatch in _context.Accommodations on um.HtIdToMatch equals acToMatch.Id
                 where um.IsActive && sourceAc.CountryCode == countryCode && acToMatch.CountryCode == countryCode &&
                     (EF.Functions.JsonExists(sourceAc.SupplierAccommodationCodes,
-                        supplier.ToString().ToLower()) || EF.Functions.JsonExists(acToMatch.SupplierAccommodationCodes,
-                        supplier.ToString().ToLower()))
+                        supplier.ToString().FirstCharToLower()) || EF.Functions.JsonExists(acToMatch.SupplierAccommodationCodes,
+                        supplier.ToString().FirstCharToLower()))
                 select new Tuple<int, int>(um.SourceHtId, um.HtIdToMatch)).ToListAsync(cancellationToken);
 
 

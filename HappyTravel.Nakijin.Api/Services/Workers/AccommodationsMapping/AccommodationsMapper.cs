@@ -243,7 +243,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                 .ToList();
 
             _context.AddRange(accommodationsToAdd);
-            _context.AddRange(uncertainAccommodationsToAdd);
+            _context.AddRange(uncertainAccommodationsToAdd); 
             await _context.SaveChangesAsync(cancellationToken);
 
             var accommodationsToPublish = accommodationsToAdd

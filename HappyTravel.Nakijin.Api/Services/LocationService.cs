@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
@@ -34,7 +35,7 @@ namespace HappyTravel.Nakijin.Api.Services
 
         public async Task<List<Contracts.Country>> GetCountries(IEnumerable<Suppliers> suppliersFilter, string languageCode)
         {
-            var suppliersKeys = suppliersFilter.Select(s => s.ToString().ToLower()).ToArray();
+            var suppliersKeys = suppliersFilter.Select(s => s.ToString().FirstCharToLower()).ToArray();
             var countriesQuery = _context.Countries.Where(c => c.IsActive);
             var localitiesQuery = _context.Localities.Where(l => l.IsActive);
 
