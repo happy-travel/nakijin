@@ -243,7 +243,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 .ToList();
 
             _context.AddRange(accommodationsToAdd);
-            _context.AddRange(uncertainAccommodationsToAdd);
+            _context.AddRange(uncertainAccommodationsToAdd); 
             await _context.SaveChangesAsync(cancellationToken);
 
             var accommodationsToPublish = accommodationsToAdd
@@ -579,7 +579,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 accommodations =
                     await _context.Accommodations.Where(ac
                             => ac.CountryCode == countryCode && EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
-                                supplier.ToString().ToLower()))
+                                supplier.ToString().FirstCharToLower()))
                         .OrderBy(ac => ac.Id)
                         .Skip(skip)
                         .Take(_batchSize)
@@ -646,7 +646,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         {
             var countries = await _context.Countries
                 .Where(c => c.IsActive && EF.Functions.JsonExists(c.SupplierCountryCodes,
-                    supplier.ToString().ToLower()))
+                    supplier.ToString().FirstCharToLower()))
                 .OrderBy(c => c.Code)
                 .Select(c => ValueTuple.Create(c.Code, c.Id))
                 .ToListAsync();
@@ -662,8 +662,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 join secondAc in _context.Accommodations on um.SecondHtId equals secondAc.Id
                 where um.IsActive && firstAc.CountryCode == countryCode && secondAc.CountryCode == countryCode &&
                     (EF.Functions.JsonExists(firstAc.SupplierAccommodationCodes,
-                        supplier.ToString().ToLower()) || EF.Functions.JsonExists(secondAc.SupplierAccommodationCodes,
-                        supplier.ToString().ToLower()))
+                        supplier.ToString().FirstCharToLower()) || EF.Functions.JsonExists(secondAc.SupplierAccommodationCodes,
+                        supplier.ToString().FirstCharToLower()))
                 select new Tuple<int, int>(um.FirstHtId, um.SecondHtId)).ToListAsync(cancellationToken);
 
 
