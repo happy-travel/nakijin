@@ -22,6 +22,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
             var accommodationEnvelope = new Envelope(accommodation.Location.Coordinates.Longitude - 0.01,
                 accommodation.Location.Coordinates.Longitude + 0.01,
                 accommodation.Location.Coordinates.Latitude - 0.01, accommodation.Location.Coordinates.Latitude + 0.01);
+            
             return tree.Query(accommodationEnvelope).ToList();
         }
 

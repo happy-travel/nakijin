@@ -138,8 +138,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationsMapper>();
-                        await mapper.MapAccommodations(suppliers, MappingTypes.Full, _accommodationMappingTokenSource.Token);
+                        var iAccommodationsMapper = scope.ServiceProvider.GetRequiredService<IAccommodationsMapper>();
+                        await iAccommodationsMapper.MapAccommodations(suppliers, MappingTypes.Full, _accommodationMappingTokenSource.Token);
                     }
                     finally
                     {
@@ -172,8 +172,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationsMapper>();
-                        await mapper.MapAccommodations(suppliers, MappingTypes.Incremental, _accommodationMappingTokenSource.Token);
+                        var iAccommodationsMapper = scope.ServiceProvider.GetRequiredService<IAccommodationsMapper>();
+                        await iAccommodationsMapper.MapAccommodations(suppliers, MappingTypes.Incremental, _accommodationMappingTokenSource.Token);
                     }
                     finally
                     {
@@ -205,8 +205,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
-                        await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
+                        var iAccommodationsDataMerger = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                        await iAccommodationsDataMerger.MergeAll(_accommodationDataMergeTokenSource.Token);
                     }
                     finally
                     {

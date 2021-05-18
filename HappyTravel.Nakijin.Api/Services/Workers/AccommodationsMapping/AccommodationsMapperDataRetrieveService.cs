@@ -29,10 +29,14 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
             Suppliers supplier, int skip, int take, DateTime lastUpdatedDate, CancellationToken cancellationToken)
         {
             var accommodations = await (from ac in _context.RawAccommodations
-                where ac.Supplier == supplier
-                    && ac.CountryCode == countryCode
-                    && ac.Modified > lastUpdatedDate
-                select ac).OrderBy(ac => ac.Id).Skip(skip).Take(take).ToListAsync(cancellationToken);
+                    where ac.Supplier == supplier
+                        && ac.CountryCode == countryCode
+                        && ac.Modified > lastUpdatedDate
+                    select ac)
+                .OrderBy(ac => ac.Id)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(cancellationToken);
 
             return accommodations.Select(ac
                     => JsonConvert.DeserializeObject<Contracts.MultilingualAccommodation>(ac.Accommodation.RootElement
@@ -49,20 +53,19 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
             var skip = 0;
             do
             {
-                accommodations =
-                    await _context.Accommodations.Where(ac
-                            => ac.CountryCode == countryCode && EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
-                                supplier.ToString().FirstCharToLower()))
-                        .OrderBy(ac => ac.Id)
-                        .Skip(skip)
-                        .Take(_batchSize)
-                        .Select(ac => new SlimAccommodationData
-                        {
-                            HtId = ac.Id,
-                            SupplierAccommodationCodes = ac.SupplierAccommodationCodes,
-                            IsActive = ac.IsActive
-                        })
-                        .ToListAsync();
+                accommodations = await _context.Accommodations.Where(ac
+                        => ac.CountryCode == countryCode && EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
+                            supplier.ToString().FirstCharToLower()))
+                    .OrderBy(ac => ac.Id)
+                    .Skip(skip)
+                    .Take(_batchSize)
+                    .Select(ac => new SlimAccommodationData
+                    {
+                        HtId = ac.Id,
+                        SupplierAccommodationCodes = ac.SupplierAccommodationCodes,
+                        IsActive = ac.IsActive
+                    })
+                    .ToListAsync();
 
                 skip += _batchSize;
                 countryAccommodations.AddRange(accommodations);
@@ -80,20 +83,19 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
             var skip = 0;
             do
             {
-                accommodations =
-                    await _context.Accommodations.Where(ac
-                            => ac.CountryCode == countryCode && !EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
-                                supplier.ToString().FirstCharToLower()) && ac.IsActive)
-                        .OrderBy(ac => ac.Id)
-                        .Skip(skip)
-                        .Take(_batchSize)
-                        .Select(ac => new SlimAccommodationData
-                        {
-                            HtId = ac.Id,
-                            KeyData = ac.KeyData,
-                            SupplierAccommodationCodes = ac.SupplierAccommodationCodes
-                        })
-                        .ToListAsync();
+                accommodations = await _context.Accommodations.Where(ac
+                        => ac.CountryCode == countryCode && !EF.Functions.JsonExists(ac.SupplierAccommodationCodes,
+                            supplier.ToString().FirstCharToLower()) && ac.IsActive)
+                    .OrderBy(ac => ac.Id)
+                    .Skip(skip)
+                    .Take(_batchSize)
+                    .Select(ac => new SlimAccommodationData
+                    {
+                        HtId = ac.Id,
+                        KeyData = ac.KeyData,
+                        SupplierAccommodationCodes = ac.SupplierAccommodationCodes
+                    })
+                    .ToListAsync();
 
                 skip += _batchSize;
                 countryAccommodations.AddRange(accommodations);

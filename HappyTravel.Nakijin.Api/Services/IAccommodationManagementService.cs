@@ -16,8 +16,7 @@ namespace HappyTravel.Nakijin.Api.Services
         Task<Result> AddManualCorrection(int id, MultilingualAccommodation manualCorrectedAccommodation);
 
         Task<Result> MatchUncertain(int uncertainMatchId);
-        
-        Task<Result> MatchAccommodations(int sourceHtId, int htIdToMatch);
 
+        Task<Result> MatchAccommodations(int sourceHtId, int htIdToMatch);
     }
 }

@@ -44,8 +44,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var locationService = scope.ServiceProvider.GetRequiredService<ILocationsMapper>();
-                        await locationService.MapLocations(suppliers, _locationsMapperTokenSource.Token);
+                        var iLocationsMapper = scope.ServiceProvider.GetRequiredService<ILocationsMapper>();
+                        await iLocationsMapper.MapLocations(suppliers, _locationsMapperTokenSource.Token);
                     }
                     finally
                     {

@@ -9,6 +9,7 @@ namespace HappyTravel.Nakijin.Api.Services
     public interface ILocationService
     {
         Task<List<Contracts.Country>> GetCountries(IEnumerable<Suppliers> suppliersFilter, string languageCode);
+
         Task<DateTime> GetLastModifiedDate();
     }
 }

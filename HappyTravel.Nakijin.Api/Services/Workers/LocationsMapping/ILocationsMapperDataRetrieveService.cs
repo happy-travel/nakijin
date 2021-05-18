@@ -9,7 +9,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
     {
         Task<List<Country>> GetNormalizedCountries();
 
-
         Task<List<Locality>> GetNormalizedLocalitiesByCountry(string countryCode, CancellationToken cancellationToken);
 
 

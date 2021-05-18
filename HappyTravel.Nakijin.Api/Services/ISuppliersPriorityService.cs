@@ -8,6 +8,7 @@ namespace HappyTravel.Nakijin.Api.Services
     public interface ISuppliersPriorityService
     {
         ValueTask<Dictionary<AccommodationDataTypes, List<Suppliers>>> Get();
+
         Task AddOrUpdate(Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority);
     }
 }

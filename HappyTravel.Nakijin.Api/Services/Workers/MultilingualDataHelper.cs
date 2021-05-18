@@ -51,7 +51,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             MultiLanguage<string>? NormalizeMultilingualLocality(in MultilingualLocationInfo location)
             {
-                if (location.Locality == null)
+                if (location.Locality is null)
                     return null;
 
                 var defaultCountry = location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
@@ -89,7 +89,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
         public MultiLanguage<string>? NormalizeMultilingualNames(in MultiLanguage<string>? name)
         {
-            if (name == null)
+            if (name is null)
                 return null;
 
             var result = new MultiLanguage<string>();
