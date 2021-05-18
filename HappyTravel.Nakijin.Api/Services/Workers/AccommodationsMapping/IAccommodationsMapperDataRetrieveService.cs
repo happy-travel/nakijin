@@ -7,15 +7,13 @@ using HappyTravel.Nakijin.Data.Models;
 using NetTopologySuite.Index.Strtree;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 
-
 namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
 {
     public interface IAccommodationsMapperDataRetrieveService
     {
         Task<List<Contracts.MultilingualAccommodation>> GetAccommodationsForMapping(string countryCode, Suppliers supplier, int skip, int take,
             DateTime lastUpdatedDate, CancellationToken cancellationToken);
-
-
+        
         Task<List<(string SupplierCode, SlimAccommodationData AccommodationKeyData)>> GeCountryAccommodationBySupplier(string countryCode, Suppliers supplier);
 
         Task<List<(string Code, int Id)>> GetCountries(Suppliers supplier);
