@@ -38,6 +38,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _tracerProvider = tracerProvider;
         }
 
+
         public async Task Preload(List<Suppliers> suppliers,
             CancellationToken cancellationToken = default)
         {
@@ -46,13 +47,12 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
 
-
             foreach (var supplier in suppliers)
             {
                 try
                 {
                     var modificationDate = await _context.DataUpdateHistories
-                        .Where(dh => dh.Supplier == supplier)
+                        .Where(dh => dh.Supplier == supplier && dh.Type == DataUpdateTypes.Preloading)
                         .OrderByDescending(dh => dh.UpdateTime)
                         .Select(dh => dh.UpdateTime)
                         .FirstOrDefaultAsync(cancellationToken);
@@ -82,6 +82,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 }
             }
         }
+
 
         private async Task Preload(Suppliers supplier, DateTime modificationDate,
             CancellationToken cancellationToken = default)
