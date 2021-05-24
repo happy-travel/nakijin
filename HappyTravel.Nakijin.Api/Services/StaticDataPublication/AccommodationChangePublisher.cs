@@ -9,9 +9,9 @@ using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 
 namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 {
-    public class AccommodationsChangePublisher
+    public class AccommodationChangePublisher
     {
-        public AccommodationsChangePublisher(IStaticDataPublicationService staticDataPublicationService)
+        public AccommodationChangePublisher(IStaticDataPublicationService staticDataPublicationService)
         {
             _staticDataPublicationService = staticDataPublicationService;
         }

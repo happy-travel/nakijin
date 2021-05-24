@@ -17,20 +17,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Trace;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
+namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
 {
-    public class LocalityZonesMapper : ILocalityZonesMapper
+    public class LocalityZoneMapper : ILocalityZoneMapper
     {
-        public LocalityZonesMapper(NakijinContext context, ILocationsMapperDataRetrieveService locationsMapperDataRetrieveService,
-            ILocationNameNormalizer locationNameNormalizer, MultilingualDataHelper multilingualDataHelper, LocationsChangePublisher locationsChangePublisher,
+        public LocalityZoneMapper(NakijinContext context, ILocationMapperDataRetrieveService locationMapperDataRetrieveService,
+            ILocationNameNormalizer locationNameNormalizer, MultilingualDataHelper multilingualDataHelper, LocationChangePublisher locationChangePublisher,
             ILoggerFactory loggerFactory)
         {
             _context = context;
-            _logger = loggerFactory.CreateLogger<LocalityZonesMapper>();
+            _logger = loggerFactory.CreateLogger<LocalityZoneMapper>();
             _locationNameNormalizer = locationNameNormalizer;
             _multilingualDataHelper = multilingualDataHelper;
-            _locationsMapperDataRetrieveService = locationsMapperDataRetrieveService;
-            _locationsChangePublisher = locationsChangePublisher;
+            _locationMapperDataRetrieveService = locationMapperDataRetrieveService;
+            _locationChangePublisher = locationChangePublisher;
         }
 
 
@@ -42,7 +42,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
             _logger.LogMappingLocalityZonesStart(
                 $"Started Mapping locality zones of {supplier.ToString()}.");
 
-            var countries = await _locationsMapperDataRetrieveService.GetCountries();
+            var countries = await _locationMapperDataRetrieveService.GetCountries();
 
             foreach (var country in countries)
             {
@@ -50,9 +50,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
                     $"Started Mapping locality zones of {supplier.ToString()} of country with code {country.Code}.");
 
                 var changedLocalityZonesPairs = new Dictionary<int, int>();
-                var countryLocalities = await _locationsMapperDataRetrieveService.GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
+                var countryLocalities = await _locationMapperDataRetrieveService.GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
                 var dbNormalizedLocalityZones =
-                    await _locationsMapperDataRetrieveService.GetNormalizedLocalityZonesByCountry(country.Code, cancellationToken);
+                    await _locationMapperDataRetrieveService.GetNormalizedLocalityZonesByCountry(country.Code, cancellationToken);
                 var notSuppliersLocalityZones = dbNormalizedLocalityZones
                     .Where(l => !l.LocalityZone.SupplierLocalityZoneCodes.ContainsKey(supplier)).ToList();
                 var suppliersLocalityZones = dbNormalizedLocalityZones
@@ -203,11 +203,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
         }
 
 
-        private readonly ILogger<LocalityZonesMapper> _logger;
-        private readonly ILocationsMapperDataRetrieveService _locationsMapperDataRetrieveService;
+        private readonly ILogger<LocalityZoneMapper> _logger;
+        private readonly ILocationMapperDataRetrieveService _locationMapperDataRetrieveService;
         private readonly ILocationNameNormalizer _locationNameNormalizer;
         private readonly MultilingualDataHelper _multilingualDataHelper;
-        private readonly LocationsChangePublisher _locationsChangePublisher;
+        private readonly LocationChangePublisher _locationChangePublisher;
         private readonly NakijinContext _context;
     }
 }

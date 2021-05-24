@@ -14,11 +14,11 @@ using NetTopologySuite.Index.Strtree;
 using Newtonsoft.Json;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 {
-    public class AccommodationsMapperDataRetrieveService : IAccommodationsMapperDataRetrieveService
+    public class AccommodationMapperDataRetrieveService : IAccommodationMapperDataRetrieveService
     {
-        public AccommodationsMapperDataRetrieveService(NakijinContext context, IOptions<StaticDataLoadingOptions> options)
+        public AccommodationMapperDataRetrieveService(NakijinContext context, IOptions<StaticDataLoadingOptions> options)
         {
             _context = context;
             _batchSize = options.Value.MappingBatchSize;

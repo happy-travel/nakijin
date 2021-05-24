@@ -21,7 +21,7 @@ using Microsoft.Extensions.Options;
 using NetTopologySuite.Index.Strtree;
 using OpenTelemetry.Trace;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 {
     /*
         1. Get accommodations by a country
@@ -38,22 +38,22 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
            Intermediate scores should be calibrated to achieve better matching
         5. If the score is sufficient, merge the new and the existing accommodation. Unmatched field became synonyms
     */
-    public class AccommodationsMapper : IAccommodationsMapper
+    public class AccommodationMapper : IAccommodationMapper
     {
-        public AccommodationsMapper(NakijinContext context,
+        public AccommodationMapper(NakijinContext context,
             ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
             MultilingualDataHelper multilingualDataHelper, AccommodationMappingsCache mappingsCache,
-            TracerProvider tracerProvider, AccommodationsChangePublisher accommodationsChangePublisher, AccommodationsMapperHelper mapperHelper, IAccommodationsMapperDataRetrieveService accommodationsMapperDataRetrieveService)
+            TracerProvider tracerProvider, AccommodationChangePublisher accommodationChangePublisher, AccommodationMapperHelper mapperHelper, IAccommodationMapperDataRetrieveService accommodationMapperDataRetrieveService)
         {
             _context = context;
-            _logger = loggerFactory.CreateLogger<AccommodationsMapper>();
+            _logger = loggerFactory.CreateLogger<AccommodationMapper>();
             _batchSize = options.Value.MappingBatchSize;
             _multilingualDataHelper = multilingualDataHelper;
             _tracerProvider = tracerProvider;
             _mappingsCache = mappingsCache;
-            _accommodationsChangePublisher = accommodationsChangePublisher;
+            _accommodationChangePublisher = accommodationChangePublisher;
             _mapperHelper = mapperHelper;
-            _accommodationsMapperDataRetrieveService = accommodationsMapperDataRetrieveService;
+            _accommodationMapperDataRetrieveService = accommodationMapperDataRetrieveService;
         }
 
 
@@ -61,7 +61,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
             CancellationToken cancellationToken)
         {
             var currentSpan = Tracer.CurrentSpan;
-            var tracer = _tracerProvider.GetTracer(nameof(AccommodationsMapper));
+            var tracer = _tracerProvider.GetTracer(nameof(AccommodationMapper));
 
             foreach (var supplier in suppliers)
             {
@@ -109,16 +109,16 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
             Tracer tracer,
             CancellationToken cancellationToken)
         {
-            var htAccommodationMappings = await _accommodationsMapperDataRetrieveService.GetHtAccommodationMappings();
+            var htAccommodationMappings = await _accommodationMapperDataRetrieveService.GetHtAccommodationMappings();
 
             var lastMappingDate = mappingType switch
             {
                 MappingTypes.Full => DateTime.MinValue,
-                MappingTypes.Incremental => await _accommodationsMapperDataRetrieveService.GetLastMappingDate(supplier, cancellationToken),
+                MappingTypes.Incremental => await _accommodationMapperDataRetrieveService.GetLastMappingDate(supplier, cancellationToken),
                 _ => throw new NotSupportedException()
             };
 
-            foreach (var country in await _accommodationsMapperDataRetrieveService.GetCountries(supplier))
+            foreach (var country in await _accommodationMapperDataRetrieveService.GetCountries(supplier))
             {
                 using var countryAccommodationsMappingSpan =
                     tracer.StartActiveSpan($"{nameof(MapAccommodations)} of country with code {country.Code}",
@@ -127,10 +127,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                 _logger.LogMappingAccommodationsOfSpecifiedCountryStart(
                     $"Started mapping of {supplier.ToString()} accommodations of country with code {country.Code}");
 
-                var countryAccommodationsTree = await _accommodationsMapperDataRetrieveService.GetCountryAccommodationsTree(country.Code, supplier);
+                var countryAccommodationsTree = await _accommodationMapperDataRetrieveService.GetCountryAccommodationsTree(country.Code, supplier);
                 countryAccommodationsMappingSpan.AddEvent("Constructed country accommodations tree");
 
-                var countryAccommodationsOfSupplier = await _accommodationsMapperDataRetrieveService.GeCountryAccommodationBySupplier(country.Code, supplier);
+                var countryAccommodationsOfSupplier = await _accommodationMapperDataRetrieveService.GeCountryAccommodationBySupplier(country.Code, supplier);
 
                 var notActiveCountryAccommodationsOfSupplier = countryAccommodationsOfSupplier
                     .Where(ac => !ac.AccommodationKeyData.IsActive)
@@ -142,11 +142,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country accommodations");
 
                 var activeCountryUncertainMatchesOfSupplier =
-                    await _accommodationsMapperDataRetrieveService.GetActiveCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
+                    await _accommodationMapperDataRetrieveService.GetActiveCountryUncertainMatchesBySupplier(country.Code, supplier, cancellationToken);
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country uncertain matches");
 
-                var countryLocalities = await _accommodationsMapperDataRetrieveService.GetLocalitiesByCountry(country.Id);
-                var countryLocalityZones = await _accommodationsMapperDataRetrieveService.GetLocalityZonesByCountry(country.Id);
+                var countryLocalities = await _accommodationMapperDataRetrieveService.GetLocalitiesByCountry(country.Id);
+                var countryLocalityZones = await _accommodationMapperDataRetrieveService.GetLocalityZonesByCountry(country.Id);
                 countryAccommodationsMappingSpan.AddEvent("Got supplier's specified country locations");
 
                 var accommodationDetails = new List<Contracts.MultilingualAccommodation>();
@@ -154,7 +154,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                 do
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    accommodationDetails = await _accommodationsMapperDataRetrieveService.GetAccommodationsForMapping(country.Code, supplier, skip,
+                    accommodationDetails = await _accommodationMapperDataRetrieveService.GetAccommodationsForMapping(country.Code, supplier, skip,
                         _batchSize, lastMappingDate, cancellationToken);
                     countryAccommodationsMappingSpan.AddEvent(
                         $"Got supplier's specified country accommodations batch skip = {skip}, top = {_batchSize}");
@@ -255,8 +255,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
                     acc.KeyData.DefaultLocalityName, acc.KeyData.DefaultCountryName, acc.CountryCode,
                     acc.KeyData.Coordinates));
 
-            await _accommodationsChangePublisher.PublishAdded(addedAccommodations);
-            await _accommodationsChangePublisher.PublishRemoved(removedAccommodations);
+            await _accommodationChangePublisher.PublishAdded(addedAccommodations);
+            await _accommodationChangePublisher.PublishRemoved(removedAccommodations);
 
             mappingSpan.AddEvent("Save batch changes to db");
 
@@ -517,13 +517,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
 
 
         private readonly int _batchSize;
-        private readonly AccommodationsChangePublisher _accommodationsChangePublisher;
-        private readonly ILogger<AccommodationsMapper> _logger;
+        private readonly AccommodationChangePublisher _accommodationChangePublisher;
+        private readonly ILogger<AccommodationMapper> _logger;
         private readonly MultilingualDataHelper _multilingualDataHelper;
-        private readonly IAccommodationsMapperDataRetrieveService _accommodationsMapperDataRetrieveService;
+        private readonly IAccommodationMapperDataRetrieveService _accommodationMapperDataRetrieveService;
         private readonly NakijinContext _context;
         private readonly TracerProvider _tracerProvider;
         private readonly AccommodationMappingsCache _mappingsCache;
-        private readonly AccommodationsMapperHelper _mapperHelper;
+        private readonly AccommodationMapperHelper _mapperHelper;
     }
 }

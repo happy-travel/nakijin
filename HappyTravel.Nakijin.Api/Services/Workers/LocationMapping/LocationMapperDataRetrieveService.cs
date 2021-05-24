@@ -9,9 +9,9 @@ using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
+namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
 {
-    public class LocationsMapperDataRetrieveService : ILocationsMapperDataRetrieveService
+    public class LocationsMapperDataRetrieveService : ILocationMapperDataRetrieveService
     {
         public LocationsMapperDataRetrieveService(NakijinContext context, MultilingualDataHelper multilingualDataHelper,
             ILocationNameNormalizer locationNameNormalizer)

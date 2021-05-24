@@ -9,9 +9,9 @@ using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Api.Infrastructure.Environments;
 using HappyTravel.Nakijin.Api.Services;
 using HappyTravel.Nakijin.Api.Services.Workers;
-using HappyTravel.Nakijin.Api.Services.Workers.AccommodationsDataCalculation;
-using HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping;
-using HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping;
+using HappyTravel.Nakijin.Api.Services.Workers.LocationMapping;
 using IdentityModel.Client;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
@@ -34,16 +34,16 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
-            services.AddTransient<IAccommodationsMapper, AccommodationsMapper>();
-            services.AddTransient<IAccommodationsMapperDataRetrieveService, AccommodationsMapperDataRetrieveService>();
-            services.AddTransient<AccommodationsMapperHelper>();
-            services.AddTransient<IAccommodationsDataMerger, AccommodationsDataMerger>();
-            services.AddTransient<AccommodationsMergerHelper>();
-            services.AddTransient<ILocationsMapper, LocationsMapper>();
-            services.AddTransient<ICountriesMapper, CountriesMapper>();
-            services.AddTransient<ILocalitiesMapper, LocalitiesMapper>();
-            services.AddTransient<ILocalityZonesMapper, LocalityZonesMapper>();
-            services.AddTransient<ILocationsMapperDataRetrieveService, LocationsMapperDataRetrieveService>();
+            services.AddTransient<IAccommodationMapper, AccommodationMapper>();
+            services.AddTransient<IAccommodationMapperDataRetrieveService, AccommodationMapperDataRetrieveService>();
+            services.AddTransient<AccommodationMapperHelper>();
+            services.AddTransient<IAccommodationDataMerger, AccommodationDataMerger>();
+            services.AddTransient<AccommodationMergerHelper>();
+            services.AddTransient<ILocationMapper, LocationMapper>();
+            services.AddTransient<ICountryMapper, CountryMapper>();
+            services.AddTransient<ILocalityMapper, LocalityMapper>();
+            services.AddTransient<ILocalityZoneMapper, LocalityZoneMapper>();
+            services.AddTransient<ILocationMapperDataRetrieveService, LocationsMapperDataRetrieveService>();
             services.AddTransient<IAccommodationManagementService, AccommodationManagementService>();
             services.AddTransient<ISuppliersPriorityService, SuppliersPriorityService>();
             services.AddTransient<IConnectorClient, ConnectorClient>();
@@ -82,8 +82,8 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             {
                 builder
                     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
-                    .AddSource(nameof(AccommodationsMapper), nameof(LocationsMapper), nameof(AccommodationPreloader),
-                        nameof(AccommodationsDataMerger))
+                    .AddSource(nameof(AccommodationMapper), nameof(LocationMapper), nameof(AccommodationPreloader),
+                        nameof(AccommodationDataMerger))
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRedisInstrumentation(connection)

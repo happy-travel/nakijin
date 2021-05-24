@@ -17,20 +17,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Trace;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
+namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
 {
-    public class LocalitiesMapper : ILocalitiesMapper
+    public class LocalityMapper : ILocalityMapper
     {
-        public LocalitiesMapper(NakijinContext context, ILocationsMapperDataRetrieveService locationsMapperDataRetrieveService,
-            ILocationNameNormalizer locationNameNormalizer, MultilingualDataHelper multilingualDataHelper, LocationsChangePublisher locationsChangePublisher,
+        public LocalityMapper(NakijinContext context, ILocationMapperDataRetrieveService locationMapperDataRetrieveService,
+            ILocationNameNormalizer locationNameNormalizer, MultilingualDataHelper multilingualDataHelper, LocationChangePublisher locationChangePublisher,
             ILoggerFactory loggerFactory)
         {
             _context = context;
-            _logger = loggerFactory.CreateLogger<LocalitiesMapper>();
+            _logger = loggerFactory.CreateLogger<LocalityMapper>();
             _locationNameNormalizer = locationNameNormalizer;
             _multilingualDataHelper = multilingualDataHelper;
-            _locationsMapperDataRetrieveService = locationsMapperDataRetrieveService;
-            _locationsChangePublisher = locationsChangePublisher;
+            _locationMapperDataRetrieveService = locationMapperDataRetrieveService;
+            _locationChangePublisher = locationChangePublisher;
         }
 
 
@@ -41,7 +41,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
             _logger.LogMappingLocalitiesStart(
                 $"Started Mapping localities of {supplier.ToString()}.");
 
-            var countries = await _locationsMapperDataRetrieveService.GetCountries();
+            var countries = await _locationMapperDataRetrieveService.GetCountries();
 
             foreach (var country in countries)
             {
@@ -49,7 +49,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
                     $"Started Mapping localities of {supplier.ToString()} of country with code {country.Code}.");
 
                 var changedLocalityPairs = new Dictionary<int, int>();
-                var dbNormalizedLocalities = await _locationsMapperDataRetrieveService.GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
+                var dbNormalizedLocalities = await _locationMapperDataRetrieveService.GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
                 var notSuppliersLocalities = dbNormalizedLocalities
                     .Where(l => !l.SupplierLocalityCodes.ContainsKey(supplier)).ToList();
                 var suppliersLocalities = dbNormalizedLocalities
@@ -134,8 +134,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
 
                 await _context.SaveChangesAsync(cancellationToken);
 
-                await _locationsChangePublisher.PublishRemovedLocalities(changedLocalityPairs.Keys.ToList());
-                await _locationsChangePublisher.PublishAddedLocalities(newLocalities
+                await _locationChangePublisher.PublishRemovedLocalities(changedLocalityPairs.Keys.ToList());
+                await _locationChangePublisher.PublishAddedLocalities(newLocalities
                     .Distinct(new LocalityComparer())
                     .Select(l => new LocalityData(l.Id, l.Names.En, country.Name, country.Code))
                     .ToList());
@@ -205,11 +205,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
         }
 
 
-        private readonly ILogger<LocalitiesMapper> _logger;
-        private readonly ILocationsMapperDataRetrieveService _locationsMapperDataRetrieveService;
+        private readonly ILogger<LocalityMapper> _logger;
+        private readonly ILocationMapperDataRetrieveService _locationMapperDataRetrieveService;
         private readonly ILocationNameNormalizer _locationNameNormalizer;
         private readonly MultilingualDataHelper _multilingualDataHelper;
-        private readonly LocationsChangePublisher _locationsChangePublisher;
+        private readonly LocationChangePublisher _locationChangePublisher;
         private readonly NakijinContext _context;
     }
 }

@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using HappyTravel.Nakijin.Data.Models;
 using OpenTelemetry.Trace;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers.LocationsMapping
+namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
 {
-    public interface ILocalityZonesMapper
+    public interface ILocalityMapper
     {
         Task Map(Suppliers supplier, Tracer tracer, TelemetrySpan parentSpan, CancellationToken cancellationToken);
     }

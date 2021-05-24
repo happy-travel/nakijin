@@ -11,9 +11,9 @@ using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
 
 namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 {
-    public class LocationsChangePublisher
+    public class LocationChangePublisher
     {
-        public LocationsChangePublisher(IStaticDataPublicationService staticDataPublicationService)
+        public LocationChangePublisher(IStaticDataPublicationService staticDataPublicationService)
         {
             _staticDataPublicationService = staticDataPublicationService;
         }

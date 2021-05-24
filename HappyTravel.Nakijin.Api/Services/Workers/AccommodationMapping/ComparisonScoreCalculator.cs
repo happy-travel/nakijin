@@ -5,13 +5,12 @@ using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Contracts = HappyTravel.EdoContracts.Accommodations.Internals;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsMapping
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 {
     public static class ComparisonScoreCalculator
     {
         // Considering that accommodations always have default(En) value
-        public static float Calculate(in AccommodationKeyData nearestAccommodation,
-            in AccommodationKeyData accommodation)
+        public static float Calculate(in AccommodationKeyData nearestAccommodation, in AccommodationKeyData accommodation)
         {
             float score = NameScore * GetNamesScore(nearestAccommodation, accommodation);
 

@@ -12,11 +12,11 @@ using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Data.Models.Mappers;
 using Newtonsoft.Json;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsDataCalculation
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
 {
-    public class AccommodationsMergerHelper
+    public class AccommodationMergerHelper
     {
-        public AccommodationsMergerHelper(ISuppliersPriorityService suppliersPriorityService, MultilingualDataHelper multilingualDataHelper)
+        public AccommodationMergerHelper(ISuppliersPriorityService suppliersPriorityService, MultilingualDataHelper multilingualDataHelper)
         {
             _multilingualDataHelper = multilingualDataHelper;
             _suppliersPriorityService = suppliersPriorityService;

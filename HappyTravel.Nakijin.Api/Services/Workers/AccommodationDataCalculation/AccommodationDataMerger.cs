@@ -16,17 +16,17 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Trace;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsDataCalculation
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
 {
-    public class AccommodationsDataMerger : IAccommodationsDataMerger
+    public class AccommodationDataMerger : IAccommodationDataMerger
     {
-        public AccommodationsDataMerger(NakijinContext context, AccommodationsMergerHelper mergerHelper,
+        public AccommodationDataMerger(NakijinContext context, AccommodationMergerHelper mergerHelper,
             IOptions<StaticDataLoadingOptions> options, MultilingualDataHelper multilingualDataHelper,
             ILoggerFactory loggerFactory, TracerProvider tracerProvider)
         {
             _context = context;
             _options = options.Value;
-            _logger = loggerFactory.CreateLogger<AccommodationsDataMerger>();
+            _logger = loggerFactory.CreateLogger<AccommodationDataMerger>();
             _multilingualDataHelper = multilingualDataHelper;
             _tracerProvider = tracerProvider;
             _mergerHelper = mergerHelper;
@@ -36,7 +36,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsDataCalculation
         public async Task Calculate(List<Suppliers> suppliers, CancellationToken cancellationToken)
         {
             var currentSpan = Tracer.CurrentSpan;
-            var tracer = _tracerProvider.GetTracer(nameof(AccommodationsDataMerger));
+            var tracer = _tracerProvider.GetTracer(nameof(AccommodationDataMerger));
             _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
 
             foreach (var supplier in suppliers)
@@ -120,7 +120,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsDataCalculation
         public async Task MergeAll(CancellationToken cancellationToken)
         {
             var currentSpan = Tracer.CurrentSpan;
-            var tracer = _tracerProvider.GetTracer(nameof(AccommodationsDataMerger));
+            var tracer = _tracerProvider.GetTracer(nameof(AccommodationDataMerger));
             _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
 
             try
@@ -225,11 +225,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationsDataCalculation
         }
 
 
-        private readonly AccommodationsMergerHelper _mergerHelper;
+        private readonly AccommodationMergerHelper _mergerHelper;
         private readonly TracerProvider _tracerProvider;
         private readonly StaticDataLoadingOptions _options;
         private readonly MultilingualDataHelper _multilingualDataHelper;
         private readonly NakijinContext _context;
-        private readonly ILogger<AccommodationsDataMerger> _logger;
+        private readonly ILogger<AccommodationDataMerger> _logger;
     }
 }
