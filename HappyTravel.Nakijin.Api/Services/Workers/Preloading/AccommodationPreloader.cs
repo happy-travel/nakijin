@@ -39,8 +39,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         }
 
 
-        public async Task Preload(List<Suppliers> suppliers,
-            CancellationToken cancellationToken = default)
+        public async Task Preload(List<Suppliers> suppliers, CancellationToken cancellationToken = default)
         {
             var currentSpan = Tracer.CurrentSpan;
             var tracer = _tracerProvider.GetTracer(nameof(AccommodationPreloader));

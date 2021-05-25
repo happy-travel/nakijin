@@ -138,8 +138,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var iAccommodationMapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                        await iAccommodationMapper.MapAccommodations(suppliers, MappingTypes.Full, _accommodationMappingTokenSource.Token);
+                        var accommodationMapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                        await accommodationMapper.MapAccommodations(suppliers, MappingTypes.Full, _accommodationMappingTokenSource.Token);
                     }
                     finally
                     {
@@ -172,8 +172,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var iAccommodationMapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                        await iAccommodationMapper.MapAccommodations(suppliers, MappingTypes.Incremental, _accommodationMappingTokenSource.Token);
+                        var accommodationMapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                        await accommodationMapper.MapAccommodations(suppliers, MappingTypes.Incremental, _accommodationMappingTokenSource.Token);
                     }
                     finally
                     {
@@ -205,8 +205,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var iAccommodationDataMerger = scope.ServiceProvider.GetRequiredService<IAccommodationDataMerger>();
-                        await iAccommodationDataMerger.MergeAll(_accommodationDataMergeTokenSource.Token);
+                        var accommodationDataMerger = scope.ServiceProvider.GetRequiredService<IAccommodationDataMerger>();
+                        await accommodationDataMerger.MergeAll(_accommodationDataMergeTokenSource.Token);
                     }
                     finally
                     {
