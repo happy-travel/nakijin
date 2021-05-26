@@ -15,5 +15,7 @@ namespace HappyTravel.Nakijin.Api.Models.Mappers
         public Dictionary<Suppliers,string> SupplierAccommodationCodes { get; set; } = new Dictionary<Suppliers, string>();
 
         public bool IsActive { get; set; } = true;
+        
+        public DeactivationReasons DeactivationReason { get; set; }
     }
 }

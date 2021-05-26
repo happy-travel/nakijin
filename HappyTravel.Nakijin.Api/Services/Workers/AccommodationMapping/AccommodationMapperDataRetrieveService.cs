@@ -63,7 +63,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     {
                         HtId = ac.Id,
                         SupplierAccommodationCodes = ac.SupplierAccommodationCodes,
-                        IsActive = ac.IsActive
+                        IsActive = ac.IsActive,
+                        DeactivationReason = ac.DeactivationReason
                     })
                     .ToListAsync();
 

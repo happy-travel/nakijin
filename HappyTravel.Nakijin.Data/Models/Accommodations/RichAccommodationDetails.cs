@@ -24,7 +24,8 @@ namespace HappyTravel.Nakijin.Data.Models.Accommodations
             new Dictionary<Suppliers, string>();
 
         public bool IsCalculated { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; }    
+        public DeactivationReasons DeactivationReason { get; set; }
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 

@@ -88,6 +88,7 @@ namespace HappyTravel.Nakijin.Data
                     .IsRequired();
                 a.Property(p => p.IsCalculated).IsRequired().HasDefaultValue(true);
                 a.Property(p => p.IsActive).IsRequired();
+                a.Property(p => p.DeactivationReason).IsRequired();
                 a.Property(p => p.Created)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
