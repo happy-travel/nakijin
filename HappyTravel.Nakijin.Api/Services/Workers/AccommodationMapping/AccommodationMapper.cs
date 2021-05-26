@@ -135,7 +135,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
                 var notActiveCountryAccommodationsOfSupplier = countryAccommodationsOfSupplier
                     .Where(ac => !ac.AccommodationKeyData.IsActive).ToList();
-
+                
+                // Process invalid not active accommodations, because they can be activated if data became valid on supplier side.
                 var invalidNotActiveCountryAccommodationsOfSupplier = notActiveCountryAccommodationsOfSupplier
                     .Where(ac => ac.AccommodationKeyData.DeactivationReason != DeactivationReasons.MatchingWithOther)
                     .ToDictionary(ac => ac.SupplierCode, ac => ac.AccommodationKeyData);
@@ -319,6 +320,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 if (isActive && activeCountryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
                     return;
 
+                
                 if (isActive && invalidNotActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
                     out var existingNotActive))
                 {
