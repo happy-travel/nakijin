@@ -9,20 +9,20 @@ using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
-using HappyTravel.Nakijin.Api.Services.Workers;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
 
 namespace HappyTravel.Nakijin.Api.Services
 {
     public class AccommodationManagementService : IAccommodationManagementService
     {
         public AccommodationManagementService(NakijinContext context,
-            IAccommodationsDataMerger accommodationsDataMerger, AccommodationMappingsCache mappingsCache,
-            AccommodationsChangePublisher accommodationsChangePublisher)
+            IAccommodationDataMerger accommodationDataMerger, AccommodationMappingsCache mappingsCache,
+            AccommodationChangePublisher accommodationChangePublisher)
         {
             _context = context;
-            _accommodationsDataMerger = accommodationsDataMerger;
+            _accommodationDataMerger = accommodationDataMerger;
             _mappingsCache = mappingsCache;
-            _accommodationsChangePublisher = accommodationsChangePublisher;
+            _accommodationChangePublisher = accommodationChangePublisher;
         }
 
 
@@ -34,11 +34,11 @@ namespace HappyTravel.Nakijin.Api.Services
             if (uncertainMatch == default)
                 return Result.Success();
 
-            var (_, isFailure, error) = await Match(uncertainMatch.FirstHtId, uncertainMatch.SecondHtId);
+            var (_, isFailure, error) = await Match(uncertainMatch.SourceHtId, uncertainMatch.HtIdToMatch);
             if (isFailure)
                 return Result.Failure(error);
 
-            await AddOrUpdateMappings(uncertainMatch.FirstHtId, uncertainMatch.SecondHtId);
+            await AddOrUpdateMappings(uncertainMatch.SourceHtId, uncertainMatch.HtIdToMatch);
 
             uncertainMatch.IsActive = false;
             uncertainMatch.Modified = DateTime.UtcNow;
@@ -48,7 +48,7 @@ namespace HappyTravel.Nakijin.Api.Services
 
             await _mappingsCache.Fill();
             
-            await _accommodationsChangePublisher.PublishRemoved(uncertainMatch.SecondHtId);
+            await _accommodationChangePublisher.PublishRemoved(uncertainMatch.HtIdToMatch);
 
             return Result.Success();
         }
@@ -65,7 +65,7 @@ namespace HappyTravel.Nakijin.Api.Services
 
             await _mappingsCache.Fill();
 
-            await _accommodationsChangePublisher.PublishRemoved(htIdToMatch);
+            await _accommodationChangePublisher.PublishRemoved(htIdToMatch);
             
             return Result.Success();
         }
@@ -112,7 +112,7 @@ namespace HappyTravel.Nakijin.Api.Services
             if (accommodation.IsCalculated)
                 return Result.Failure($"Accommodation data with {nameof(id)} {id} already calculated");
 
-            var calculatedData = await _accommodationsDataMerger.Merge(accommodation);
+            var calculatedData = await _accommodationDataMerger.Merge(accommodation);
 
             accommodation.CalculatedAccommodation = calculatedData;
             accommodation.Modified = DateTime.UtcNow;
@@ -201,8 +201,8 @@ namespace HappyTravel.Nakijin.Api.Services
         }
 
 
-        private readonly AccommodationsChangePublisher _accommodationsChangePublisher;
-        private readonly IAccommodationsDataMerger _accommodationsDataMerger;
+        private readonly AccommodationChangePublisher _accommodationChangePublisher;
+        private readonly IAccommodationDataMerger _accommodationDataMerger;
         private readonly NakijinContext _context;
         private readonly AccommodationMappingsCache _mappingsCache;
     }

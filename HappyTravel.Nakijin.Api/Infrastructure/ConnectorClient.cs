@@ -43,7 +43,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
                     return Result.Failure<TResponse, ProblemDetails>(error);
                 }
 
-                var result = _serializer.Deserialize<TResponse>(jsonTextReader);
+                var result = _serializer.Deserialize<TResponse>(jsonTextReader)!;
                 return result;
             }
             catch (Exception ex)

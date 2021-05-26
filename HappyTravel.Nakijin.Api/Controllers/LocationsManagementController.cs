@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using HappyTravel.Nakijin.Api.Services.Workers;
+using HappyTravel.Nakijin.Api.Services.Workers.LocationMapping;
 using HappyTravel.Nakijin.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,8 +43,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var locationService = scope.ServiceProvider.GetRequiredService<ILocationMapper>();
-                        await locationService.MapLocations(suppliers, _locationsMapperTokenSource.Token);
+                        var locationMapper = scope.ServiceProvider.GetRequiredService<ILocationMapper>();
+                        await locationMapper.MapLocations(suppliers, _locationsMapperTokenSource.Token);
                     }
                     finally
                     {

@@ -5,17 +5,16 @@ using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Contracts = HappyTravel.EdoContracts.Accommodations.Internals;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 {
     public static class ComparisonScoreCalculator
     {
         // Considering that accommodations always have default(En) value
-        public static float Calculate(in AccommodationKeyData nearestAccommodation,
-            in AccommodationKeyData accommodation)
+        public static float Calculate(in AccommodationKeyData nearestAccommodation, in AccommodationKeyData accommodation)
         {
             float score = NameScore * GetNamesScore(nearestAccommodation, accommodation);
 
-            if (score == NameScore
+            if (score.Equals(NameScore)
                 && nearestAccommodation.DefaultLocalityName != null
                 && accommodation.DefaultLocalityName != null
                 && String.Equals(nearestAccommodation.DefaultLocalityName, accommodation.DefaultLocalityName,
@@ -39,9 +38,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             var locationsNamesToIgnore =
                 GetLocationsNamesForIgnoreOnNameComparision(nearestAccommodation, accommodation);
 
-            if (nearestAccommodation.DefaultName.Contains("hotel", StringComparison.InvariantCultureIgnoreCase) 
+            if (nearestAccommodation.DefaultName.Contains("hotel", StringComparison.InvariantCultureIgnoreCase)
                 && nearestAccommodation.DefaultName.Contains("apartment", StringComparison.InvariantCultureIgnoreCase)
-                || accommodation.DefaultName.Contains("hotel", StringComparison.InvariantCultureIgnoreCase) 
+                || accommodation.DefaultName.Contains("hotel", StringComparison.InvariantCultureIgnoreCase)
                 && accommodation.DefaultName.Contains("apartment", StringComparison.InvariantCultureIgnoreCase))
             {
                 return StringComparisonHelper.GetEqualityCoefficient(nearestAccommodation.DefaultName,
@@ -60,6 +59,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
 
             return scores.Max();
         }
+
 
         private static List<string> GetLocationsNamesForIgnoreOnNameComparision(
             in AccommodationKeyData nearestAccommodation,
@@ -83,6 +83,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     : value.Split(" ").ToList();
         }
 
+
         private static float GetAddressScore(in AccommodationKeyData nearestAccommodation,
             in AccommodationKeyData accommodation)
         {
@@ -92,6 +93,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     GetLocationsNamesForIgnoreOnNameComparision(nearestAccommodation, accommodation),
                     WordsToIgnoreForAddressesComparison));
         }
+
 
         private static List<string> GetWordsToIgnore(List<string> wordsToIgnore, string[]? constantWords = default)
         {
@@ -116,8 +118,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 GetComparisonResult(nearestAccommodationContactInfo.WebSites, accommodationContactInfo.WebSites),
                 GetComparisonResult(nearestAccommodationContactInfo.Faxes, accommodationContactInfo.Faxes),
                 GetComparisonResult(
-                    nearestAccommodationContactInfo.Phones.Select(ph => ph?.ToNormalizedPhoneNumber()).ToList(),
-                    accommodationContactInfo.Phones.Select(p => p?.ToNormalizedPhoneNumber()).ToList())
+                    nearestAccommodationContactInfo.Phones.Select(ph => ph?.ToNormalizedPhoneNumber()).ToList()!,
+                    accommodationContactInfo.Phones.Select(p => p?.ToNormalizedPhoneNumber()).ToList()!)
             };
 
             if (contactInfoComparisonResults.Any(c => !c.isAnyEmpty && c.areContains) &&
@@ -141,6 +143,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 return (false, mergedData.Any());
             }
         }
+
 
         private const float MaxScore = 3.5f;
         private const float NameScore = 2f;

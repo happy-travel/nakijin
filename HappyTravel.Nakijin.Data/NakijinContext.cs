@@ -100,8 +100,8 @@ namespace HappyTravel.Nakijin.Data
             builder.Entity<AccommodationUncertainMatches>(m =>
             {
                 m.HasKey(p => p.Id);
-                m.Property(p => p.FirstHtId).IsRequired();
-                m.Property(p => p.SecondHtId).IsRequired();
+                m.Property(p => p.SourceHtId).IsRequired();
+                m.Property(p => p.HtIdToMatch).IsRequired();
                 m.Property(p => p.IsActive).HasDefaultValue(true).IsRequired();
                 m.Property(p => p.Created)
                     .IsRequired()
@@ -111,10 +111,10 @@ namespace HappyTravel.Nakijin.Data
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
 
-                m.HasOne(p => p.FirstAccommodation).WithMany(ac => ac.FirstUncertainMatches)
-                    .HasForeignKey(um => um.FirstHtId).OnDelete(DeleteBehavior.Restrict);
-                m.HasOne(p => p.SecondAccommodation).WithMany(ac => ac.SecondUncertainMatches)
-                    .HasForeignKey(um => um.SecondHtId).OnDelete(DeleteBehavior.Restrict);
+                m.HasOne(p => p.SourceAccommodation).WithMany(ac => ac.SourceAccommodationUncertainMatches)
+                    .HasForeignKey(um => um.SourceHtId).OnDelete(DeleteBehavior.Restrict);
+                m.HasOne(p => p.AccommodationToMatch).WithMany(ac => ac.AccommodationToMatchUncertainMatches)
+                    .HasForeignKey(um => um.HtIdToMatch).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<StaticData>(m =>

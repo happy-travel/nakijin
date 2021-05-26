@@ -49,7 +49,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 (await _context.StaticDatas.SingleAsync(d => d.Type == StaticDataTypes.SuppliersPriority)).Value;
             _suppliersPriority =
                 JsonConvert.DeserializeObject<Dictionary<AccommodationDataTypes, List<Suppliers>>>(
-                    priorityDocument.RootElement.ToString());
+                    priorityDocument.RootElement.ToString()!);
             return _suppliersPriority;
         }
 

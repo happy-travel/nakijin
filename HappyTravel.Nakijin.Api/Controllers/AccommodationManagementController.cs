@@ -9,6 +9,8 @@ using HappyTravel.Nakijin.Api.Models.Mappers.Enums;
 using HappyTravel.Nakijin.Api.Services;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Api.Services.Workers;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -136,8 +138,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                        await mapper.MapAccommodations(suppliers, MappingTypes.Full, _accommodationMappingTokenSource.Token);
+                        var accommodationMapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                        await accommodationMapper.MapAccommodations(suppliers, MappingTypes.Full, _accommodationMappingTokenSource.Token);
                     }
                     finally
                     {
@@ -170,8 +172,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var mapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
-                        await mapper.MapAccommodations(suppliers, MappingTypes.Incremental, _accommodationMappingTokenSource.Token);
+                        var accommodationMapper = scope.ServiceProvider.GetRequiredService<IAccommodationMapper>();
+                        await accommodationMapper.MapAccommodations(suppliers, MappingTypes.Incremental, _accommodationMappingTokenSource.Token);
                     }
                     finally
                     {
@@ -203,8 +205,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
-                        await accommodationService.MergeAll(_accommodationDataMergeTokenSource.Token);
+                        var accommodationDataMerger = scope.ServiceProvider.GetRequiredService<IAccommodationDataMerger>();
+                        await accommodationDataMerger.MergeAll(_accommodationDataMergeTokenSource.Token);
                     }
                     finally
                     {
@@ -236,7 +238,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 {
                     try
                     {
-                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationsDataMerger>();
+                        var accommodationService = scope.ServiceProvider.GetRequiredService<IAccommodationDataMerger>();
                         await accommodationService.Calculate(suppliers, _accommodationsDataCalculatorTokenSource.Token);
                     }
                     finally
