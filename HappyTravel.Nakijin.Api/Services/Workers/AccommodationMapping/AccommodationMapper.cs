@@ -40,10 +40,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
     */
     public class AccommodationMapper : IAccommodationMapper
     {
-        public AccommodationMapper(NakijinContext context,
-            ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
-            MultilingualDataHelper multilingualDataHelper, AccommodationMappingsCache mappingsCache,
-            TracerProvider tracerProvider, AccommodationChangePublisher accommodationChangePublisher, AccommodationMapperHelper mapperHelper,
+        public AccommodationMapper(NakijinContext context, ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
+            MultilingualDataHelper multilingualDataHelper, AccommodationMappingsCache mappingsCache, TracerProvider tracerProvider,
+            AccommodationChangePublisher accommodationChangePublisher, AccommodationMapperHelper mapperHelper,
             IAccommodationMapperDataRetrieveService accommodationMapperDataRetrieveService)
         {
             _context = context;
@@ -135,7 +134,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
                 var notActiveCountryAccommodationsOfSupplier = countryAccommodationsOfSupplier
                     .Where(ac => !ac.AccommodationKeyData.IsActive).ToList();
-                
+
                 // Process invalid not active accommodations, because they can be activated if data became valid on supplier side.
                 var invalidNotActiveCountryAccommodationsOfSupplier = notActiveCountryAccommodationsOfSupplier
                     .Where(ac => ac.AccommodationKeyData.DeactivationReason != DeactivationReasons.MatchingWithOther)
@@ -314,13 +313,12 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
             }
 
 
-            void AddOrChangeActivity(Contracts.MultilingualAccommodation accommodation, bool isActive,
+            void AddOrChangeActivity(Contracts.MultilingualAccommodation accommodation, bool isActive, 
                 DeactivationReasons deactivationReason = DeactivationReasons.None)
             {
                 if (isActive && activeCountryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
                     return;
 
-                
                 if (isActive && invalidNotActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
                     out var existingNotActive))
                 {
