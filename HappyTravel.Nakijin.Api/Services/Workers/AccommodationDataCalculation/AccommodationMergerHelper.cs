@@ -107,7 +107,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 additionalInfo: additionalInfo,
                 schedule: scheduleInfo,
                 textualDescriptions: textualDescriptions,
-                hasDirectContract: hasDirectContract
+                hasDirectContract: hasDirectContract,
+                isActive: true
             );
         }
 
