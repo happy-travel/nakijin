@@ -39,7 +39,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 return Result.Failure(error);
 
             await AddOrUpdateMappings(uncertainMatch.SourceHtId, uncertainMatch.HtIdToMatch);
-
+            
             uncertainMatch.IsActive = false;
             uncertainMatch.Modified = DateTime.UtcNow;
 
@@ -149,6 +149,7 @@ namespace HappyTravel.Nakijin.Api.Services
             sourceAccommodation.Modified = utcDate;
 
             accommodationToMatch.IsActive = false;
+            accommodationToMatch.DeactivationReason = DeactivationReasons.MatchingWithOther;
             accommodationToMatch.Modified = utcDate;
 
             _context.Update(sourceAccommodation);
