@@ -23,7 +23,7 @@
         <PackageReference Include="IdentityModel" Version="5.0.1" />
         <PackageReference Include="IdentityModel.AspNetCore" Version="3.0.0" />
         <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="3.0.1" />
-        <PackageReference Include="HappyTravel.ErrorHandling" Version="1.2.0" />
+        <PackageReference Include="HappyTravel.ErrorHandling" Version="1.2.1" />
         <PackageReference Include="HappyTravel.MultiLanguage" Version="1.0.2" />
         <PackageReference Include="HappyTravel.StdOutLogger" Version="1.0.19" />
         <PackageReference Include="HappyTravel.VaultClient" Version="1.1.0" />

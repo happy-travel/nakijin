@@ -140,13 +140,14 @@ namespace HappyTravel.Nakijin.Api
             services.AddTransient<ILocationMappingInfoService, LocationMappingInfoService>();
             services.AddTransient<ILocationMappingFactory, LocationMappingFactory>();
             services.AddStaticDataPublicationService(vaultClient, Configuration, _environment);
+            services.AddProblemDetailsErrorHandling();
         }
 
 
         public void Configure(IApplicationBuilder app, IOptions<RequestLocalizationOptions> localizationOptions)
         {
             var logger = _loggerFactory.CreateLogger<Startup>();
-            app.UseProblemDetailsExceptionHandler(_environment, logger);
+            app.UseProblemDetailsErrorHandler(_environment, logger);
             app.UseHttpContextLogging(
                 options => options.IgnoredPaths = new HashSet<string> { "/health" }
             );
