@@ -467,8 +467,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                         accommodationToUpdate.SupplierAccommodationCodes.TryAdd(supplierCode.Key, supplierCode.Value);
 
                     _context.Accommodations.Attach(accommodationToDeactivate);
-                    _context.Entry(accommodationToDeactivate).Property(p => p.IsActive).IsModified = true;
-                    _context.Entry(accommodationToDeactivate).Property(p => p.Modified).IsModified = true;
+                    var entry = _context.Entry(accommodationToDeactivate);
+                    entry.Property(p => p.IsActive).IsModified = true;
+                    entry.Property(p => p.DeactivationReason).IsModified = true;
+                    entry.Property(p => p.Modified).IsModified = true;
 
                     AddOrUpdateHtAccommodationMappings(matchedAccommodation.HtId, existingAccommodation.HtId);
                 }
