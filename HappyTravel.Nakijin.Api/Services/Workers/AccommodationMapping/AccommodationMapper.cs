@@ -210,7 +210,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 {
                     _logger.LogNotValidCoordinatesInAccommodation(
                         $"{supplier.ToString()} have the accommodation with not valid coordinates, which code is {accommodation.SupplierCode}");
-                    AddOrChangeActivity(normalized, false, DeactivationReasons.InvalidCoordinates);
+                    DeactivateOrAddNotActive(normalized.SupplierCode, DeactivationReasons.InvalidCoordinates, normalized);
                     continue;
                 }
 
@@ -218,14 +218,14 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 {
                     _logger.LogNotValidDefaultNameOfAccommodation(
                         $"{supplier.ToString()} have the accommodation with not valid default name, which code is {accommodation.SupplierCode}");
-                    AddOrChangeActivity(normalized, false, DeactivationReasons.InvalidName);
+                    DeactivateOrAddNotActive(normalized.SupplierCode, DeactivationReasons.InvalidName, normalized);
                     continue;
                 }
 
                 var nearestAccommodations = _mapperHelper.GetNearest(normalized, countryAccommodationsTree);
                 if (!nearestAccommodations.Any())
                 {
-                    AddOrChangeActivity(normalized, true);
+                    ActivateOrAddActive(normalized);
                     continue;
                 }
 
@@ -234,7 +234,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 switch (matchingResult)
                 {
                     case MatchingResults.NotMatch:
-                        AddOrChangeActivity(normalized, true);
+                        ActivateOrAddActive(normalized);
                         break;
                     case MatchingResults.Uncertain:
                         AddUncertain(normalized, matchedAccommodation.HtId, score);
@@ -301,7 +301,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     out var existingNotActive))
                 {
                     matchedHtId = existingNotActive.HtId;
-                    AddOrChangeActivity(accommodation, true);
+                    ActivateOrAddActive(accommodation);
 
                     if (activeCountryUncertainMatchesOfSupplier.Any(eum
                         => eum.Equals(new Tuple<int, int>(matchedHtId, existingHtId))
@@ -339,18 +339,17 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                         AddOrUpdateHtAccommodationMappings(existingAccommodation.HtId, 0, dbAccommodation);
                     }
 
-                    AddOrChangeActivity(accommodation, false, DeactivationReasons.DeactivatedOnSupplier);
+                    DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.DeactivatedOnSupplier, accommodation);
                 }
             }
 
 
-            void AddOrChangeActivity(Contracts.MultilingualAccommodation accommodation, bool isActive,
-                DeactivationReasons deactivationReason = DeactivationReasons.None)
+            void ActivateOrAddActive(Contracts.MultilingualAccommodation accommodation)
             {
-                if (isActive && activeCountryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
+                if (activeCountryAccommodationsOfSupplier.ContainsKey(accommodation.SupplierCode))
                     return;
 
-                if (isActive && invalidNotActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
+                if (invalidNotActiveCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
                     out var existingNotActive))
                 {
                     var accommodationToUpdate = new RichAccommodationDetails
@@ -358,7 +357,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                         Id = existingNotActive.HtId,
                         IsActive = true,
                         Modified = utcDate,
-                        DeactivationReason = deactivationReason
                     };
 
                     _context.Attach(accommodationToUpdate);
@@ -375,17 +373,25 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     return;
                 }
 
-                if (!isActive && notActiveCountryAccommodationsOfSupplier.Any(ac => ac.SupplierCode == accommodation.SupplierCode))
+                var dbAccommodation = GetDbAccommodation(accommodation, true);
+                accommodationsToAdd.Add(dbAccommodation);
+            }
+
+
+            void DeactivateOrAddNotActive(string supplierAccommodationCode, DeactivationReasons reason,
+                Contracts.MultilingualAccommodation? accommodation = null)
+            {
+                if (notActiveCountryAccommodationsOfSupplier.Any(ac => ac.SupplierCode == supplierAccommodationCode))
                     return;
 
-                if (!isActive && activeCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
+                if (activeCountryAccommodationsOfSupplier.TryGetValue(supplierAccommodationCode,
                     out var existingActive))
                 {
                     var accommodationToUpdate = new RichAccommodationDetails
                     {
                         Id = existingActive.HtId,
                         IsActive = false,
-                        DeactivationReason = deactivationReason,
+                        DeactivationReason = reason,
                         Modified = utcDate
                     };
 
@@ -400,10 +406,14 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     return;
                 }
 
-                var dbAccommodation = GetDbAccommodation(accommodation, isActive, deactivationReason);
-                accommodationsToAdd.Add(dbAccommodation);
+                if (accommodation != null)
+                {
+                    var dbAccommodation = GetDbAccommodation(accommodation.Value, false, reason);
+                    accommodationsToAdd.Add(dbAccommodation);
+                }
             }
-            
+
+
             void Update(Contracts.MultilingualAccommodation accommodation, SlimAccommodationData matchedAccommodation)
             {
                 var accommodationToUpdate = new RichAccommodationDetails
@@ -418,7 +428,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 {
                     _logger.LogSameAccommodationInOneSupplierError(
                         $"{supplier.ToString()} have the same accommodations with codes {matchedAccommodation.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}");
-                    AddOrChangeActivity(accommodation, false, DeactivationReasons.DuplicateInOneSupplier);
+                    DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.DuplicateInOneSupplier, accommodation);
                     return;
                 }
 
@@ -430,7 +440,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
                     _logger.LogSameAccommodationInOneSupplierError(
                         $"{supplier.ToString()} have the same accommodations with codes {entry.Entity.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}");
-                    AddOrChangeActivity(accommodation, false, DeactivationReasons.DuplicateInOneSupplier);
+                    DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.DuplicateInOneSupplier, accommodation);
                     return;
                 }
 
@@ -441,26 +451,12 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 if (activeCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode,
                     out var existingAccommodation))
                 {
-                    var accommodationToDeactivate = new RichAccommodationDetails
-                    {
-                        Id = existingAccommodation.HtId,
-                        Modified = utcDate,
-                        IsActive = false,
-                        DeactivationReason = DeactivationReasons.MatchingWithOther
-                    };
-
-                    removedAccommodations.Add(existingAccommodation.HtId);
+                    DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.MatchingWithOther, accommodation);
 
                     // TODO: merge two manual corrected data 
 
                     foreach (var supplierCode in existingAccommodation.SupplierAccommodationCodes)
                         accommodationToUpdate.SupplierAccommodationCodes.TryAdd(supplierCode.Key, supplierCode.Value);
-
-                    _context.Accommodations.Attach(accommodationToDeactivate);
-                    var entry = _context.Entry(accommodationToDeactivate);
-                    entry.Property(p => p.IsActive).IsModified = true;
-                    entry.Property(p => p.DeactivationReason).IsModified = true;
-                    entry.Property(p => p.Modified).IsModified = true;
 
                     AddOrUpdateHtAccommodationMappings(matchedAccommodation.HtId, existingAccommodation.HtId);
                 }
