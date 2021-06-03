@@ -204,7 +204,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
             {
                 if (!accommodation.IsActive)
                 {
-                    ProcessDeactivatedAccommodation(accommodation);
+                    IgnoreOrDeactivateDeactivatedOnSupplier(accommodation);
                     continue;
                 }
 
@@ -268,7 +268,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
             accommodationsToPublish.AddRange(htAccommodationMappingsToAdd
                 .Where(hm => hm.Accommodation != null)
-                .Select(ac => ac.Accommodation).ToList());
+                .Select(ac => ac.Accommodation)
+                .ToList());
 
             foreach (var acc in accommodationsToPublish)
                 addedAccommodations.Add(new AccommodationData(acc.Id, acc.KeyData.DefaultName,
@@ -321,29 +322,29 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     HtIdToMatch = matchedHtId != 0 ? matchedHtId : 0,
                     Created = utcDate,
                     Modified = utcDate,
-                    AccommodationToMatch = matchedHtId == 0 ? GetDbAccommodation(accommodation, true) : null,
+                    AccommodationToMatch = matchedHtId == 0 ? GetDbAccommodation(accommodation, isActive: true) : null,
                     IsActive = true
                 });
             }
 
 
-            void ProcessDeactivatedAccommodation(Contracts.MultilingualAccommodation accommodation)
+            void IgnoreOrDeactivateDeactivatedOnSupplier(Contracts.MultilingualAccommodation accommodation)
             {
-                if (activeCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode, out var existingAccommodation))
+                if (!activeCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode, out var existingAccommodation))
+                    return;
+
+                if (existingAccommodation.SupplierAccommodationCodes.Count > 1)
                 {
-                    if (existingAccommodation.SupplierAccommodationCodes.Count > 1)
-                    {
-                        var dbAccommodation = GetDbAccommodation(accommodation, true);
-                        foreach (var supplierCode in existingAccommodation.SupplierAccommodationCodes)
-                            dbAccommodation.SupplierAccommodationCodes.TryAdd(supplierCode.Key, supplierCode.Value);
+                    var dbAccommodation = GetDbAccommodation(accommodation, isActive: true);
+                    foreach (var supplierCode in existingAccommodation.SupplierAccommodationCodes)
+                        dbAccommodation.SupplierAccommodationCodes.TryAdd(supplierCode.Key, supplierCode.Value);
 
-                        dbAccommodation.SupplierAccommodationCodes.Remove(supplier);
+                    dbAccommodation.SupplierAccommodationCodes.Remove(supplier);
 
-                        AddOrUpdateHtAccommodationMappings(existingAccommodation.HtId, 0, dbAccommodation);
-                    }
-
-                    DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.DeactivatedOnSupplier, accommodation);
+                    AddOrUpdateHtAccommodationMappings(existingAccommodation.HtId, 0, dbAccommodation);
                 }
+
+                DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.DeactivatedOnSupplier, accommodation);
             }
 
 
@@ -376,7 +377,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     return;
                 }
 
-                var dbAccommodation = GetDbAccommodation(accommodation, true);
+                var dbAccommodation = GetDbAccommodation(accommodation, isActive: true);
                 accommodationsToAdd.Add(dbAccommodation);
             }
 
@@ -411,7 +412,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
                 if (accommodation != null)
                 {
-                    var dbAccommodation = GetDbAccommodation(accommodation.Value, false, reason);
+                    var dbAccommodation = GetDbAccommodation(accommodation.Value, isActive: false, reason);
                     accommodationsToAdd.Add(dbAccommodation);
                 }
             }
@@ -469,6 +470,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 // TODO: Deactivate  uncertain matches if exist
             }
 
+            
 
             void AddOrUpdateHtAccommodationMappings(int deactivatedHtId, int htId = 0, RichAccommodationDetails? accommodation = null)
             {
