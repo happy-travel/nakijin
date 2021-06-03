@@ -341,7 +341,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
                     dbAccommodation.SupplierAccommodationCodes.Remove(supplier);
 
-                    AddOrUpdateHtAccommodationMappings(existingAccommodation.HtId, 0, dbAccommodation);
+                    AddOrUpdateHtAccommodationMappings(existingAccommodation.HtId, actualHtId: 0, dbAccommodation);
                 }
 
                 DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.DeactivatedOnSupplier, accommodation);
@@ -470,13 +470,12 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 // TODO: Deactivate  uncertain matches if exist
             }
 
-            
 
-            void AddOrUpdateHtAccommodationMappings(int deactivatedHtId, int htId = 0, RichAccommodationDetails? accommodation = null)
+            void AddOrUpdateHtAccommodationMappings(int deactivatedHtId, int actualHtId = 0, RichAccommodationDetails? accommodation = null)
             {
                 var dbHtAccommodationMapping = new HtAccommodationMapping
                 {
-                    HtId = htId,
+                    HtId = actualHtId,
                     MappedHtIds = new HashSet<int>() {deactivatedHtId},
                     Accommodation = accommodation,
                     Modified = utcDate,
@@ -497,7 +496,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     _context.Entry(htAccommodationMappingToDeactivate).Property(m => m.Modified).IsModified = true;
                 }
 
-                if (htId != 0 && htAccommodationMappings.TryGetValue(htId, out var mappings))
+                if (actualHtId != 0 && htAccommodationMappings.TryGetValue(actualHtId, out var mappings))
                 {
                     dbHtAccommodationMapping.Id = mappings.Id;
                     dbHtAccommodationMapping.MappedHtIds.UnionWith(mappings.MappedHtIds);
