@@ -188,6 +188,9 @@ namespace HappyTravel.Nakijin.Data
                 ha.Property(p => p.Modified).IsRequired();
                 ha.Property(p => p.Created).IsRequired();
                 ha.Property(p => p.MappedHtIds).HasColumnType("jsonb").IsRequired();
+                
+                ha.HasOne(p => p.Accommodation).WithMany(ac => ac.HtAccommodationMappings)
+                    .HasForeignKey(um => um.HtId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<DataUpdateHistory>(uh =>
