@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.SuppliersCatalog;
 
 namespace HappyTravel.Nakijin.Data.Models.Accommodations
 {

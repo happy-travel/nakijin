@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.SuppliersCatalog;
 using Contracts = HappyTravel.EdoContracts.StaticData;
 
 namespace HappyTravel.Nakijin.Api.Services

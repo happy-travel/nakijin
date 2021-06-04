@@ -10,6 +10,7 @@ using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
+using HappyTravel.SuppliersCatalog;
 
 namespace HappyTravel.Nakijin.Api.Services
 {

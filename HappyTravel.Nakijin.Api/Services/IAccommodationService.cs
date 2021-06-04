@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.SuppliersCatalog;
 
 namespace HappyTravel.Nakijin.Api.Services
 {

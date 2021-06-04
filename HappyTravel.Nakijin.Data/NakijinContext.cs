@@ -4,6 +4,7 @@ using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Data.Models.Mappers;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 

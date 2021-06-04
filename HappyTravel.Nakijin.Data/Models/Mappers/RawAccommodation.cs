@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text.Json;
 using HappyTravel.MultiLanguage;
+using HappyTravel.SuppliersCatalog;
 
 namespace HappyTravel.Nakijin.Data.Models.Mappers
 {
