@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Data;
-using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 using Contracts = HappyTravel.EdoContracts.StaticData;
 

@@ -7,6 +7,7 @@ using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Api.Services;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

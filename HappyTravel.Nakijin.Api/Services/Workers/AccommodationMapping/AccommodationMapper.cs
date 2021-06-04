@@ -15,6 +15,7 @@ using HappyTravel.Nakijin.Api.Models.Mappers;
 using HappyTravel.Nakijin.Api.Models.Mappers.Enums;
 using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
 using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

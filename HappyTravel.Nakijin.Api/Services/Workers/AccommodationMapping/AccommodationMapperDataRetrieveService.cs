@@ -7,6 +7,7 @@ using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.Mappers;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NetTopologySuite.Geometries;

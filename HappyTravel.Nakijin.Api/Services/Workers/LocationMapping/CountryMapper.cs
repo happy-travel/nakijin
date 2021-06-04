@@ -13,6 +13,7 @@ using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Trace;

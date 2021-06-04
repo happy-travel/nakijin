@@ -10,6 +10,7 @@ using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 
 namespace HappyTravel.Nakijin.Api.Services

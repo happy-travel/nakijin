@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.SuppliersCatalog;
 
 namespace HappyTravel.Nakijin.Api.Infrastructure
 {

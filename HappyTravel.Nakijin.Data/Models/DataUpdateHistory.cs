@@ -1,4 +1,5 @@
 using System;
+using HappyTravel.SuppliersCatalog;
 
 namespace HappyTravel.Nakijin.Data.Models
 {

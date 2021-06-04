@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.Nakijin.Api.Models.Mappers;
 using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.SuppliersCatalog;
 using NetTopologySuite.Index.Strtree;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 

@@ -28,21 +28,21 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.Preload(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.Preload(System.Collections.Generic.List{HappyTravel.SuppliersCatalog.Suppliers})">
             <summary>
             Loads raw accommodation data 
             </summary>
             <param name="suppliers"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.MapAccommodationsFully(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.MapAccommodationsFully(System.Collections.Generic.List{HappyTravel.SuppliersCatalog.Suppliers})">
             <summary>
             Maps accommodations 
             </summary>
             <param name="suppliers"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.MapAccommodationsIncrementally(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.MapAccommodationsIncrementally(System.Collections.Generic.List{HappyTravel.SuppliersCatalog.Suppliers})">
             <summary>
             Maps accommodations 
             </summary>
@@ -55,7 +55,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.CalculateAccommodationsData(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.CalculateAccommodationsData(System.Collections.Generic.List{HappyTravel.SuppliersCatalog.Suppliers})">
             <summary>
             Calculates accommodations data
             </summary>
@@ -68,7 +68,7 @@
             <param name="id">Accommodation id</param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.AddSuppliersPriority(System.Int32,System.Collections.Generic.Dictionary{HappyTravel.Nakijin.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers}})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.AddSuppliersPriority(System.Int32,System.Collections.Generic.Dictionary{HappyTravel.Nakijin.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.SuppliersCatalog.Suppliers}})">
             <summary>
             Adds suppliers priority to accommodation
             </summary>
@@ -99,7 +99,7 @@
             <param name="htIdToMatch"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.Get(HappyTravel.Nakijin.Data.Models.Suppliers,System.String)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.Get(HappyTravel.SuppliersCatalog.Suppliers,System.String)">
             <summary>
             Gets accommodation
             </summary>
@@ -159,14 +159,14 @@
             </summary>
             <returns>Last changed location modified date</returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationsManagementController.MapLocations(System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationsManagementController.MapLocations(System.Collections.Generic.List{HappyTravel.SuppliersCatalog.Suppliers})">
             <summary>
             Maps locations (countries, localities, locality zones) of suppliers with existing locations.
             </summary>
             <param name="suppliers"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.SuppliersPriorityController.AddOrUpdateDefaultPriority(System.Collections.Generic.Dictionary{HappyTravel.Nakijin.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.Nakijin.Data.Models.Suppliers}})">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.SuppliersPriorityController.AddOrUpdateDefaultPriority(System.Collections.Generic.Dictionary{HappyTravel.Nakijin.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.SuppliersCatalog.Suppliers}})">
             <summary>
             Sets or updates default priority
             </summary>
