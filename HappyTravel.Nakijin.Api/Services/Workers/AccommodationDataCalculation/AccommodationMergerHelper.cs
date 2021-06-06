@@ -10,6 +10,7 @@ using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Data.Models.Mappers;
+using HappyTravel.SuppliersCatalog;
 using Newtonsoft.Json;
 
 namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
@@ -107,7 +108,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 additionalInfo: additionalInfo,
                 schedule: scheduleInfo,
                 textualDescriptions: textualDescriptions,
-                hasDirectContract: hasDirectContract
+                hasDirectContract: hasDirectContract,
+                isActive: true
             );
         }
 

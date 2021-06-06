@@ -6,6 +6,7 @@ using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Infrastructure.Logging;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

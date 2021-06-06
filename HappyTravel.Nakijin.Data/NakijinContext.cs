@@ -4,6 +4,7 @@ using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Data.Models.Mappers;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
@@ -188,6 +189,9 @@ namespace HappyTravel.Nakijin.Data
                 ha.Property(p => p.Modified).IsRequired();
                 ha.Property(p => p.Created).IsRequired();
                 ha.Property(p => p.MappedHtIds).HasColumnType("jsonb").IsRequired();
+                
+                ha.HasOne(p => p.Accommodation).WithMany(ac => ac.HtAccommodationMappings)
+                    .HasForeignKey(um => um.HtId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<DataUpdateHistory>(uh =>

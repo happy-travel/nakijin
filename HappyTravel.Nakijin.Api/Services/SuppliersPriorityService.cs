@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 

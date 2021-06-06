@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.SuppliersCatalog;
 using OpenTelemetry.Trace;
 
 namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping

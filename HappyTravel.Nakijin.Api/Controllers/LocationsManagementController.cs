@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.Nakijin.Api.Services.Workers.LocationMapping;
 using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;

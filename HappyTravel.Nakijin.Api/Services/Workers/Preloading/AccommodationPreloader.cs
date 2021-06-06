@@ -7,13 +7,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.LocationNameNormalizer;
-using HappyTravel.Nakijin.Api.Infrastructure;
-using HappyTravel.Nakijin.Api.Infrastructure.Logging;
-using HappyTravel.Nakijin.Api.Models;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Mappers;
+using HappyTravel.Nakijin.Api.Infrastructure;
+using HappyTravel.Nakijin.Api.Infrastructure.Logging;
+using HappyTravel.Nakijin.Api.Models;
+using HappyTravel.LocationNameNormalizer;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -95,7 +96,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.Preloading
         }
 
 
-        private async Task Preload(Suppliers supplier, DateTime modificationDate, CancellationToken cancellationToken = default)
+        private async Task Preload(Suppliers supplier, DateTime modificationDate,
+            CancellationToken cancellationToken = default)
         {
             _logger.LogPreloadingAccommodationsStart($"Started Preloading accommodations of {supplier.ToString()}.");
 
@@ -175,7 +177,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.Preloading
             _logger.LogPreloadingAccommodationsFinish($"Finished Preloading accommodations of {supplier.ToString()} .");
 
 
-            async Task<List<MultilingualAccommodation>> GetAccommodations(Suppliers supplier, DateTime modDate, int skip, int take)
+            async Task<List<MultilingualAccommodation>> GetAccommodations(Suppliers supplier, DateTime modDate,
+                int skip, int take)
             {
                 var url = _suppliersOptions.SuppliersUrls[supplier] +
                     $"{AccommodationUrl}?skip={skip}&top={take}&modification-date={modDate}";

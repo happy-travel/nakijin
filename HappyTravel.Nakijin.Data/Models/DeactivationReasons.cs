@@ -6,6 +6,7 @@ namespace HappyTravel.Nakijin.Data.Models
         InvalidCoordinates = 1,
         InvalidName = 2,
         DuplicateInOneSupplier = 3,
-        MatchingWithOther = 4
+        MatchingWithOther = 4,
+        DeactivatedOnSupplier = 5
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.SuppliersCatalog;
 
 namespace HappyTravel.Nakijin.Data.Models.Accommodations
 {
@@ -30,6 +31,7 @@ namespace HappyTravel.Nakijin.Data.Models.Accommodations
         public DateTime Modified { get; set; }
 
 
+        public virtual ICollection<HtAccommodationMapping> HtAccommodationMappings { get; set; }
         public virtual ICollection<AccommodationUncertainMatches> SourceAccommodationUncertainMatches { get; set; }
         public virtual ICollection<AccommodationUncertainMatches> AccommodationToMatchUncertainMatches { get; set; }
     }

@@ -12,6 +12,7 @@ using HappyTravel.Nakijin.Api.Services.Workers;
 using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
 using HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
