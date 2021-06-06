@@ -206,7 +206,7 @@ namespace HappyTravel.Nakijin.Data
         public virtual DbSet<RichAccommodationDetails> Accommodations { get; set; }
         public virtual DbSet<RawAccommodation> RawAccommodations { get; set; }
         public virtual DbSet<AccommodationUncertainMatches> AccommodationUncertainMatches { get; set; }
-        public virtual DbSet<StaticData> StaticDatas { get; set; }
+        public virtual DbSet<StaticData> StaticData { get; set; }
         public virtual DbSet<HtAccommodationMapping> HtAccommodationMappings { get; set; }
         public virtual DbSet<DataUpdateHistory> DataUpdateHistories { get; set; }
     }

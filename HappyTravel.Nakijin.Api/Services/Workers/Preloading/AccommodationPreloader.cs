@@ -7,20 +7,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.Nakijin.Data;
-using HappyTravel.Nakijin.Data.Models;
-using HappyTravel.Nakijin.Data.Models.Mappers;
+using HappyTravel.LocationNameNormalizer;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Infrastructure.Logging;
 using HappyTravel.Nakijin.Api.Models;
-using HappyTravel.LocationNameNormalizer;
+using HappyTravel.Nakijin.Data;
+using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.Nakijin.Data.Models.Mappers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using OpenTelemetry.Trace;
 
-namespace HappyTravel.Nakijin.Api.Services.Workers
+namespace HappyTravel.Nakijin.Api.Services.Workers.Preloading
 {
     public class AccommodationPreloader : IAccommodationPreloader
     {
@@ -43,32 +43,23 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         {
             var currentSpan = Tracer.CurrentSpan;
             var tracer = _tracerProvider.GetTracer(nameof(AccommodationPreloader));
-
+            
             _context.Database.SetCommandTimeout(_options.DbCommandTimeOut);
 
             foreach (var supplier in suppliers)
             {
                 try
                 {
-                    var modificationDate = await _context.DataUpdateHistories
-                        .Where(dh => dh.Supplier == supplier && dh.Type == DataUpdateTypes.Preloading)
-                        .OrderByDescending(dh => dh.UpdateTime)
-                        .Select(dh => dh.UpdateTime)
-                        .FirstOrDefaultAsync(cancellationToken);
+                    var updateDate = DateTime.UtcNow;
+                    var lastUpdateDate = await GetLastUpdateDate(supplier);
 
                     using var supplierAccommodationsPreloadingSpan = tracer.StartActiveSpan(
                         $"{nameof(Preload)} accommodations of {supplier.ToString()}", SpanKind.Internal, currentSpan);
 
                     cancellationToken.ThrowIfCancellationRequested();
-                    await Preload(supplier, modificationDate, cancellationToken);
+                    await Preload(supplier, lastUpdateDate, cancellationToken);
 
-                    _context.DataUpdateHistories.Add(new DataUpdateHistory
-                    {
-                        Supplier = supplier,
-                        Type = DataUpdateTypes.Preloading,
-                        UpdateTime = DateTime.UtcNow
-                    });
-                    await _context.SaveChangesAsync(cancellationToken);
+                    await AddUpdateDateToHistory(supplier, updateDate);
                 }
                 catch (TaskCanceledException)
                 {
@@ -80,11 +71,31 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                     _logger.LogPreloadingAccommodationsError(ex);
                 }
             }
+
+
+            Task<DateTime> GetLastUpdateDate(Suppliers supplier)
+                => _context.DataUpdateHistories
+                    .Where(dh => dh.Supplier == supplier && dh.Type == DataUpdateTypes.Preloading)
+                    .OrderByDescending(dh => dh.UpdateTime)
+                    .Select(dh => dh.UpdateTime)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+
+            Task AddUpdateDateToHistory(Suppliers supplier, DateTime date)
+            {
+                _context.DataUpdateHistories.Add(new DataUpdateHistory
+                {
+                    Supplier = supplier,
+                    Type = DataUpdateTypes.Preloading,
+                    UpdateTime = date
+                });
+                
+                return _context.SaveChangesAsync(cancellationToken);
+            }
         }
 
 
-        private async Task Preload(Suppliers supplier, DateTime modificationDate,
-            CancellationToken cancellationToken = default)
+        private async Task Preload(Suppliers supplier, DateTime modificationDate, CancellationToken cancellationToken = default)
         {
             _logger.LogPreloadingAccommodationsStart($"Started Preloading accommodations of {supplier.ToString()}.");
 
@@ -164,8 +175,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
             _logger.LogPreloadingAccommodationsFinish($"Finished Preloading accommodations of {supplier.ToString()} .");
 
 
-            async Task<List<MultilingualAccommodation>> GetAccommodations(Suppliers supplier, DateTime modDate,
-                int skip, int take)
+            async Task<List<MultilingualAccommodation>> GetAccommodations(Suppliers supplier, DateTime modDate, int skip, int take)
             {
                 var url = _suppliersOptions.SuppliersUrls[supplier] +
                     $"{AccommodationUrl}?skip={skip}&top={take}&modification-date={modDate}";

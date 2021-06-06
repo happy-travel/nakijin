@@ -67,6 +67,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
             {
                 try
                 {
+                    var updateDate = DateTime.UtcNow;
+                    
                     using var supplierAccommodationsMappingSpan = tracer.StartActiveSpan(
                         $"{nameof(MapAccommodations)} of {supplier.ToString()}", SpanKind.Internal, currentSpan);
 
@@ -83,14 +85,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     await _mappingsCache.Fill();
                     supplierAccommodationsMappingSpan.AddEvent("Reset accommodation mappings cache");
 
-                    _context.DataUpdateHistories.Add(new DataUpdateHistory
-                    {
-                        Supplier = supplier,
-                        Type = DataUpdateTypes.Mapping,
-                        UpdateTime = DateTime.UtcNow
-                    });
-
-                    await _context.SaveChangesAsync(cancellationToken);
+                    await AddUpdateDateToHistory(supplier, updateDate);
                 }
                 catch (TaskCanceledException)
                 {
@@ -101,6 +96,19 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 {
                     _logger.LogMappingAccommodationsError(ex);
                 }
+            }
+            
+            
+            Task AddUpdateDateToHistory(Suppliers supplier, DateTime date)
+            {
+                _context.DataUpdateHistories.Add(new DataUpdateHistory
+                {
+                    Supplier = supplier,
+                    Type = DataUpdateTypes.Mapping,
+                    UpdateTime = date
+                });
+                
+                return _context.SaveChangesAsync(cancellationToken);
             }
         }
 

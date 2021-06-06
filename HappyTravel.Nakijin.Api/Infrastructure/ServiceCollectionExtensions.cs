@@ -12,6 +12,7 @@ using HappyTravel.Nakijin.Api.Services.Workers;
 using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
 using HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping;
 using HappyTravel.Nakijin.Api.Services.Workers.LocationMapping;
+using HappyTravel.Nakijin.Api.Services.Workers.Preloading;
 using IdentityModel.Client;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
