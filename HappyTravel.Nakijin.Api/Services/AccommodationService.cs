@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
+using HappyTravel.MapperContracts.Internal.Mappings.Enums;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Data;
@@ -55,7 +56,7 @@ namespace HappyTravel.Nakijin.Api.Services
             if (isFailure)
                 return Result.Failure<Accommodation>(error);
 
-            if (type != AccommodationMapperLocationTypes.Accommodation)
+            if (type != MapperLocationTypes.Accommodation)
                 return Result.Failure<Accommodation>($"{type} is not supported");
 
             var actualHtId = await _mappingsCache.GetActualHtId(id);

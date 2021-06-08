@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.MapperContracts.Internal.Mappings.Enums;
 using HappyTravel.MapperContracts.Public.Accommodations.Enums;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Api.Services;
@@ -26,13 +27,13 @@ namespace HappyTravel.Nakijin.Api.Converters
             var countryName = accommodation.Location.Country.GetValueOrDefault(language);
             var localityZoneName = accommodation.Location.LocalityZone?.GetValueOrDefault(language);
             var textualDescriptions = new List<TextualDescription>();
-            var accommodationHtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, htId);
-            var countryHtId = HtId.Create(AccommodationMapperLocationTypes.Country, htCountryId);
+            var accommodationHtId = HtId.Create(MapperLocationTypes.Accommodation, htId);
+            var countryHtId = HtId.Create(MapperLocationTypes.Country, htCountryId);
             var localityHtId = htLocalityId is not null
-                ? HtId.Create(AccommodationMapperLocationTypes.Locality, htLocalityId.Value)
+                ? HtId.Create(MapperLocationTypes.Locality, htLocalityId.Value)
                 : string.Empty;
             var localityZoneHtId = htLocalityZoneId is not null
-                ? HtId.Create(AccommodationMapperLocationTypes.LocalityZone, htLocalityZoneId.Value)
+                ? HtId.Create(MapperLocationTypes.LocalityZone, htLocalityZoneId.Value)
                 : string.Empty;
 
             foreach (var descriptions in accommodation.TextualDescriptions)
