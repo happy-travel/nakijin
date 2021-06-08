@@ -52,25 +52,42 @@ namespace HappyTravel.Nakijin.Api.Services
 
         public async Task<Result<Accommodation>> Get(string htId, string languageCode)
         {
-            var (_, isFailure, (type, id), error) = HtId.Parse(htId);
+            var (_, isFailure, actualHtId, error) = await GetActualAccommodationHtId(htId);
             if (isFailure)
                 return Result.Failure<Accommodation>(error);
 
-            if (type != AccommodationMapperLocationTypes.Accommodation)
-                return Result.Failure<Accommodation>($"{type} is not supported");
-
-            var actualHtId = await _mappingsCache.GetActualHtId(id);
-
-            var accommodation = await GetRichDetails(actualHtId);
+            var accommodations = await GetRichDetails(new List<int>(actualHtId));
+            var accommodation = accommodations.SingleOrDefault(a => a.Id == actualHtId);
 
             if (accommodation == default)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
+            
+            return MapToAccommodation(htId: accommodation.Id, 
+                htCountryId: accommodation.CountryId,
+                htLocalityId: accommodation.LocalityId, 
+                htLocalityZoneId: accommodation.LocalityZoneId, 
+                accommodation: accommodation.CalculatedAccommodation,
+                language: languageCode,
+                modified: accommodation.Modified);
+        }
 
 
-            return MapToAccommodation(accommodation.Id, accommodation.CountryId,
-                accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.CalculatedAccommodation,
-                languageCode,
-                accommodation.Modified);
+        public async Task<List<Accommodation>> Get(List<string> htIds, string languageCode)
+        {
+            var results = await Task.WhenAll(htIds.Select(GetActualAccommodationHtId));
+            var ids = results.Where(r => r.IsSuccess)
+                .Select(r => r.Value)
+                .ToList();
+
+            return (await GetRichDetails(ids))
+                .Select(a => MapToAccommodation(htId: a.Id, 
+                    htCountryId: a.CountryId,
+                    htLocalityId: a.LocalityId, 
+                    htLocalityZoneId: a.LocalityZoneId, 
+                    accommodation: a.CalculatedAccommodation,
+                    language: languageCode,
+                    modified: a.Modified))
+                .ToList();
         }
 
 
@@ -120,9 +137,9 @@ namespace HappyTravel.Nakijin.Api.Services
                 .ToList();
         }
 
-        private async Task<RichAccommodationDetails?> GetRichDetails(int id)
-            => await _context.Accommodations
-                .Where(ac => ac.IsActive && ac.Id == id)
+        private Task<List<RichAccommodationDetails>> GetRichDetails(ICollection<int> ids)
+            => _context.Accommodations
+                .Where(ac => ac.IsActive && ids.Contains(ac.Id))
                 .Select(ac => new RichAccommodationDetails
                 {
                     Id = ac.Id,
@@ -132,7 +149,7 @@ namespace HappyTravel.Nakijin.Api.Services
                     CalculatedAccommodation = ac.CalculatedAccommodation,
                     Modified = ac.Modified
                 })
-                .SingleOrDefaultAsync();
+                .ToListAsync();
 
         private Accommodation MapToAccommodation(int htId, int htCountryId, int? htLocalityId, int? htLocalityZoneId,
             MultilingualAccommodation accommodation, string language, DateTime? modified = null)
@@ -191,6 +208,20 @@ namespace HappyTravel.Nakijin.Api.Services
                 modified: modified
             );
         }
+
+
+        private async Task<Result<int>> GetActualAccommodationHtId(string htId)
+        {
+            var (_, isFailure, (type, id), error) = HtId.Parse(htId);
+            if (isFailure)
+                return Result.Failure<int>(error);
+
+            if (type != AccommodationMapperLocationTypes.Accommodation)
+                return Result.Failure<int>($"{type} is not supported");
+
+            return await _mappingsCache.GetActualHtId(id);
+        }
+        
 
         private readonly AccommodationMappingsCache _mappingsCache;
         private readonly NakijinContext _context;
