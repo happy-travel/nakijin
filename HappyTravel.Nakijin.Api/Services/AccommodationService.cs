@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
-using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Data;
-using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
+using HappyTravel.MapperContracts.Public.Accommodations;
+using HappyTravel.Nakijin.Api.Converters;
 
 namespace HappyTravel.Nakijin.Api.Services
 {
@@ -44,7 +43,7 @@ namespace HappyTravel.Nakijin.Api.Services
             if (accommodation == null)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
-            return MapToAccommodation(accommodation.Id, accommodation.CountryId,
+            return AccommodationConverter.Convert(accommodation.Id, accommodation.CountryId,
                 accommodation.LocalityId, accommodation.LocalityZoneId,
                 accommodation.Data, languageCode, accommodation.Modified);
         }
@@ -66,16 +65,14 @@ namespace HappyTravel.Nakijin.Api.Services
             if (accommodation == default)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
 
-
-            return MapToAccommodation(accommodation.Id, accommodation.CountryId,
+            return AccommodationConverter.Convert(accommodation.Id, accommodation.CountryId,
                 accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.CalculatedAccommodation,
                 languageCode,
                 accommodation.Modified);
         }
 
 
-        public Task<DateTime> GetLastModifiedDate()
-            => _context.Accommodations.OrderByDescending(d => d.Modified).Select(l => l.Modified).FirstOrDefaultAsync();
+        public Task<DateTime> GetLastModifiedDate() => _context.Accommodations.OrderByDescending(d => d.Modified).Select(l => l.Modified).FirstOrDefaultAsync();
 
 
         public async Task<List<Accommodation>> Get(int skip, int top, IEnumerable<Suppliers> suppliersFilter,
@@ -84,7 +81,6 @@ namespace HappyTravel.Nakijin.Api.Services
             var suppliersKeys = suppliersFilter.Select(s => s.ToString().FirstCharToLower()).ToArray();
             var accommodationsQuery = _context.Accommodations
                 .Where(ac => ac.IsActive);
-
 
             if (suppliersKeys.Any())
             {
@@ -110,15 +106,17 @@ namespace HappyTravel.Nakijin.Api.Services
                     CountryId = ac.CountryId,
                     LocalityId = ac.LocalityId,
                     LocalityZoneId = ac.LocalityZoneId,
-                    Data = ac.CalculatedAccommodation
+                    Data = ac.CalculatedAccommodation,
+                    ModifiedDate = ac.Modified
                 })
                 .ToListAsync();
 
             return accommodations.Select(ac
-                    => MapToAccommodation(ac.Id, ac.CountryId, ac.LocalityId, ac.LocalityZoneId, ac.Data,
-                        languageCode))
+                    => AccommodationConverter.Convert(ac.Id, ac.CountryId, ac.LocalityId, ac.LocalityZoneId, ac.Data,
+                        languageCode, ac.ModifiedDate))
                 .ToList();
         }
+
 
         private async Task<RichAccommodationDetails?> GetRichDetails(int id)
             => await _context.Accommodations
@@ -134,63 +132,10 @@ namespace HappyTravel.Nakijin.Api.Services
                 })
                 .SingleOrDefaultAsync();
 
-        private Accommodation MapToAccommodation(int htId, int htCountryId, int? htLocalityId, int? htLocalityZoneId,
-            MultilingualAccommodation accommodation, string language, DateTime? modified = null)
-        {
-            var name = accommodation.Name.GetValueOrDefault(language);
-            var accommodationAmenities = accommodation.AccommodationAmenities.GetValueOrDefault(language);
-            var additionalInfo = accommodation.AdditionalInfo.GetValueOrDefault(language);
-            var category = accommodation.Category.GetValueOrDefault(language);
-            var address = accommodation.Location.Address.GetValueOrDefault(language);
-            var localityName = accommodation.Location.Locality?.GetValueOrDefault(language);
-            var countryName = accommodation.Location.Country.GetValueOrDefault(language);
-            var localityZoneName = accommodation.Location.LocalityZone?.GetValueOrDefault(language);
-            var textualDescriptions = new List<TextualDescription>();
-            var accommodationHtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, htId);
-            var countryHtId = HtId.Create(AccommodationMapperLocationTypes.Country, htCountryId);
-            var localityHtId = htLocalityId is not null
-                ? HtId.Create(AccommodationMapperLocationTypes.Locality, htLocalityId.Value)
-                : string.Empty;
-            var localityZoneHtId = htLocalityZoneId is not null
-                ? HtId.Create(AccommodationMapperLocationTypes.LocalityZone, htLocalityZoneId.Value)
-                : string.Empty;
+        
+        
+        
 
-            foreach (var descriptions in accommodation.TextualDescriptions)
-            {
-                var description = descriptions.Description.GetValueOrDefault(language);
-                textualDescriptions.Add(new TextualDescription(descriptions.Type, description));
-            }
-
-            return new Accommodation(
-                htId.ToString(),
-                name,
-                accommodationAmenities,
-                additionalInfo,
-                category,
-                accommodation.Contacts,
-                new LocationInfo(
-                    accommodation.Location.CountryCode,
-                    countryHtId,
-                    countryName,
-                    localityHtId,
-                    localityName,
-                    localityZoneHtId,
-                    localityZoneName,
-                    accommodation.Location.Coordinates,
-                    address,
-                    accommodation.Location.LocationDescriptionCode,
-                    accommodation.Location.PointsOfInterests,
-                    accommodation.Location.IsHistoricalBuilding
-                ),
-                accommodation.Photos,
-                accommodation.Rating,
-                accommodation.Schedule,
-                textualDescriptions,
-                accommodation.Type,
-                accommodationHtId,
-                modified: modified
-            );
-        }
 
         private readonly AccommodationMappingsCache _mappingsCache;
         private readonly NakijinContext _context;

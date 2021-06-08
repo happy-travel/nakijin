@@ -6,7 +6,7 @@ using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using HappyTravel.EdoContracts.StaticData;
+using HappyTravel.MapperContracts.Public.Locations;
 
 namespace HappyTravel.Nakijin.Api.Controllers
 {
