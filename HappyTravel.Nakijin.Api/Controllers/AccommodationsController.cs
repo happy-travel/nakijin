@@ -58,7 +58,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         {
             var (_, isFailure, result, error) = await _accommodationService.Get(accommodationHtId, LanguageCode);
             if (isFailure)
-                return BadRequest(error);
+                return BadRequest(ProblemDetailsBuilder.Build(error));
 
             return Ok(result);
         }
