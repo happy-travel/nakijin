@@ -17,7 +17,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
     [ApiVersion("1.0")]
     [Route("api/{v:apiVersion}")]
     [Produces("application/json")]
-    [AllowAnonymous]
+    [Authorize]
     public class AccommodationsController : StaticDataControllerBase
     {
         public AccommodationsController(IAccommodationService accommodationService)
