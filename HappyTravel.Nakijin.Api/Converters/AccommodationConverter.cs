@@ -91,7 +91,7 @@ namespace HappyTravel.Nakijin.Api.Converters
                 : string.Empty;
 
             return new SlimAccommodation(
-                htId:htId.ToString(),
+                htId:HtId.Create(MapperLocationTypes.Accommodation, htId),
                 location: new SlimLocationInfo(
                     address: address,
                     country: countryName,
