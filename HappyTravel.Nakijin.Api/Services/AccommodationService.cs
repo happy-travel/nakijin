@@ -4,14 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.EdoContracts.Accommodations.Internals;
+using HappyTravel.MapperContracts.Public.Accommodations;
+using HappyTravel.MapperContracts.Public.Accommodations.Internals;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Data;
-using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
+using TextualDescription = HappyTravel.EdoContracts.Accommodations.Internals.TextualDescription;
 
 namespace HappyTravel.Nakijin.Api.Services
 {
@@ -162,12 +163,11 @@ namespace HappyTravel.Nakijin.Api.Services
             }
 
             return new Accommodation(
-                htId.ToString(),
-                name,
-                accommodationAmenities,
-                additionalInfo,
-                category,
-                accommodation.Contacts,
+                htId: name,
+                accommodationAmenities: accommodationAmenities,
+                additionalInfo: additionalInfo,
+                category: category,
+                contacts: accommodation.Contacts,
                 new LocationInfo(
                     accommodation.Location.CountryCode,
                     countryHtId,
@@ -187,7 +187,6 @@ namespace HappyTravel.Nakijin.Api.Services
                 accommodation.Schedule,
                 textualDescriptions,
                 accommodation.Type,
-                accommodationHtId,
                 modified: modified
             );
         }
