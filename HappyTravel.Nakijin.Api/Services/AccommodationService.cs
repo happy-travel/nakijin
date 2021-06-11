@@ -72,6 +72,7 @@ namespace HappyTravel.Nakijin.Api.Services
 
         public async Task<List<SlimAccommodation>> Get(List<string> htIds, string languageCode)
         {
+            // TODO: optimize to one call
             var ids = new List<int>();
             foreach (var htId in htIds)
             {
