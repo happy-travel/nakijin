@@ -187,8 +187,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.Preloading
 
                 if (isFailure)
                 {
-                    _logger.Log(LogLevel.Error, error.Detail);
-                    return new List<MultilingualAccommodation>(0);
+                    throw new Exception($"Problem occured on loading accommodations from supplier '{supplier}'. Error message is {error.Detail}");
                 }
 
                 return response;
