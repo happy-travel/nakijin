@@ -72,10 +72,14 @@ namespace HappyTravel.Nakijin.Api.Services
 
         public async Task<List<SlimAccommodation>> Get(List<string> htIds, string languageCode)
         {
-            var results = await Task.WhenAll(htIds.Select(GetActualAccommodationHtId));
-            var ids = results.Where(r => r.IsSuccess)
-                .Select(r => r.Value)
-                .ToList();
+            // TODO: optimize to one call
+            var ids = new List<int>();
+            foreach (var htId in htIds)
+            {
+                var (isSuccess, _, id, _) = await GetActualAccommodationHtId(htId);
+                if (isSuccess)
+                    ids.Add(id);
+            }
 
             return (await GetRichDetails(ids))
                 .Select(a => AccommodationConverter.ConvertToSlim(htId: a.Id, 
