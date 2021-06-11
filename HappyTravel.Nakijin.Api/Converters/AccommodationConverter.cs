@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.MapperContracts.Internal.Mappings.Enums;
+using HappyTravel.MapperContracts.Public.Accommodations;
 using HappyTravel.MapperContracts.Public.Accommodations.Enums;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Api.Services;
@@ -69,6 +70,40 @@ namespace HappyTravel.Nakijin.Api.Converters
                 textualDescriptions: textualDescriptions,
                 type:GetPropertyType(accommodation.Type),
                 modified: modified
+            );
+        }
+        
+        
+        public static SlimAccommodation ConvertToSlim(int htId, int htCountryId, int? htLocalityId, int? htLocalityZoneId,
+            MultilingualAccommodation accommodation, string language, DateTime modified)
+        {
+            var name = accommodation.Name.GetValueOrDefault(language);
+            var address = accommodation.Location.Address.GetValueOrDefault(language);
+            var localityName = accommodation.Location.Locality?.GetValueOrDefault(language);
+            var countryName = accommodation.Location.Country.GetValueOrDefault(language);
+            var localityZoneName = accommodation.Location.LocalityZone?.GetValueOrDefault(language);
+            var countryHtId = HtId.Create(MapperLocationTypes.Country, htCountryId);
+            var localityHtId = htLocalityId is not null
+                ? HtId.Create(MapperLocationTypes.Locality, htLocalityId.Value)
+                : string.Empty;
+            var localityZoneHtId = htLocalityZoneId is not null
+                ? HtId.Create(MapperLocationTypes.LocalityZone, htLocalityZoneId.Value)
+                : string.Empty;
+
+            return new SlimAccommodation(
+                htId:htId.ToString(),
+                location: new SlimLocationInfo(
+                    address: address,
+                    country: countryName,
+                    countryCode: accommodation.Location.CountryCode,
+                    locality: localityName,
+                    localityZone: localityZoneName,
+                    coordinates: accommodation.Location.Coordinates
+                ),
+                name: name,
+                photo: GetPhotos(accommodation.Photos).FirstOrDefault(),
+                rating: GetRating(accommodation.Rating),
+                propertyType:GetPropertyType(accommodation.Type)
             );
         }
 
