@@ -114,6 +114,13 @@
             <param name="accommodationHtId">Accommodation HtId</param>
             <returns>Accommodation details</returns>
         </member>
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.Get(System.Collections.Generic.List{System.String})">
+            <summary>
+            Gets accommodations
+            </summary>
+            <param name="accommodationHtIds">Accommodation HtIds</param>
+            <returns>List of accommodation details</returns>
+        </member>
         <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.Get(System.Int32,System.Int32,System.Collections.Generic.List{System.String},System.Nullable{System.Boolean})">
             <summary>
              Returns a list of accommodation details
