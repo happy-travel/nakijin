@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.GeoData.Enums;
 using HappyTravel.Geography;
+using HappyTravel.MapperContracts.Internal.Mappings.Enums;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
@@ -25,7 +26,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 return;
 
             var convertedCountries = addedCountries.Select(c => new Location(
-                HtId.Create(AccommodationMapperLocationTypes.Country, c.Id),
+                HtId.Create(MapperLocationTypes.Country, c.Id),
                 name: string.Empty,
                 locality: string.Empty,
                 country: c.Name,
@@ -33,7 +34,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 GeoPointExtension.OriginGeoPoint,
                 distanceInMeters: 0,
                 PredictionSources.Interior,
-                AccommodationMapperLocationTypes.Country,
+                MapperLocationTypes.Country,
                 LocationTypes.Location)).ToList();
 
             await _staticDataPublicationService.Publish(convertedCountries, UpdateEventTypes.Add);
@@ -46,7 +47,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 return;
 
             var convertedCountries = removedCountries.Select(c => new Location(
-                HtId.Create(AccommodationMapperLocationTypes.Country, c),
+                HtId.Create(MapperLocationTypes.Country, c),
                 name: string.Empty,
                 locality: string.Empty,
                 country: string.Empty,
@@ -54,7 +55,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 GeoPointExtension.OriginGeoPoint,
                 distanceInMeters: 0,
                 PredictionSources.Interior,
-                AccommodationMapperLocationTypes.Country,
+                MapperLocationTypes.Country,
                 LocationTypes.Location)).ToList();
 
             await _staticDataPublicationService.Publish(convertedCountries, UpdateEventTypes.Remove);
@@ -68,7 +69,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 
             var convertedLocalities = addedLocalities.Select(l
                 => new Location(
-                    HtId.Create(AccommodationMapperLocationTypes.Locality, l.Id),
+                    HtId.Create(MapperLocationTypes.Locality, l.Id),
                     name: string.Empty,
                     l.Name,
                     l.CountryName,
@@ -76,7 +77,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                     GeoPointExtension.OriginGeoPoint,
                     distanceInMeters: 0,
                     PredictionSources.Interior,
-                    AccommodationMapperLocationTypes.Locality,
+                    MapperLocationTypes.Locality,
                     LocationTypes.Location)).ToList();
 
             await _staticDataPublicationService.Publish(convertedLocalities, UpdateEventTypes.Add);
@@ -90,7 +91,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 
             var convertedLocalities = removedLocalities.Select(l
                 => new Location(
-                    HtId.Create(AccommodationMapperLocationTypes.Locality, l),
+                    HtId.Create(MapperLocationTypes.Locality, l),
                     name: string.Empty,
                     locality: string.Empty,
                     country: string.Empty,
@@ -98,7 +99,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                     GeoPointExtension.OriginGeoPoint,
                     distanceInMeters: 0,
                     PredictionSources.Interior,
-                    AccommodationMapperLocationTypes.Locality,
+                    MapperLocationTypes.Locality,
                     LocationTypes.Location)).ToList();
 
             await _staticDataPublicationService.Publish(convertedLocalities, UpdateEventTypes.Remove);
@@ -112,7 +113,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 
             var convertedLocalityZones = addedLocalityZones.Select(lz
                 => new Location(
-                    HtId.Create(AccommodationMapperLocationTypes.LocalityZone, lz.Id),
+                    HtId.Create(MapperLocationTypes.LocalityZone, lz.Id),
                     lz.Name,
                     lz.LocalityName,
                     lz.CountryName,
@@ -120,7 +121,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                     GeoPointExtension.OriginGeoPoint,
                     distanceInMeters: 0,
                     PredictionSources.Interior,
-                    AccommodationMapperLocationTypes.LocalityZone,
+                    MapperLocationTypes.LocalityZone,
                     LocationTypes.Location)).ToList();
 
             await _staticDataPublicationService.Publish(convertedLocalityZones, UpdateEventTypes.Add);
@@ -134,14 +135,14 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 
             var convertedLocalityZones = removedLocalityZones.Select(lz
                 => new Location(
-                    HtId.Create(AccommodationMapperLocationTypes.LocalityZone, lz), string.Empty,
+                    HtId.Create(MapperLocationTypes.LocalityZone, lz), string.Empty,
                     locality: string.Empty,
                     country: string.Empty,
                     countryCode: string.Empty,
                     GeoPointExtension.OriginGeoPoint,
                     distanceInMeters: 0,
                     PredictionSources.Interior,
-                    AccommodationMapperLocationTypes.LocalityZone,
+                    MapperLocationTypes.LocalityZone,
                     LocationTypes.Location)).ToList();
 
             await _staticDataPublicationService.Publish(convertedLocalityZones, UpdateEventTypes.Remove);
