@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
-using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.MapperContracts.Public.Accommodations;
 using HappyTravel.SuppliersCatalog;
 
 namespace HappyTravel.Nakijin.Api.Services

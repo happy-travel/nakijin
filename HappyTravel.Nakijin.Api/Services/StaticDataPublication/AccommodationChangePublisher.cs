@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.GeoData.Enums;
+using HappyTravel.MapperContracts.Internal.Mappings.Enums;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
@@ -56,7 +57,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 
         private static Location ConvertToLocation(AccommodationData accommodation)
             => new Location(
-                HtId.Create(AccommodationMapperLocationTypes.Accommodation, accommodation.Id),
+                HtId.Create(MapperLocationTypes.Accommodation, accommodation.Id),
                 accommodation.Name,
                 accommodation.LocalityName,
                 accommodation.CountryName,
@@ -64,12 +65,12 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 accommodation.Coordinates,
                 distanceInMeters: 0,
                 PredictionSources.Interior,
-                AccommodationMapperLocationTypes.Accommodation,
+                MapperLocationTypes.Accommodation,
                 LocationTypes.Accommodation);
 
 
         private static Location ConvertToLocation(int id)
-            => new Location(HtId.Create(AccommodationMapperLocationTypes.Accommodation, id),
+            => new Location(HtId.Create(MapperLocationTypes.Accommodation, id),
                 name: string.Empty,
                 locality: string.Empty,
                 country: string.Empty,
@@ -77,7 +78,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 GeoPointExtension.OriginGeoPoint,
                 distanceInMeters: 0,
                 PredictionSources.Interior,
-                AccommodationMapperLocationTypes.Accommodation,
+                MapperLocationTypes.Accommodation,
                 LocationTypes.Accommodation);
 
 
