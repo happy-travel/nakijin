@@ -61,12 +61,14 @@ namespace HappyTravel.Nakijin.Api.Services
 
             if (accommodation == default)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
-            
+
 
             return AccommodationConverter.Convert(accommodation.Id, accommodation.CountryId,
                 accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.CalculatedAccommodation,
                 languageCode,
                 accommodation.Modified);
+        }
+
 
         public async Task<List<Accommodation>> Get(List<string> htIds, string languageCode)
         {
@@ -76,7 +78,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 .ToList();
 
             return (await GetRichDetails(ids))
-                .Select(a => MapToAccommodation(htId: a.Id, 
+                .Select(a => AccommodationConverter.Convert(htId: a.Id, 
                     htCountryId: a.CountryId,
                     htLocalityId: a.LocalityId, 
                     htLocalityZoneId: a.LocalityZoneId, 
@@ -132,6 +134,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 .ToList();
         }
 
+        
         private Task<List<RichAccommodationDetails>> GetRichDetails(ICollection<int> ids)
             => _context.Accommodations
                 .Where(ac => ac.IsActive && ids.Contains(ac.Id))
@@ -146,11 +149,6 @@ namespace HappyTravel.Nakijin.Api.Services
                 })
                 .ToListAsync();
 
-        
-        
-        
-
-
 
         private async Task<Result<int>> GetActualAccommodationHtId(string htId)
         {
@@ -158,7 +156,7 @@ namespace HappyTravel.Nakijin.Api.Services
             if (isFailure)
                 return Result.Failure<int>(error);
 
-            if (type != AccommodationMapperLocationTypes.Accommodation)
+            if (type != MapperLocationTypes.Accommodation)
                 return Result.Failure<int>($"{type} is not supported");
 
             return await _mappingsCache.GetActualHtId(id);
