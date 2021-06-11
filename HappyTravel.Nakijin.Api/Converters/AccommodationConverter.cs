@@ -75,7 +75,7 @@ namespace HappyTravel.Nakijin.Api.Converters
         
         
         public static SlimAccommodation ConvertToSlim(int htId, int htCountryId, int? htLocalityId, int? htLocalityZoneId,
-            MultilingualAccommodation accommodation, string language, DateTime modified)
+            MultilingualAccommodation accommodation, string language)
         {
             var name = accommodation.Name.GetValueOrDefault(language);
             var address = accommodation.Location.Address.GetValueOrDefault(language);

@@ -83,8 +83,7 @@ namespace HappyTravel.Nakijin.Api.Services
                     htLocalityId: a.LocalityId, 
                     htLocalityZoneId: a.LocalityZoneId, 
                     accommodation: a.CalculatedAccommodation,
-                    language: languageCode,
-                    modified: a.Modified))
+                    language: languageCode))
                 .ToList();
         }
 
