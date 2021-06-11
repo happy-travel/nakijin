@@ -56,7 +56,7 @@ namespace HappyTravel.Nakijin.Api.Services
             if (isFailure)
                 return Result.Failure<Accommodation>(error);
 
-            var accommodations = await GetRichDetails(new List<int>(actualHtId));
+            var accommodations = await GetRichDetails(new List<int>{actualHtId});
             var accommodation = accommodations.SingleOrDefault(a => a.Id == actualHtId);
 
             if (accommodation == default)
@@ -139,7 +139,8 @@ namespace HappyTravel.Nakijin.Api.Services
 
         
         private Task<List<RichAccommodationDetails>> GetRichDetails(ICollection<int> ids)
-            => _context.Accommodations
+        {
+            return _context.Accommodations
                 .Where(ac => ac.IsActive && ids.Contains(ac.Id))
                 .Select(ac => new RichAccommodationDetails
                 {
@@ -151,6 +152,7 @@ namespace HappyTravel.Nakijin.Api.Services
                     Modified = ac.Modified
                 })
                 .ToListAsync();
+        }
 
 
         private async Task<Result<int>> GetActualAccommodationHtId(string htId)
