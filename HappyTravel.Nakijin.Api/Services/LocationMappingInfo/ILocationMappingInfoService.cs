@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
-using HappyTravel.Nakijin.Api.Models.LocationInfo;
-using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
+using HappyTravel.MapperContracts.Internal.Mappings;
+using HappyTravel.MapperContracts.Internal.Mappings.Enums;
 using Location = HappyTravel.Nakijin.Api.Models.LocationServiceInfo.Location;
 
 namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
@@ -13,7 +13,7 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
     {
         Task<Result<List<LocationMapping>>> Get(List<string> htIds, string languageCode);
         
-        Task<List<Location>> Get(AccommodationMapperLocationTypes locationType, string languageCode, DateTime modified,
+        Task<List<Location>> Get(MapperLocationTypes locationType, string languageCode, DateTime modified,
             int skip, int top, CancellationToken cancellationToken = default);
     }
 }

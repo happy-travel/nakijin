@@ -68,6 +68,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
             {
                 try
                 {
+                    var updateDate = DateTime.UtcNow;
+
                     using var supplierAccommodationsMappingSpan = tracer.StartActiveSpan(
                         $"{nameof(MapAccommodations)} of {supplier.ToString()}", SpanKind.Internal, currentSpan);
 
@@ -84,14 +86,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     await _mappingsCache.Fill();
                     supplierAccommodationsMappingSpan.AddEvent("Reset accommodation mappings cache");
 
-                    _context.DataUpdateHistories.Add(new DataUpdateHistory
-                    {
-                        Supplier = supplier,
-                        Type = DataUpdateTypes.Mapping,
-                        UpdateTime = DateTime.UtcNow
-                    });
-
-                    await _context.SaveChangesAsync(cancellationToken);
+                    await AddUpdateDateToHistory(supplier, updateDate);
                 }
                 catch (TaskCanceledException)
                 {
@@ -102,6 +97,19 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 {
                     _logger.LogMappingAccommodationsError(ex);
                 }
+            }
+
+
+            Task AddUpdateDateToHistory(Suppliers supplier, DateTime date)
+            {
+                _context.DataUpdateHistories.Add(new DataUpdateHistory
+                {
+                    Supplier = supplier,
+                    Type = DataUpdateTypes.Mapping,
+                    UpdateTime = date
+                });
+
+                return _context.SaveChangesAsync(cancellationToken);
             }
         }
 
@@ -258,6 +266,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 .Select(ac => ac.AccommodationToMatch)
                 .ToList();
 
+            var accommodationsFromHtMappingsToPublish = htAccommodationMappingsToAdd
+                .Where(ac => ac.HtId == 0)
+                .Select(ac => ac.Accommodation)
+                .ToList();
+
             _context.AddRange(accommodationsToAdd);
             _context.AddRange(uncertainAccommodationsToAdd);
             _context.AddRange(htAccommodationMappingsToAdd);
@@ -265,12 +278,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
             var accommodationsToPublish = accommodationsToAdd
                 .Where(a => a.IsActive)
-                .Union(accommodationsFromUncertainToPublish).ToList();
-
-            accommodationsToPublish.AddRange(htAccommodationMappingsToAdd
-                .Where(hm => hm.Accommodation != null)
-                .Select(ac => ac.Accommodation)
-                .ToList());
+                .Union(accommodationsFromUncertainToPublish)
+                .Union(accommodationsFromHtMappingsToPublish)
+                .ToList();
 
             foreach (var acc in accommodationsToPublish)
                 addedAccommodations.Add(new AccommodationData(acc.Id, acc.KeyData.DefaultName,
@@ -463,7 +473,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     foreach (var supplierCode in existingAccommodation.SupplierAccommodationCodes)
                         accommodationToUpdate.SupplierAccommodationCodes.TryAdd(supplierCode.Key, supplierCode.Value);
 
-                    AddOrUpdateHtAccommodationMappings(matchedAccommodation.HtId, existingAccommodation.HtId);
+                    AddOrUpdateHtAccommodationMappings(existingAccommodation.HtId, matchedAccommodation.HtId);
                 }
 
                 _context.Entry(accommodationToUpdate).Property(p => p.SupplierAccommodationCodes).IsModified = true;

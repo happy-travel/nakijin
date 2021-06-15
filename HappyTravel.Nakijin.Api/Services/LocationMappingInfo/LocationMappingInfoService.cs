@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.GeoData.Enums;
 using HappyTravel.Geography;
-using HappyTravel.Nakijin.Api.Models.LocationInfo;
-using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
+using HappyTravel.MapperContracts.Internal.Mappings;
+using HappyTravel.MapperContracts.Internal.Mappings.Enums;
 using HappyTravel.Nakijin.Data;
 using Microsoft.EntityFrameworkCore;
 using Location = HappyTravel.Nakijin.Api.Models.LocationServiceInfo.Location;
@@ -48,10 +48,10 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
                 var ids = parsedCodeGroup.Ids;
                 mappings.AddRange(parsedCodeGroup.Type switch
                 {
-                    AccommodationMapperLocationTypes.Country => await _locationMappingFactory.GetForCountry(ids, languageCode),
-                    AccommodationMapperLocationTypes.Locality => await _locationMappingFactory.GetForLocality(ids, languageCode),
-                    AccommodationMapperLocationTypes.LocalityZone => await _locationMappingFactory.GetForLocalityZone(ids, languageCode),
-                    AccommodationMapperLocationTypes.Accommodation => await _locationMappingFactory.GetForAccommodation(ids, languageCode),
+                    MapperLocationTypes.Country => await _locationMappingFactory.GetForCountry(ids, languageCode),
+                    MapperLocationTypes.Locality => await _locationMappingFactory.GetForLocality(ids, languageCode),
+                    MapperLocationTypes.LocalityZone => await _locationMappingFactory.GetForLocalityZone(ids, languageCode),
+                    MapperLocationTypes.Accommodation => await _locationMappingFactory.GetForAccommodation(ids, languageCode),
                     _ => throw new ArgumentOutOfRangeException()
                 });
             }
@@ -60,15 +60,15 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
         }
 
         
-        public Task<List<Location>> Get(AccommodationMapperLocationTypes locationType, string languageCode,
+        public Task<List<Location>> Get(MapperLocationTypes locationType, string languageCode,
             DateTime modified, int skip, int top, CancellationToken cancellationToken = default)
         {
             return locationType switch
             {
-                AccommodationMapperLocationTypes.Country => BuildCountries(languageCode, skip, top, modified, cancellationToken),
-                AccommodationMapperLocationTypes.Locality => BuildLocalities(languageCode, skip, top, modified, cancellationToken),
-                AccommodationMapperLocationTypes.LocalityZone => BuildLocalityZones(languageCode, skip, top, modified, cancellationToken),
-                AccommodationMapperLocationTypes.Accommodation => BuildAccommodations(skip, top, modified, cancellationToken),
+                MapperLocationTypes.Country => BuildCountries(languageCode, skip, top, modified, cancellationToken),
+                MapperLocationTypes.Locality => BuildLocalities(languageCode, skip, top, modified, cancellationToken),
+                MapperLocationTypes.LocalityZone => BuildLocalityZones(languageCode, skip, top, modified, cancellationToken),
+                MapperLocationTypes.Accommodation => BuildAccommodations(skip, top, modified, cancellationToken),
                 _ => throw new ArgumentOutOfRangeException(nameof(locationType), locationType, null)
             };
         }
@@ -86,11 +86,11 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
             return countries.Select(c =>
                 {
                     var country = c.Names.GetValueOrDefault(languageCode);
-                    var htId = HtId.Create(AccommodationMapperLocationTypes.Country,
+                    var htId = HtId.Create(MapperLocationTypes.Country,
                         c.Id);
 
                     return new Location(htId, country, string.Empty, country, c.Code, EmptyGeoPoint, 0,
-                        PredictionSources.Interior, AccommodationMapperLocationTypes.Country, LocationTypes.Location);
+                        PredictionSources.Interior, MapperLocationTypes.Country, LocationTypes.Location);
                 })
                 .ToList();
         }
@@ -111,12 +111,12 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
                 {
                     var locality = localityAndCountry.locality.Names.GetValueOrDefault(languageCode);
                     var country = localityAndCountry.country.Names.GetValueOrDefault(languageCode);
-                    var htId = HtId.Create(AccommodationMapperLocationTypes.Locality,
+                    var htId = HtId.Create(MapperLocationTypes.Locality,
                         localityAndCountry.locality.Id);
                     
                     return new Location(htId, locality, locality, country,
                         localityAndCountry.country.Code, EmptyGeoPoint, 0, PredictionSources.Interior,
-                        AccommodationMapperLocationTypes.Locality, LocationTypes.Location);
+                        MapperLocationTypes.Locality, LocationTypes.Location);
                 })
                 .ToList();
         }
@@ -141,12 +141,12 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
                     var zone = zlc.zone.Names.GetValueOrDefault(languageCode);
                     var locality = zlc.locality.Names.GetValueOrDefault(languageCode);
                     var country = zlc.country.Names.GetValueOrDefault(languageCode);
-                    var htId = HtId.Create(AccommodationMapperLocationTypes.LocalityZone,
+                    var htId = HtId.Create(MapperLocationTypes.LocalityZone,
                         zlc.zone.Id);
 
                     return new Location(htId, zone, locality, country, zlc.country.Code,
                         EmptyGeoPoint, 0,
-                        PredictionSources.Interior, AccommodationMapperLocationTypes.LocalityZone,
+                        PredictionSources.Interior, MapperLocationTypes.LocalityZone,
                         LocationTypes.Location);
                 })
                 .ToList();
@@ -180,11 +180,11 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
                     var accommodation = alc.KeyData.DefaultName;
                     var locality = alc.KeyData.DefaultLocalityName;
                     var country = alc.KeyData.DefaultCountryName;
-                    var htId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, alc.Id);
+                    var htId = HtId.Create(MapperLocationTypes.Accommodation, alc.Id);
                     
                     return new Location(htId, accommodation, locality, country, alc.CountryCode,
                         alc.KeyData.Coordinates, 0,
-                        PredictionSources.Interior, AccommodationMapperLocationTypes.Accommodation,
+                        PredictionSources.Interior, MapperLocationTypes.Accommodation,
                         LocationTypes.Accommodation);
                 })
                 .ToList();

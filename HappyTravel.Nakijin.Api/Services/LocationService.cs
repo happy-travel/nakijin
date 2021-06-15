@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HappyTravel.MapperContracts.Internal.Mappings.Enums;
 using HappyTravel.MapperContracts.Public.Locations;
 using HappyTravel.Nakijin.Api.Infrastructure;
-using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
@@ -53,17 +53,17 @@ namespace HappyTravel.Nakijin.Api.Services
                     CountryCode = c.Code,
                     CountryNames = c.Names,
                     LocalityId = l.Id,
-                    LocalityNams = l.Names
+                    LocalityNamеs = l.Names
                 }).ToListAsync();
 
             return (from c in countries
                 group c by new {c.CountryId, c.CountryCode, c.CountryNames}
                 into gr
                 select new
-                    Country(gr.Key.CountryCode, HtId.Create(AccommodationMapperLocationTypes.Country, gr.Key.CountryId),
+                    Country(gr.Key.CountryCode, HtId.Create(MapperLocationTypes.Country, gr.Key.CountryId),
                         gr.Key.CountryNames.GetValueOrDefault(languageCode),
-                        gr.Select(l => new Locality(HtId.Create(AccommodationMapperLocationTypes.Locality, l.LocalityId),
-                            l.LocalityNams.GetValueOrDefault(languageCode))).ToList())).ToList();
+                        gr.Select(l => new Locality(HtId.Create(MapperLocationTypes.Locality, l.LocalityId),
+                            l.LocalityNamеs.GetValueOrDefault(languageCode))).ToList())).ToList();
         }
 
 

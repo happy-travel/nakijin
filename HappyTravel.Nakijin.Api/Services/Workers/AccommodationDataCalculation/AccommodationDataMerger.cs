@@ -51,12 +51,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                     _logger.LogCalculatingAccommodationsDataStart(
                         $"Started calculation accommodations data of supplier {supplier.ToString()}");
 
-                    var lastUpdatedDate = await _context.DataUpdateHistories.Where(dh
-                            => dh.Supplier == supplier && dh.Type == DataUpdateTypes.DataCalculation)
-                        .OrderByDescending(dh => dh.UpdateTime)
-                        .Select(dh => dh.UpdateTime)
-                        .FirstOrDefaultAsync(cancellationToken);
-
+                    var lastUpdatedDate = await GetLastUpdateDate(supplier);
+                    var updateDate = DateTime.UtcNow;
+                    
                     var changedSupplierHotelCodes = new List<string>();
                     var skip = 0;
                     do
@@ -94,14 +91,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                         await CalculateBatch(notCalculatedAccommodations, cancellationToken);
                     } while (changedSupplierHotelCodes.Count > 0);
 
-                    _context.DataUpdateHistories.Add(new DataUpdateHistory
-                    {
-                        Supplier = supplier,
-                        Type = DataUpdateTypes.DataCalculation,
-                        UpdateTime = DateTime.UtcNow
-                    });
-
-                    await _context.SaveChangesAsync(cancellationToken);
+                    await AddUpdateDateToHistory(supplier, updateDate);
+                    
                     _logger.LogCalculatingAccommodationsDataFinish(
                         $"Finished calculation of supplier {supplier.ToString()} data.");
                 }
@@ -114,6 +105,27 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 {
                     _logger.LogCalculatingAccommodationsDataError(ex);
                 }
+            }
+
+
+            Task<DateTime> GetLastUpdateDate(Suppliers supplier)
+                => _context.DataUpdateHistories.Where(dh => dh.Supplier == supplier && 
+                        dh.Type == DataUpdateTypes.DataCalculation)
+                    .OrderByDescending(dh => dh.UpdateTime)
+                    .Select(dh => dh.UpdateTime)
+                    .FirstOrDefaultAsync(cancellationToken);
+            
+            
+            Task AddUpdateDateToHistory(Suppliers supplier, DateTime date)
+            {
+                _context.DataUpdateHistories.Add(new DataUpdateHistory
+                {
+                    Supplier = supplier,
+                    Type = DataUpdateTypes.DataCalculation,
+                    UpdateTime = date
+                });
+                
+                return _context.SaveChangesAsync(cancellationToken);
             }
         }
 

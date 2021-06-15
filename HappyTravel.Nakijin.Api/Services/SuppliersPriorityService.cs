@@ -22,7 +22,7 @@ namespace HappyTravel.Nakijin.Api.Services
         public async Task AddOrUpdate(Dictionary<AccommodationDataTypes, List<Suppliers>> suppliersPriority)
         {
             var jsonDocument = JsonDocument.Parse(JsonConvert.SerializeObject(suppliersPriority));
-            var dbPriorities = await _context.StaticDatas.SingleOrDefaultAsync(d => d.Type == StaticDataTypes.SuppliersPriority);
+            var dbPriorities = await _context.StaticData.SingleOrDefaultAsync(d => d.Type == StaticDataTypes.SuppliersPriority);
             if (dbPriorities != default)
             {
                 dbPriorities.Value = jsonDocument;
@@ -30,7 +30,7 @@ namespace HappyTravel.Nakijin.Api.Services
             }
             else
             {
-                _context.StaticDatas.Add(new StaticData
+                _context.StaticData.Add(new StaticData
                 {
                     Type = StaticDataTypes.SuppliersPriority,
                     Value = jsonDocument
@@ -47,7 +47,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 return _suppliersPriority;
 
             var priorityDocument =
-                (await _context.StaticDatas.SingleAsync(d => d.Type == StaticDataTypes.SuppliersPriority)).Value;
+                (await _context.StaticData.SingleAsync(d => d.Type == StaticDataTypes.SuppliersPriority)).Value;
             _suppliersPriority =
                 JsonConvert.DeserializeObject<Dictionary<AccommodationDataTypes, List<Suppliers>>>(
                     priorityDocument.RootElement.ToString()!);

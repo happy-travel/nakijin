@@ -1,10 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HappyTravel.Nakijin.Api.Models.LocationInfo;
-using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
+using HappyTravel.MapperContracts.Internal.Mappings;
+using HappyTravel.MapperContracts.Internal.Mappings.Enums;
+using HappyTravel.MapperContracts.Internal.Mappings.Internals;
 using HappyTravel.Nakijin.Data;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
+using Location = HappyTravel.MapperContracts.Internal.Mappings.Internals.Location;
 
 namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
 {
@@ -37,19 +41,23 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
                 .Select(g =>
                 {
                     return new LocationMapping
-                    {
-                        Location = new Models.LocationInfo.Location
-                        {
-                            Country = g
+                    (
+                        location : new Location
+                        (
+                            country: g
                                 .Select(a => a.CountryNames.GetValueOrDefault(languageCode))
-                                .FirstOrDefault() ?? string.Empty
-                        },
-                        AccommodationMappings = g.Select(a => new AccommodationMapping
-                        {
-                            HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, a.AccommodationId),
-                            SupplierCodes = a.SupplierCodes
-                        }).ToList()
-                    };
+                                .FirstOrDefault() ?? string.Empty,
+                            locality: string.Empty,
+                            name: String.Empty,
+                            coordinates: default,
+                            type: MapperLocationTypes.Country
+                        ),
+                        accommodationMappings : g.Select(a => new AccommodationMapping
+                        (
+                            htId : HtId.Create(MapperLocationTypes.Accommodation, a.AccommodationId),
+                            supplierCodes : a.SupplierCodes
+                        )).ToList()
+                    );
                 })
                 .ToList();
         }
@@ -78,18 +86,21 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
                 {
                     var firstAccommodationInfo = g.First();
                     return new LocationMapping
-                    {
-                        Location = new Models.LocationInfo.Location
-                        {
-                            Country = firstAccommodationInfo.CountryNames.GetValueOrDefault(languageCode),
-                            Locality = firstAccommodationInfo.LocalityNames.GetValueOrDefault(languageCode)
-                        },
-                        AccommodationMappings = g.Select(a => new AccommodationMapping
-                        {
-                            HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, a.AccommodationId),
-                            SupplierCodes = a.SupplierCodes
-                        }).ToList()
-                    };
+                    (
+                        location : new Location
+                        (
+                            country : firstAccommodationInfo.CountryNames.GetValueOrDefault(languageCode),
+                            locality : firstAccommodationInfo.LocalityNames.GetValueOrDefault(languageCode),
+                            name : string.Empty,
+                            coordinates: default,
+                            type: MapperLocationTypes.Locality
+                        ),
+                        accommodationMappings : g.Select(a => new AccommodationMapping
+                        (
+                            htId : HtId.Create(MapperLocationTypes.Accommodation, a.AccommodationId),
+                            supplierCodes : a.SupplierCodes
+                        )).ToList()
+                    );
                 })
                 .ToList();
         }
@@ -120,19 +131,21 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
                 {
                     var firstAccommodationInfo = g.First();
                     return new LocationMapping
-                    {
-                        Location = new Models.LocationInfo.Location
-                        {
-                            Country = firstAccommodationInfo.CountryNames.GetValueOrDefault(languageCode),
-                            Locality = firstAccommodationInfo.LocalityNames.GetValueOrDefault(languageCode),
-                            Name = firstAccommodationInfo.LocalityZoneNames.GetValueOrDefault(languageCode)
-                        },
-                        AccommodationMappings = g.Select(a => new AccommodationMapping
-                        {
-                            HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation, a.AccommodationId),
-                            SupplierCodes = a.SupplierCodes
-                        }).ToList()
-                    };
+                    (
+                        location: new Location
+                        (
+                            coordinates: default,
+                            country: firstAccommodationInfo.CountryNames.GetValueOrDefault(languageCode),
+                            locality: firstAccommodationInfo.LocalityNames.GetValueOrDefault(languageCode),
+                            name: firstAccommodationInfo.LocalityZoneNames.GetValueOrDefault(languageCode),
+                            type: MapperLocationTypes.LocalityZone
+                        ),
+                        accommodationMappings: g.Select(a => new AccommodationMapping
+                        (
+                            htId: HtId.Create(MapperLocationTypes.Accommodation, a.AccommodationId),
+                            supplierCodes: a.SupplierCodes
+                        )).ToList()
+                    );
                 })
                 .ToList();
         }
@@ -143,8 +156,8 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
             var accommodationsInfo = await (from accommodation in _context.Accommodations
                 join country in _context.Countries on accommodation.CountryId equals country.Id
                 join optionalLocality in _context.Localities on accommodation.LocalityId equals optionalLocality.Id into localities
-                from locality in localities.DefaultIfEmpty() 
-                where accommodationIds.Contains(accommodation.Id) && country.Id == accommodation.CountryId  && accommodation.IsActive
+                from locality in localities.DefaultIfEmpty()
+                where accommodationIds.Contains(accommodation.Id) && country.Id == accommodation.CountryId && accommodation.IsActive
                 select new
                 {
                     CountryNames = country.Names,
@@ -158,29 +171,29 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
                 return new List<LocationMapping>();
 
             return accommodationsInfo.Select(a =>
-            {
-                return new LocationMapping
                 {
-                    Location = new Models.LocationInfo.Location
-                    {
-                        Country = a.CountryNames.GetValueOrDefault(languageCode),
-                        Locality = a.LocalityNames?.GetValueOrDefault(languageCode),
-                        Name = a.CalculatedAccommodation.Name.GetValueOrDefault(languageCode),
-                        Coordinates = a.CalculatedAccommodation.Location.Coordinates
-                    },
-                    AccommodationMappings = new List<AccommodationMapping>
-                    {
-                        new()
+                    return new LocationMapping
+                    (
+                        location: new Location
+                        (
+                            country: a.CountryNames.GetValueOrDefault(languageCode),
+                            locality: a.LocalityNames?.GetValueOrDefault(languageCode),
+                            name: a.CalculatedAccommodation.Name.GetValueOrDefault(languageCode),
+                            coordinates: a.CalculatedAccommodation.Location.Coordinates,
+                            type: MapperLocationTypes.Accommodation
+                        ),
+                        accommodationMappings: new List<AccommodationMapping>
                         {
-                            HtId = HtId.Create(AccommodationMapperLocationTypes.Accommodation,
-                                a.AccommodationId),
-                            SupplierCodes = a.SupplierCodes
+                            new
+                            (
+                                htId: HtId.Create(MapperLocationTypes.Accommodation,
+                                    a.AccommodationId),
+                                supplierCodes: a.SupplierCodes
+                            )
                         }
-                    }
-                };
-            })
+                    );
+                })
                 .ToList();
-            
         }
 
 

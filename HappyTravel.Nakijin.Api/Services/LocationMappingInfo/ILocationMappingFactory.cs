@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using HappyTravel.Nakijin.Api.Models.LocationInfo;
+using HappyTravel.MapperContracts.Internal.Mappings;
 
 namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
 {
