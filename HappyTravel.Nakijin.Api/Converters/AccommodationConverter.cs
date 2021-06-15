@@ -44,7 +44,7 @@ namespace HappyTravel.Nakijin.Api.Converters
             }
 
             return new Accommodation(
-                htId:htId.ToString(),
+                htId:HtId.Create(MapperLocationTypes.Accommodation, htId),
                 name: name,
                 accommodationAmenities: accommodationAmenities,
                 additionalInfo: additionalInfo,
