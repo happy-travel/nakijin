@@ -24,9 +24,9 @@ namespace HappyTravel.Nakijin.Api.Services
         
         // Substitutes the locality htIdToRemove for accommodations with substitutionalHtId.
         // Zone for accommodations will be substituted if substitutionalZoneHtId is specified 
-        public async Task<Result> RemoveLocality(string htIdToRemove, string substitutionalHtId, string? substitutionalZoneHtId = null, CancellationToken cancellationToken = default)
+        public async Task<Result> RemoveLocality(string removableHtId, string substitutionalHtId, string? substitutionalZoneHtId = null, CancellationToken cancellationToken = default)
         {
-            var (_, isGettingLocalityToRemoveFailure, localityToRemove, gettingLocalityToRemoveError ) = await GetLocality(htIdToRemove, cancellationToken);
+            var (_, isGettingLocalityToRemoveFailure, localityToRemove, gettingLocalityToRemoveError ) = await GetLocality(removableHtId, cancellationToken);
             if (isGettingLocalityToRemoveFailure)
                 return Result.Failure(gettingLocalityToRemoveError);
 

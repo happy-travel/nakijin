@@ -65,17 +65,17 @@ namespace HappyTravel.Nakijin.Api.Controllers
         ///  Replaces the id of removable location by a substitution location id. Accommodations must have the relation with the new location and a new zone (if substitutionalZoneHtId specified) instead of the removable location.
         ///  After this calculation/start Endpoint must be  
         /// </summary>
-        /// <param name="htIdToRemove">A location id to remove </param>
+        /// <param name="removableHtId">A location id to remove </param>
         /// <param name="substitutionalHtId">A location id for substituting the removable location</param>
         /// <param name="substitutionalZoneHtId">An id for substituting zone id for accommodations associated with the removable location</param>
         /// <returns></returns>
         [ProducesResponseType((int) HttpStatusCode.OK)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
-        [HttpDelete("locations/locality/remove/{htIdToRemove}/substitute/{substitutionalHtId}")]
-        [HttpDelete("locations/locality/remove/{htIdToRemove}/substitute/{substitutionalHtId}/zone/{substitutionalZoneHtId}")]
-        public async Task<IActionResult> RemoveLocalityWithSubstitution([FromRoute] string htIdToRemove, [FromRoute] string substitutionalHtId, [FromRoute] string substitutionalZoneHtId = null!)
+        [HttpDelete("locations/locality/remove/{removableHtId}/substitute/{substitutionalHtId}")]
+        [HttpDelete("locations/locality/remove/{removableHtId}/substitute/{substitutionalHtId}/zone/{substitutionalZoneHtId}")]
+        public async Task<IActionResult> RemoveLocalityWithSubstitution([FromRoute] string removableHtId, [FromRoute] string substitutionalHtId, [FromRoute] string substitutionalZoneHtId = null!)
         {
-            var (_, isFailure, error) = await _locationManagementService.RemoveLocality(htIdToRemove, substitutionalHtId, substitutionalZoneHtId);
+            var (_, isFailure, error) = await _locationManagementService.RemoveLocality(removableHtId, substitutionalHtId, substitutionalZoneHtId);
             if (isFailure)
                 return BadRequest(ProblemDetailsBuilder.Build(error));
 
