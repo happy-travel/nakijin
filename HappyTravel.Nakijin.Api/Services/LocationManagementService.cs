@@ -64,7 +64,7 @@ namespace HappyTravel.Nakijin.Api.Services
             
             return Result.SuccessIf(updateAndPublishTask.IsCompletedSuccessfully, updateAndPublishTask.Exception != null 
                 ? string.Join(Environment.NewLine, updateAndPublishTask.Exception.InnerExceptions.SelectMany(e => e.ToString().ToList()))
-                : "An error occurred during the saving changes");
+                : "An error occurred during the data saving process");
         }
 
         
