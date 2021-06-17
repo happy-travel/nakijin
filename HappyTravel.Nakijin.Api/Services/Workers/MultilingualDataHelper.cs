@@ -69,8 +69,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 var allDescriptions = textualDescription.Description.GetAll();
 
                 foreach (var description in allDescriptions)
-                    multilingualDescription.TrySetValue(description.languageCode, WebUtility.HtmlDecode(description.value).NormalizeInlineHtml());
-
+                    multilingualDescription.TrySetValue(description.languageCode, WebUtility.HtmlDecode(description.value ?? string.Empty).NormalizeInlineHtml());
+                
                 return new MultilingualTextualDescription(textualDescription.Type, multilingualDescription);
             }
         }
