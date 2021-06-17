@@ -24,42 +24,38 @@ namespace HappyTravel.Nakijin.Api.Services
         
         // Substitutes the locality htIdToRemove for accommodations with substitutionalHtId.
         // Zone for accommodations will be substituted if substitutionalZoneHtId is specified 
-        public async Task<Result> RemoveLocality(string removableHtId, string substitutionalHtId, string? substitutionalZoneHtId = null, CancellationToken cancellationToken = default)
+        public async Task<Result> RemoveLocality(string removableHtId, string substitutionalHtId, string? substitutionalZoneHtId = null,
+            CancellationToken cancellationToken = default)
         {
-            var (_, isGettingLocalityToRemoveFailure, localityToRemove, gettingLocalityToRemoveError ) = await GetLocality(removableHtId, cancellationToken);
-            if (isGettingLocalityToRemoveFailure)
-                return Result.Failure(gettingLocalityToRemoveError);
-
-            var (_, isGettingSubstitutionalLocalityFailure, substitutionalLocality, gettingSubstitutionalLocalityError) = await GetLocality(substitutionalHtId, cancellationToken);
-            if (isGettingSubstitutionalLocalityFailure)
-                return Result.Failure(gettingSubstitutionalLocalityError);
-
-            if (localityToRemove.CountryId != substitutionalLocality.CountryId)
-                return Result.Failure("The locality to remove and the substitutional locality must have the same country");
+            var (_, isGettingLocalitiesFailure, (removableLocality, substitutionalLocality), gettingLocalitiesError) =
+                await GetLocalities(removableHtId, substitutionalHtId, cancellationToken);
             
+            if (isGettingLocalitiesFailure)
+                return Result.Failure(gettingLocalitiesError);
+
+            if (removableLocality.CountryId != substitutionalLocality.CountryId)
+                return Result.Failure("The locality to remove and the substitutional locality must have the same country");
+
             LocalityZone substitutionalZone = null!;
+
             if (!string.IsNullOrEmpty(substitutionalZoneHtId))
             {
-                var gettingZoneIdResult = GetId(substitutionalZoneHtId, MapperLocationTypes.LocalityZone);
-                if (gettingZoneIdResult.IsFailure)
-                    return Result.Failure(gettingZoneIdResult.Error);
+                var substitutionalZoneResult = await GetSubstitutionalZone(substitutionalZoneHtId, substitutionalLocality, cancellationToken);
+                if (substitutionalZoneResult.IsFailure)
+                    return Result.Failure(substitutionalZoneResult.Error);
 
-                substitutionalZone = await GetZone(gettingZoneIdResult.Value, cancellationToken);
-                if (substitutionalZone == null)
-                    return Result.Failure($"Failed to find substitutional zone '{substitutionalZoneHtId}'");
-                    
-                if (substitutionalLocality.Id != substitutionalZone.LocalityId)
-                    return Result.Failure($"Substitutional zone '{substitutionalZoneHtId}' doesn't belong to substitutional locality {substitutionalHtId}");
+                substitutionalZone = substitutionalZoneResult.Value;
             }
-
-            var zonesToRemove = await GetZones(localityToRemove!, cancellationToken);
+        
+            var zonesToRemove = await GetZones(removableLocality!, cancellationToken);
             
-            var accommodationsOfLocationToRemove = await GetAccommodations(localityToRemove!, cancellationToken);
+            var accommodationsOfLocationToRemove = await GetAccommodations(removableLocality!, cancellationToken);
             ModifyRelation(accommodationsOfLocationToRemove, substitutionalLocality, substitutionalZone, cancellationToken);
             
             _context.UpdateRange(accommodationsOfLocationToRemove);
             _context.RemoveRange(zonesToRemove);
-            var updateAndPublishTask = Task.WhenAll(_context.SaveChangesAsync(cancellationToken), PublishLocations(new(){localityToRemove}, zonesToRemove));
+            
+            var updateAndPublishTask = Task.WhenAll(_context.SaveChangesAsync(cancellationToken), PublishLocations(new(){removableLocality}, zonesToRemove));
             await updateAndPublishTask;
             
             return Result.SuccessIf(updateAndPublishTask.IsCompletedSuccessfully, updateAndPublishTask.Exception != null 
@@ -67,6 +63,20 @@ namespace HappyTravel.Nakijin.Api.Services
                 : "An error occurred during the data saving process");
         }
 
+
+        private async Task<Result<(Locality removableLocality, Locality subtitutionalLocality)>> GetLocalities(string removableHtId, string substitutionalHtId, CancellationToken cancellationToken = default)
+        {
+            var (_, isGettingLocalityToRemoveFailure, removableLocality, gettingLocalityToRemoveError ) = await GetLocality(removableHtId, cancellationToken);
+            if (isGettingLocalityToRemoveFailure)
+                return Result.Failure<(Locality removableLocality, Locality subtitutionalLocality)>(gettingLocalityToRemoveError);
+
+            var (_, isGettingSubstitutionalLocalityFailure, substitutionalLocality, gettingSubstitutionalLocalityError) = await GetLocality(substitutionalHtId, cancellationToken);
+            if (isGettingSubstitutionalLocalityFailure)
+                return Result.Failure<(Locality removableLocality, Locality subtitutionalLocality)>(gettingSubstitutionalLocalityError);
+
+            return (removableLocality!, substitutionalLocality!);
+        }
+        
         
         private async Task<Result<Locality>> GetLocality(string htId, CancellationToken cancellationToken = default)
         {
@@ -113,6 +123,23 @@ namespace HappyTravel.Nakijin.Api.Services
         
         private Task<LocalityZone> GetZone(int zoneId, CancellationToken cancellationToken)
             => _context.LocalityZones.SingleOrDefaultAsync(z => z.Id == zoneId, cancellationToken);
+
+
+        private async Task<Result<LocalityZone>> GetSubstitutionalZone(string substitutionalZoneHtId, Locality substitutionalLocality, CancellationToken cancellationToken = default)
+        {
+            var gettingZoneIdResult = GetId(substitutionalZoneHtId, MapperLocationTypes.LocalityZone);
+            if (gettingZoneIdResult.IsFailure)
+                return Result.Failure<LocalityZone>(gettingZoneIdResult.Error);
+
+            var substitutionalZone = await GetZone(gettingZoneIdResult.Value, cancellationToken);
+            if (substitutionalZone == null)
+                return Result.Failure<LocalityZone>($"Failed to find substitutional zone '{substitutionalZoneHtId}'");
+                    
+            if (substitutionalLocality.Id != substitutionalZone.LocalityId)
+                return Result.Failure<LocalityZone>($"Substitutional zone '{substitutionalZoneHtId}' doesn't belong to substitutional locality {substitutionalLocality.Id}");
+
+            return substitutionalZone;
+        }
         
         
         private void ModifyRelation(List<RichAccommodationDetails> accommodations, Locality locality, LocalityZone zone = null!, CancellationToken cancellationToken = default)
@@ -130,16 +157,17 @@ namespace HappyTravel.Nakijin.Api.Services
         
         private async Task<Result> PublishLocations(List<Locality?> localities, List<LocalityZone> zones)
         {
-            var localitiesIds = localities.Select(a => a.Id).ToList();
             var zoneIds = zones.Select(z => z.Id).ToList();
-            var publishTask =_locationChangePublisher.PublishRemovedLocalities(localitiesIds).AsTask();
-            await publishTask;
-            if (!publishTask.IsCompletedSuccessfully)
-                return Result.Failure($"Failed to publish locations removal. Ids '{string.Join($", ", localitiesIds)}'");
+            var localitiesIds = localities.Select(a => a.Id).ToList();
+            var publishLocalitiesTask =_locationChangePublisher.PublishRemovedLocalities(localitiesIds).AsTask();
+            var publicZonesTask = _locationChangePublisher.PublishRemovedLocalityZones(zoneIds).AsTask();
 
-            publishTask = _locationChangePublisher.PublishRemovedLocalityZones(zoneIds).AsTask();
-            await publishTask;
-            if (!publishTask.IsCompletedSuccessfully)
+            await Task.WhenAll(publishLocalitiesTask, publicZonesTask);
+            
+            if (!publishLocalitiesTask.IsCompletedSuccessfully)
+                return Result.Failure($"Failed to publish locations removal. Ids '{string.Join($", ", localitiesIds)}'");
+            
+            if (!publicZonesTask.IsCompletedSuccessfully)
                 return Result.Failure($"Failed to publish zones removal. Ids '{string.Join($", ", zoneIds)}'");
 
             return Result.Success();
