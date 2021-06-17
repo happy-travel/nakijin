@@ -211,13 +211,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
             foreach (var accommodation in accommodationsToMap)
             {
-                if (!accommodation.IsActive)
+                var normalized = _multilingualDataHelper.NormalizeAccommodation(accommodation);
+                if (!normalized.IsActive)
                 {
-                    IgnoreOrDeactivateDeactivatedOnSupplier(accommodation);
+                    IgnoreOrDeactivateDeactivatedOnSupplier(normalized);
                     continue;
                 }
 
-                var normalized = _multilingualDataHelper.NormalizeAccommodation(accommodation);
                 if (normalized.Location.Coordinates.IsEmpty() || !normalized.Location.Coordinates.IsValid())
                 {
                     _logger.LogNotValidCoordinatesInAccommodation(
