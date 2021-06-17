@@ -21,31 +21,32 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
         {
             return new Contracts.MultilingualAccommodation
             (
-                accommodation.SupplierCode,
-                NormalizeMultilingualNames(accommodation.Name)!,
-                accommodation.AccommodationAmenities,
-                accommodation.AdditionalInfo,
-                accommodation.Category,
-                accommodation.Contacts,
+                supplierCode: accommodation.SupplierCode,
+                name: NormalizeMultilingualNames(accommodation.Name)!,
+                accommodationAmenities: accommodation.AccommodationAmenities,
+                additionalInfo: accommodation.AdditionalInfo,
+                category: accommodation.Category,
+                contacts: accommodation.Contacts,
                 new MultilingualLocationInfo(
                     _locationNameNormalizer.GetNormalizedCountryCode(accommodation.Location.Country.En,
                         accommodation.Location.CountryCode),
-                    NormalizeCountryMultiLingualNames(accommodation.Location.Country),
-                    accommodation.Location.Coordinates,
-                    accommodation.Location.Address,
-                    accommodation.Location.LocationDescriptionCode,
-                    accommodation.Location.PointsOfInterests,
-                    accommodation.Location.SupplierLocalityCode,
-                    NormalizeMultilingualLocality(accommodation.Location),
-                    accommodation.Location.SupplierLocalityZoneCode,
-                    NormalizeMultilingualNames(accommodation.Location.LocalityZone)
+                    country: NormalizeCountryMultiLingualNames(accommodation.Location.Country),
+                    coordinates: accommodation.Location.Coordinates,
+                    address: accommodation.Location.Address,
+                    locationDescriptionCode: accommodation.Location.LocationDescriptionCode,
+                    pointsOfInterests: accommodation.Location.PointsOfInterests,
+                    supplierLocalityCode: accommodation.Location.SupplierLocalityCode,
+                    locality: NormalizeMultilingualLocality(accommodation.Location),
+                    supplierLocalityZoneCode: accommodation.Location.SupplierLocalityZoneCode,
+                    localityZone: NormalizeMultilingualNames(accommodation.Location.LocalityZone)
                 ),
-                accommodation.Photos,
-                accommodation.Rating,
-                accommodation.Schedule,
-                accommodation.TextualDescriptions,
-                accommodation.Type,
-                accommodation.HasDirectContract
+                photos: accommodation.Photos,
+                rating: accommodation.Rating,
+                schedule: accommodation.Schedule,
+                textualDescriptions: accommodation.TextualDescriptions,
+                type: accommodation.Type,
+                hasDirectContract: accommodation.HasDirectContract,
+                isActive: accommodation.IsActive
             );
 
 
