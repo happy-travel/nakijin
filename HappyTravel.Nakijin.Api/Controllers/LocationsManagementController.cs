@@ -62,20 +62,14 @@ namespace HappyTravel.Nakijin.Api.Controllers
 
         
         /// <summary>
-        ///  Replaces the id of removable location by a substitution location id. Accommodations must have the relation with the new location and a new zone (if substitutionalZoneHtId specified) instead of the removable location.
-        ///  After this calculation/start Endpoint must be  
+        /// Deactivates a locality and locality zones. LocalityId and LocalityZone fields in related accommodations will be set to NULL.
         /// </summary>
-        /// <param name="removableHtId">Location id to remove </param>
-        /// <param name="substitutionalHtId">Location id for substituting the removable location</param>
-        /// <param name="substitutionalZoneHtId">Id of the substituting zone for accommodations associated with the removable location</param>
-        /// <returns></returns>
         [ProducesResponseType((int) HttpStatusCode.OK)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
-        [HttpDelete("locations/locality/remove/{removableHtId}/substitute/{substitutionalHtId}")]
-        [HttpDelete("locations/locality/remove/{removableHtId}/substitute/{substitutionalHtId}/zone/{substitutionalZoneHtId}")]
-        public async Task<IActionResult> RemoveLocalityWithSubstitution([FromRoute] string removableHtId, [FromRoute] string substitutionalHtId, [FromRoute] string? substitutionalZoneHtId = null)
+        [HttpPost("locations/locality/deactivate/{localityHtId}")]
+        public async Task<IActionResult> DeactivateLocality([FromRoute] string localityHtId, CancellationToken cancellationToken = default)
         {
-            var (_, isFailure, error) = await _locationManagementService.RemoveLocality(removableHtId, substitutionalHtId, substitutionalZoneHtId);
+            var (_, isFailure, error) = await _locationManagementService.Deactivate(localityHtId, cancellationToken);
             if (isFailure)
                 return BadRequest(ProblemDetailsBuilder.Build(error));
 

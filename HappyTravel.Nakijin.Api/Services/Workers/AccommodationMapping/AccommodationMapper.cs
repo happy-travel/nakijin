@@ -287,8 +287,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     acc.KeyData.DefaultLocalityName, acc.KeyData.DefaultCountryName, acc.CountryCode,
                     acc.KeyData.Coordinates));
 
-            await _accommodationChangePublisher.PublishAdded(addedAccommodations);
-            await _accommodationChangePublisher.PublishRemoved(removedAccommodations);
+            await _accommodationChangePublisher.PublishAdd(addedAccommodations);
+            await _accommodationChangePublisher.PublishRemove(removedAccommodations);
 
             mappingSpan.AddEvent("Save batch changes to db");
 

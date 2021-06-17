@@ -49,7 +49,7 @@ namespace HappyTravel.Nakijin.Api.Services
 
             await _mappingsCache.Fill();
             
-            await _accommodationChangePublisher.PublishRemoved(uncertainMatch.HtIdToMatch);
+            await _accommodationChangePublisher.PublishRemove(uncertainMatch.HtIdToMatch);
 
             return Result.Success();
         }
@@ -66,7 +66,7 @@ namespace HappyTravel.Nakijin.Api.Services
 
             await _mappingsCache.Fill();
 
-            await _accommodationChangePublisher.PublishRemoved(htIdToMatch);
+            await _accommodationChangePublisher.PublishRemove(htIdToMatch);
             
             return Result.Success();
         }

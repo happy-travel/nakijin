@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,44 +17,56 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
         }
 
 
-        public async Task PublishAdded(AccommodationData addedAccommodation)
+        public Task PublishAdd(AccommodationData addedAccommodation)
         {
-            var convertedAccommodationAdded = ConvertToLocation(addedAccommodation);
+            var convertedAccommodationAdded = Convert(addedAccommodation);
 
-            await _staticDataPublicationService.Publish(convertedAccommodationAdded, UpdateEventTypes.Add);
+            return _staticDataPublicationService.Publish(convertedAccommodationAdded, UpdateEventTypes.Add);
         }
 
 
-        public async Task PublishRemoved(int id)
+        public Task PublishRemove(int id)
         {
-            var convertedAccommodationRemoved = ConvertToLocation(id);
+            var convertedAccommodationRemoved = Convert(id);
 
-            await _staticDataPublicationService.Publish(convertedAccommodationRemoved, UpdateEventTypes.Remove);
+            return _staticDataPublicationService.Publish(convertedAccommodationRemoved, UpdateEventTypes.Remove);
         }
 
 
-        public async ValueTask PublishAdded(List<AccommodationData> addedAccommodations)
+        public Task PublishAdd(List<AccommodationData> addedAccommodations)
         {
             if (!addedAccommodations.Any())
-                return;
+                return Task.CompletedTask;
 
-            var convertedAccommodationsAdded = addedAccommodations.Select(ConvertToLocation).ToList();
+            var convertedAccommodationsAdded = addedAccommodations.Select(Convert).ToList();
 
-            await _staticDataPublicationService.Publish(convertedAccommodationsAdded, UpdateEventTypes.Add);
+            return _staticDataPublicationService.Publish(convertedAccommodationsAdded, UpdateEventTypes.Add);
         }
 
 
-        public async ValueTask PublishRemoved(List<int> removedAccommodations)
+        public Task PublishRemove(List<int> removedAccommodations)
         {
             if (!removedAccommodations.Any())
-                return;
+                return Task.CompletedTask;
 
-            var convertedAccommodations = removedAccommodations.Select(ConvertToLocation).ToList();
+            var convertedAccommodations = removedAccommodations.Select(Convert).ToList();
 
-            await _staticDataPublicationService.Publish(convertedAccommodations, UpdateEventTypes.Remove);
+            return _staticDataPublicationService.Publish(convertedAccommodations, UpdateEventTypes.Remove);
         }
 
-        private static Location ConvertToLocation(AccommodationData accommodation)
+
+        public Task PublishUpdate(List<int> accommodationIds)
+        {
+            if (!accommodationIds.Any())
+                return Task.CompletedTask;
+            
+            var convertedAccommodations = accommodationIds.Select(Convert).ToList();
+
+            return _staticDataPublicationService.Publish(convertedAccommodations, UpdateEventTypes.Update);
+        }
+        
+        
+        private static Location Convert(AccommodationData accommodation)
             => new Location(
                 HtId.Create(MapperLocationTypes.Accommodation, accommodation.Id),
                 accommodation.Name,
@@ -69,7 +80,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 LocationTypes.Accommodation);
 
 
-        private static Location ConvertToLocation(int id)
+        private static Location Convert(int id)
             => new Location(HtId.Create(MapperLocationTypes.Accommodation, id),
                 name: string.Empty,
                 locality: string.Empty,

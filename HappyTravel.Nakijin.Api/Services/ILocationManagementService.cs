@@ -6,6 +6,6 @@ namespace HappyTravel.Nakijin.Api.Services
 {
     public interface ILocationManagementService
     {
-        Task<Result> RemoveLocality(string removableHtId, string substitutionalHtId, string? substitutionalZoneHtId = null, CancellationToken cancellationToken = default);
+        Task<Result> Deactivate(string localityHtId, CancellationToken cancellationToken = default);
     }
 }

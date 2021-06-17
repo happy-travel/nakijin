@@ -173,15 +173,10 @@
             <param name="suppliers"></param>
             <returns></returns>
         </member>
-        <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationsManagementController.RemoveLocalityWithSubstitution(System.String,System.String,System.String)">
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationsManagementController.DeactivateLocality(System.String,System.Threading.CancellationToken)">
             <summary>
-             Replaces the id of removable location by a substitution location id. Accommodations must have the relation with the new location and a new zone (if substitutionalZoneHtId specified) instead of the removable location.
-             After this calculation/start Endpoint must be  
+            Deactivates ta locality and locality zones. LocalityId and LocalityZone fields in related accommodations will be set to NULL.
             </summary>
-            <param name="removableHtId">Location id to remove </param>
-            <param name="substitutionalHtId">Location id for substituting the removable location</param>
-            <param name="substitutionalZoneHtId">Id of the substituting zone for accommodations associated with the removable location</param>
-            <returns></returns>
         </member>
         <member name="M:HappyTravel.Nakijin.Api.Controllers.SuppliersPriorityController.AddOrUpdateDefaultPriority(System.Collections.Generic.Dictionary{HappyTravel.Nakijin.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.SuppliersCatalog.Suppliers}})">
             <summary>
