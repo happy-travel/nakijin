@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Net;
 using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.LocationNameNormalizer;
 using HappyTravel.LocationNameNormalizer.Extensions;
@@ -43,7 +45,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 accommodation.Photos,
                 accommodation.Rating,
                 accommodation.Schedule,
-                accommodation.TextualDescriptions,
+                accommodation.TextualDescriptions.Select(NormalizeTextualDescription).ToList(),
                 accommodation.Type,
                 accommodation.HasDirectContract
             );
@@ -57,6 +59,18 @@ namespace HappyTravel.Nakijin.Api.Services.Workers
                 var defaultCountry = location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
 
                 return NormalizeLocalityMultilingualNames(defaultCountry, location.Locality);
+            }
+
+
+            MultilingualTextualDescription NormalizeTextualDescription(MultilingualTextualDescription textualDescription)
+            {
+                var multilingualDescription = new MultiLanguage<string>();
+                var allDescriptions = textualDescription.Description.GetAll();
+
+                foreach (var description in allDescriptions)
+                    multilingualDescription.TrySetValue(description.languageCode, WebUtility.HtmlDecode(description.value).NormalizeInlineHtml());
+
+                return new MultilingualTextualDescription(textualDescription.Type, multilingualDescription);
             }
         }
 
