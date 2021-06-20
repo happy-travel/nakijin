@@ -14,11 +14,14 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             string endpoint;
             string port;
             string streamName;
+            string syncTimeout;
+            
             if (environment.IsLocal())
             {
                 endpoint = configuration["StaticDataPublication:Redis:Endpoint"];
                 port = configuration["StaticDataPublication:Redis:Port"];
                 streamName = configuration["StaticDataPublication:Redis:StreamName"];
+                syncTimeout = configuration["StaticDataPublication:Redis:SyncTimeout"];
             }
             else
             {
@@ -26,6 +29,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
                 endpoint = redisOptions["endpoint"];
                 port = redisOptions["port"];
                 streamName = redisOptions["streamName"];
+                syncTimeout = redisOptions["syncTimeout"];
             }
             
             services.AddStackExchangeRedisExtensions<StackExchangeRedisDefaultSerializer>(s 
@@ -38,7 +42,8 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
                             Host = endpoint,
                             Port = int.Parse(port)
                         }
-                    }
+                    },
+                    SyncTimeout = int.Parse(syncTimeout)
                 });
             services.Configure<StaticDataPublicationOptions>(o =>
             {
