@@ -29,7 +29,8 @@
   {"id": 90205, "name": "CalculatingAccommodationsDataFinish", "level": "Information", "source": "AccommodationDataMerger", "isException": false},
   {"id": 90206, "name": "CalculatingAccommodationsDataCancel", "level": "Information", "source": "AccommodationDataMerger", "isException": false},
   {"id": 90207, "name": "CalculatingAccommodationsDataError", "level": "Error", "source": "AccommodationDataMerger", "isException": true},
-
+  {"id": 90208, "name": "CalculatingAccommodationsBatch", "level": "Information", "source": "AccommodationDataMerger", "isException": false},
+  
   {"id": 90300, "name": "PreloadingAccommodationsStart", "level": "Information", "source": "AccommodationPreloader", "isException": false},
   {"id": 90301, "name": "PreloadingAccommodationsFinish", "level": "Information", "source": "AccommodationPreloader", "isException": false},
   {"id": 90302, "name": "PreloadingAccommodationsCancel", "level": "Information", "source": "AccommodationPreloader", "isException": false},
