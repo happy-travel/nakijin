@@ -173,6 +173,11 @@
             <param name="suppliers"></param>
             <returns></returns>
         </member>
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.LocationsManagementController.DeactivateLocality(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Deactivates ta locality and locality zones. LocalityId and LocalityZone fields in related accommodations will be set to NULL.
+            </summary>
+        </member>
         <member name="M:HappyTravel.Nakijin.Api.Controllers.SuppliersPriorityController.AddOrUpdateDefaultPriority(System.Collections.Generic.Dictionary{HappyTravel.Nakijin.Data.Models.Accommodations.AccommodationDataTypes,System.Collections.Generic.List{HappyTravel.SuppliersCatalog.Suppliers}})">
             <summary>
             Sets or updates default priority
