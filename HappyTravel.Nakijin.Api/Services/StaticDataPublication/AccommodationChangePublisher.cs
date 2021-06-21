@@ -17,7 +17,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
         }
 
 
-        public Task PublishAdd(AccommodationData addedAccommodation)
+        public Task PublishAdded(AccommodationData addedAccommodation)
         {
             var convertedAccommodationAdded = Convert(addedAccommodation);
 
@@ -25,7 +25,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
         }
 
 
-        public Task PublishRemove(int id)
+        public Task PublishRemoved(int id)
         {
             var convertedAccommodationRemoved = Convert(id);
 
@@ -33,7 +33,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
         }
 
 
-        public Task PublishAdd(List<AccommodationData> addedAccommodations)
+        public Task PublishAdded(List<AccommodationData> addedAccommodations)
         {
             if (!addedAccommodations.Any())
                 return Task.CompletedTask;
@@ -44,7 +44,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
         }
 
 
-        public Task PublishRemove(List<int> removedAccommodations)
+        public Task PublishRemoved(List<int> removedAccommodations)
         {
             if (!removedAccommodations.Any())
                 return Task.CompletedTask;
@@ -55,12 +55,12 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
         }
 
 
-        public Task PublishUpdate(List<int> accommodationIds)
+        public Task PublishUpdated(List<AccommodationData> accommodationsData)
         {
-            if (!accommodationIds.Any())
+            if (!accommodationsData.Any())
                 return Task.CompletedTask;
             
-            var convertedAccommodations = accommodationIds.Select(Convert).ToList();
+            var convertedAccommodations = accommodationsData.Select(Convert).ToList();
 
             return _staticDataPublicationService.Publish(convertedAccommodations, UpdateEventTypes.Update);
         }

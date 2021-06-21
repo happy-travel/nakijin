@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.MapperContracts.Internal.Mappings.Enums;
+using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
 using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
@@ -129,21 +130,18 @@ namespace HappyTravel.Nakijin.Api.Services
         
         private async Task<Result> PublishLocations(List<Locality> localities, List<LocalityZone> zones, List<RichAccommodationDetails> accommodations)
         {
+            //  TODO Publishing of zones was removed based on the code review comment. It can be found in cb7695123e81c5bf268b3 commit
+            //  https://github.com/happy-travel/nakijin/pull/120#discussion_r655149958
             var localitiesIds = localities.Select(a => a.Id).ToList();
-            var zoneIds = zones.Select(z => z.Id).ToList();
             var accommodationIds = accommodations.Select(a => a.Id).ToList();
             
             var publishLocalitiesTask =_locationChangePublisher.PublishRemovedLocalities(localitiesIds).AsTask();
-            var publicZonesTask = _locationChangePublisher.PublishRemovedLocalityZones(zoneIds).AsTask();
-            var publicAccommodationsTask = _accommodationChangePublisher.PublishUpdate(accommodationIds);
+            var publicAccommodationsTask = _accommodationChangePublisher.PublishUpdated(accommodations.Select(Convert).ToList());
             
-            await Task.WhenAll(publishLocalitiesTask, publicZonesTask, publicAccommodationsTask);
+            await Task.WhenAll(publishLocalitiesTask, publicAccommodationsTask);
             
             if (!publishLocalitiesTask.IsCompletedSuccessfully)
                 return Result.Failure($"Failed to publish locations removing. Ids '{string.Join($", ", localitiesIds)}'");
-            
-            if (!publicZonesTask.IsCompletedSuccessfully)
-                return Result.Failure($"Failed to publish zones removing. Ids '{string.Join($", ", zoneIds)}'");
             
             if (!publicAccommodationsTask.IsCompletedSuccessfully)
                 return Result.Failure($"Failed to publish accommodations updating. Ids '{string.Join($", ", accommodationIds)}'");
@@ -151,6 +149,15 @@ namespace HappyTravel.Nakijin.Api.Services
             return Result.Success();
         }
 
+
+        private AccommodationData Convert(RichAccommodationDetails accommodationDetails)
+            => new(id: accommodationDetails.Id,
+                name: accommodationDetails.KeyData.DefaultName,
+                localityName: string.Empty, 
+                countryName: accommodationDetails.KeyData.DefaultCountryName,
+                countryCode: accommodationDetails.CountryCode,
+                coordinates: accommodationDetails.KeyData.Coordinates);
+        
         
         private readonly LocationChangePublisher _locationChangePublisher;
         private readonly AccommodationChangePublisher _accommodationChangePublisher;
