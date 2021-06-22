@@ -190,5 +190,10 @@
                 Prevents authorization policies execution for not authenticated clients
             </summary>
         </member>
+        <member name="F:HappyTravel.Nakijin.Api.Services.Validators.LocationNameRetriever._equalCountryAndLocalityNameSet">
+            <summary>
+            Contains names of the localities that have the same name as the country
+            </summary>
+        </member>
     </members>
 </doc>
