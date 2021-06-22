@@ -141,12 +141,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
                 var countryAccommodationsOfSupplier = await _accommodationMapperDataRetrieveService.GeCountryAccommodationBySupplier(country.Code, supplier);
 
-                var notActiveCountryAccommodationsOfSupplier = countryAccommodationsOfSupplier
-                    .Where(ac => !ac.AccommodationKeyData.IsActive).ToList();
-
                 // Process invalid not active accommodations, because they can be activated if data became valid on supplier side.
-                var invalidNotActiveCountryAccommodationsOfSupplier = notActiveCountryAccommodationsOfSupplier
-                    .Where(ac => ac.AccommodationKeyData.DeactivationReason != DeactivationReasons.MatchingWithOther
+                var invalidNotActiveCountryAccommodationsOfSupplier = countryAccommodationsOfSupplier
+                    .Where(ac => !ac.AccommodationKeyData.IsActive
+                        && ac.AccommodationKeyData.DeactivationReason != DeactivationReasons.MatchingWithOther
                         && ac.AccommodationKeyData.DeactivationReason != DeactivationReasons.DeactivatedOnSupplier
                         && ac.AccommodationKeyData.DeactivationReason != DeactivationReasons.None)
                     .ToDictionary(ac => ac.SupplierCode, ac => ac.AccommodationKeyData);
@@ -177,7 +175,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
                     skip += accommodationDetails.Count;
                     await Map(country, accommodationDetails, supplier, countryAccommodationsTree,
-                        activeCountryAccommodationsOfSupplier, invalidNotActiveCountryAccommodationsOfSupplier, notActiveCountryAccommodationsOfSupplier,
+                        activeCountryAccommodationsOfSupplier, invalidNotActiveCountryAccommodationsOfSupplier,
                         activeCountryUncertainMatchesOfSupplier, countryLocalities,
                         countryLocalityZones, htAccommodationMappings, countryAccommodationsMappingSpan,
                         cancellationToken);
@@ -194,7 +192,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
             Suppliers supplier, STRtree<SlimAccommodationData> countryAccommodationsTree,
             Dictionary<string, SlimAccommodationData> activeCountryAccommodationsOfSupplier,
             Dictionary<string, SlimAccommodationData> invalidNotActiveCountryAccommodationsOfSupplier,
-            List<(string SupplierCode, SlimAccommodationData AccommodationKeyData)> notActiveCountryAccommodationsOfSupplier,
             List<Tuple<int, int>> activeCountryUncertainMatchesOfSupplier, Dictionary<string, int> countryLocalities,
             Dictionary<(int LocalityId, string LocalityZoneName), int> countryLocalityZones,
             Dictionary<int, (int Id, HashSet<int> MappedHtIds)> htAccommodationMappings,
@@ -396,7 +393,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
             void DeactivateOrAddNotActive(string supplierAccommodationCode, DeactivationReasons reason,
                 Contracts.MultilingualAccommodation? accommodation = null)
             {
-                if (notActiveCountryAccommodationsOfSupplier.Any(ac => ac.SupplierCode == supplierAccommodationCode))
+                if (invalidNotActiveCountryAccommodationsOfSupplier.Any(ac => ac.Key == supplierAccommodationCode))
                     return;
 
                 if (activeCountryAccommodationsOfSupplier.TryGetValue(supplierAccommodationCode,
