@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using CSharpFunctionalExtensions;
+using HappyTravel.Nakijin.Api.Infrastructure;
+using HappyTravel.Nakijin.Api.Services;
 using HappyTravel.Nakijin.Api.Services.Workers.LocationMapping;
-using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.SuppliersCatalog;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,9 +21,10 @@ namespace HappyTravel.Nakijin.Api.Controllers
     [Authorize(Policy = "CanEdit")]
     public class LocationsManagementController : StaticDataControllerBase
     {
-        public LocationsManagementController(IServiceProvider serviceProvider)
+        public LocationsManagementController(IServiceProvider serviceProvider, ILocationManagementService locationManagementService)
         {
             _serviceProvider = serviceProvider;
+            _locationManagementService = locationManagementService;
         }
 
 
@@ -57,11 +60,28 @@ namespace HappyTravel.Nakijin.Api.Controllers
             return Accepted();
         }
 
+        
+        /// <summary>
+        /// Deactivates a locality and locality zones. LocalityId and LocalityZone fields in related accommodations will be set to NULL.
+        /// </summary>
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        [HttpPost("locations/locality/deactivate/{localityHtId}")]
+        public async Task<IActionResult> DeactivateLocality([FromRoute] string localityHtId, CancellationToken cancellationToken = default)
+        {
+            var (_, isFailure, error) = await _locationManagementService.Deactivate(localityHtId, cancellationToken);
+            if (isFailure)
+                return BadRequest(ProblemDetailsBuilder.Build(error));
+
+            return Ok();
+        }
+        
 
         private static CancellationTokenSource _locationsMapperTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));
 
 
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILocationManagementService _locationManagementService;
     }
 }

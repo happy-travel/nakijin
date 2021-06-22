@@ -119,6 +119,10 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
                 new EventId(90207, "CalculatingAccommodationsDataError"),
                 $"ERROR | AccommodationDataMerger: ");
             
+            CalculatingAccommodationsBatchOccured = LoggerMessage.Define<string>(LogLevel.Information,
+                new EventId(90208, "CalculatingAccommodationsBatch"),
+                $"INFORMATION | AccommodationDataMerger: {{message}}");
+            
             PreloadingAccommodationsStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90300, "PreloadingAccommodationsStart"),
                 $"INFORMATION | AccommodationPreloader: {{message}}");
@@ -241,7 +245,10 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
                 
          public static void LogCalculatingAccommodationsDataError(this ILogger logger, Exception exception)
             => CalculatingAccommodationsDataErrorOccured(logger, exception);
-                
+
+         public static void LogCalculatingAccommodationsBatch(this ILogger logger, string message)
+             => CalculatingAccommodationsBatchOccured(logger, message, null);
+             
          public static void LogPreloadingAccommodationsStart(this ILogger logger, string message)
             => PreloadingAccommodationsStartOccured(logger, message, null);
                 
@@ -326,6 +333,8 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
         private static readonly Action<ILogger, string, Exception> CalculatingAccommodationsDataCancelOccured;
         
         private static readonly Action<ILogger, Exception> CalculatingAccommodationsDataErrorOccured;
+        
+        private static readonly Action<ILogger, string, Exception> CalculatingAccommodationsBatchOccured;
         
         private static readonly Action<ILogger, string, Exception> PreloadingAccommodationsStartOccured;
         

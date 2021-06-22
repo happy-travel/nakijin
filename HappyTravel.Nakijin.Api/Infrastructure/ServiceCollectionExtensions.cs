@@ -55,6 +55,8 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             services.AddNameNormalizationServices();
             services.AddSingleton<MultilingualDataHelper>();
             services.AddTransient<AccommodationMappingsCache>();
+            
+            services.AddTransient<ILocationManagementService, LocationManagementService>();
 
             return services;
         }

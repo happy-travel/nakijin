@@ -201,7 +201,7 @@ namespace HappyTravel.Nakijin.Api.Services
             dbSourceAccommodationMapping.Created = utcDate;
             _context.Add(dbSourceAccommodationMapping);
         }
-
+        
 
         private readonly AccommodationChangePublisher _accommodationChangePublisher;
         private readonly IAccommodationDataMerger _accommodationDataMerger;
