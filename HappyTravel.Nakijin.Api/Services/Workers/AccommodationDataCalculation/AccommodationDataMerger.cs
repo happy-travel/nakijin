@@ -86,7 +86,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                                 parameters.Select(p => (object) p).ToArray())
                             .ToListAsync(cancellationToken);
 
-                        skip += notCalculatedAccommodations.Count;
+                        skip += changedSupplierHotelCodes.Count;
 
                         await CalculateBatch(notCalculatedAccommodations, cancellationToken);
                     } while (changedSupplierHotelCodes.Count > 0);
