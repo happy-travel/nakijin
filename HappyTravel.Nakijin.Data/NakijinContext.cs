@@ -98,12 +98,12 @@ namespace HappyTravel.Nakijin.Data
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
                 
+                a.HasOne(rad => rad.Country).WithMany(c => c.Accommodations)
+                    .HasForeignKey(rad => rad.CountryId).OnDelete(DeleteBehavior.Restrict);
                 a.HasOne(rad => rad.Locality).WithMany(l => l.Accommodations)
                     .HasForeignKey(rad => rad.LocalityId).OnDelete(DeleteBehavior.Restrict);
                 a.HasOne(rad => rad.LocalityZone).WithMany(lz => lz.Accommodations)
                     .HasForeignKey(rad => rad.LocalityZoneId).OnDelete(DeleteBehavior.Restrict);
-                a.HasOne(rad => rad.Country).WithMany(c => c.Accommodations)
-                    .HasForeignKey(rad => rad.CountryId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<AccommodationUncertainMatches>(m =>
