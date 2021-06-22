@@ -1,3 +1,5 @@
+using System;
+using HappyTravel.ConsulKeyValueClient.ConfigurationProvider.Extensions;
 using HappyTravel.Nakijin.Api.Infrastructure.Environments;
 using HappyTravel.StdOutLogger.Extensions;
 using HappyTravel.StdOutLogger.Infrastructure;
@@ -24,6 +26,9 @@ namespace HappyTravel.Nakijin.Api
                     config.AddJsonFile("appsettings.json", false, true)
                         .AddJsonFile($"appsettings.{environment.EnvironmentName}.json", true, true);
                     config.AddEnvironmentVariables();
+                    config.AddConsulKeyValueClient(Environment.GetEnvironmentVariable("CONSUL_HTTP_ADDR") ?? throw new InvalidOperationException("Consul endpoint is not set"),
+                        "nakijin",
+                        Environment.GetEnvironmentVariable("CONSUL_HTTP_TOKEN") ?? throw new InvalidOperationException("Consul http token is not set"));
                 })
                 .ConfigureLogging((hostingContext, logging) =>
                 {
@@ -37,7 +42,7 @@ namespace HappyTravel.Nakijin.Api
                         logging
                             .AddStdOutLogger(options =>
                             {
-                                options.IncludeScopes = false;
+                                options.IncludeScopes = true;
                                 options.RequestIdHeader = Constants.DefaultRequestIdHeader;
                                 options.UseUtcTimestamp = true;
                             })
