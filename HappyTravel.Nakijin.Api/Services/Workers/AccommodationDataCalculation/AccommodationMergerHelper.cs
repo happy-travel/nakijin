@@ -38,7 +38,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 d => _multilingualDataHelper.NormalizeAccommodation(
                     JsonConvert.DeserializeObject<MultilingualAccommodation>(d.Accommodation.RootElement
                         .ToString()!)));
-
+            
             var suppliersPriority = accommodation.SuppliersPriority.Any()
                 ? accommodation.SuppliersPriority
                 : await _suppliersPriorityService.Get();

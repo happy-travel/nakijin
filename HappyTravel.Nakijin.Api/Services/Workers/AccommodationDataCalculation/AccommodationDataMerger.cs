@@ -210,7 +210,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                     join sa in ac.SupplierAccommodationCodes on ra.SupplierAccommodationId equals sa.Value
                     where ra.Supplier == sa.Key
                     select ra).ToList();
-
+                
+                
+                
                 var calculatedData = await _mergerHelper.Merge(ac, supplierAccommodations);
 
                 var dbAccommodation = new RichAccommodationDetails();

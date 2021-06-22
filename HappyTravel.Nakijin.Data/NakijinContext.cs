@@ -97,6 +97,13 @@ namespace HappyTravel.Nakijin.Data
                 a.Property(p => p.Modified)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
+                
+                a.HasOne(rad => rad.Locality).WithMany(l => l.Accommodations)
+                    .HasForeignKey(rad => rad.LocalityId).OnDelete(DeleteBehavior.Restrict);
+                a.HasOne(rad => rad.LocalityZone).WithMany(lz => lz.Accommodations)
+                    .HasForeignKey(rad => rad.LocalityZoneId).OnDelete(DeleteBehavior.Restrict);
+                a.HasOne(rad => rad.Country).WithMany(c => c.Accommodations)
+                    .HasForeignKey(rad => rad.CountryId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<AccommodationUncertainMatches>(m =>
@@ -162,6 +169,9 @@ namespace HappyTravel.Nakijin.Data
                 l.Property(p => p.Modified)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
+                
+                l.HasOne(loc => loc.Country).WithMany(c => c.Localities)
+                    .HasForeignKey(loc => loc.CountryId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<LocalityZone>(lz =>
@@ -180,6 +190,9 @@ namespace HappyTravel.Nakijin.Data
                 lz.Property(p => p.Modified)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
+                
+                lz.HasOne(z => z.Locality).WithMany(l => l.LocalityZones)
+                    .HasForeignKey(z => z.LocalityId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<HtAccommodationMapping>(ha =>

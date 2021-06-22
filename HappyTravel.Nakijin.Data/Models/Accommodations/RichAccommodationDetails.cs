@@ -30,7 +30,9 @@ namespace HappyTravel.Nakijin.Data.Models.Accommodations
         public DateTime Created { get; set; }
         public DateTime Modified { get; set; }
 
-
+        public virtual Locality Locality { get; set; }
+        public virtual LocalityZone LocalityZone { get; set; }
+        public virtual Country Country { get; set; }
         public virtual ICollection<HtAccommodationMapping> HtAccommodationMappings { get; set; }
         public virtual ICollection<AccommodationUncertainMatches> SourceAccommodationUncertainMatches { get; set; }
         public virtual ICollection<AccommodationUncertainMatches> AccommodationToMatchUncertainMatches { get; set; }
