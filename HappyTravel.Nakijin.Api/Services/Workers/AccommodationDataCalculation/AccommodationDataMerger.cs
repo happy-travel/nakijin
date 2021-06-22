@@ -84,9 +84,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                                    WHERE a.""{columnName}""->> {{{changedSupplierHotelCodes.Count}}} 
                                    in ({string.Join(',', changedSupplierHotelCodes.Select((_, index) => $"{{{index}}}"))})",
                                 parameters.Select(p => (object) p).ToArray())
+                            .Where(a => a.IsActive)
                             .ToListAsync(cancellationToken);
 
-                        skip += notCalculatedAccommodations.Count;
+                        skip += changedSupplierHotelCodes.Count;
 
                         await CalculateBatch(notCalculatedAccommodations, cancellationToken);
                         
