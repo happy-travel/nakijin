@@ -15,17 +15,25 @@ namespace HappyTravel.Nakijin.Api.Services.Validators
         
         public bool IsValid(string countryName, string localityName, bool normalizeNames = false)
         {
+            string normalizedCountryName;
+            string normalizedLocalityName;
+            
             if (normalizeNames)
             {
-                countryName = _locationNameNormalizer.GetNormalizedLocalityName(countryName, localityName);
-                localityName = _locationNameNormalizer.GetNormalizedCountryName(countryName);
+                normalizedLocalityName = _locationNameNormalizer.GetNormalizedLocalityName(countryName, localityName);
+                normalizedCountryName = _locationNameNormalizer.GetNormalizedCountryName(countryName);
+            }
+            else
+            {
+                normalizedLocalityName = localityName;
+                normalizedCountryName = countryName;
             }
 
-            if (!localityName.IsValid())
+            if (!normalizedLocalityName.IsValid())
                 return false;
 
-            if (localityName.Equals(countryName, StringComparison.Ordinal))
-                return _locationNameRetriever.AreCountryAndLocalityCanBeEqual(countryName);
+            if (normalizedLocalityName.Equals(normalizedCountryName, StringComparison.Ordinal))
+                return _locationNameRetriever.CanCountryAndLocalityBeEqual(normalizedCountryName);
 
             return true;
         }

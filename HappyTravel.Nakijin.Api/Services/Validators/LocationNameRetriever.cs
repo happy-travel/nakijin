@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using HappyTravel.LocationNameNormalizer;
 
 namespace HappyTravel.Nakijin.Api.Services.Validators
@@ -12,7 +13,7 @@ namespace HappyTravel.Nakijin.Api.Services.Validators
         }
 
 
-        public bool AreCountryAndLocalityCanBeEqual(string name)
+        public bool CanCountryAndLocalityBeEqual(string name)
             => _equalCountryAndLocalityNameSet!.Contains(name);
             
         
@@ -23,11 +24,8 @@ namespace HappyTravel.Nakijin.Api.Services.Validators
             {
                 var primaryCountryName = country.Name.Primary;
 
-                foreach (var locality in country.Localities)
-                {
-                    if (locality.Name.Primary.Equals(primaryCountryName))
-                        _equalCountryAndLocalityNameSet.Add(primaryCountryName);
-                }
+                if (country.Localities.Select(l => l.Name.Primary).Contains(primaryCountryName))
+                    _equalCountryAndLocalityNameSet.Add(primaryCountryName);
             }
         }
         
@@ -35,7 +33,7 @@ namespace HappyTravel.Nakijin.Api.Services.Validators
         /// <summary>
         /// Contains names of the localities that have the same name as the country
         /// </summary>
-        private HashSet<string>? _equalCountryAndLocalityNameSet = new ();
+        private HashSet<string>? _equalCountryAndLocalityNameSet;
 
         private readonly ILocationNameRetriever _locationNameRetriever;
     }
