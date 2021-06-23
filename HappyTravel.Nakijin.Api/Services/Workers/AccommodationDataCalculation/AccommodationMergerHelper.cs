@@ -7,7 +7,6 @@ using HappyTravel.EdoContracts.Accommodations.Enums;
 using HappyTravel.EdoContracts.Accommodations.Internals;
 using HappyTravel.MultiLanguage;
 using HappyTravel.Nakijin.Api.Infrastructure;
-using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Data.Models.Mappers;
 using HappyTravel.SuppliersCatalog;
@@ -38,7 +37,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 d => _multilingualDataHelper.NormalizeAccommodation(
                     JsonConvert.DeserializeObject<MultilingualAccommodation>(d.Accommodation.RootElement
                         .ToString()!)));
-
+            
             var suppliersPriority = accommodation.SuppliersPriority.Any()
                 ? accommodation.SuppliersPriority
                 : await _suppliersPriorityService.Get();
@@ -62,7 +61,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 supplierAccommodationDetails, accommodationWithManualCorrection);
 
             var locationInfo = MergeLocationInfo(suppliersPriority[AccommodationDataTypes.LocationInfo],
-                supplierAccommodationDetails, accommodationWithManualCorrection);
+                supplierAccommodationDetails, accommodationWithManualCorrection, accommodation.Country?.Names, accommodation.Locality?.Names, accommodation.LocalityZone?.Names);
 
             var photos = MergeData(suppliersPriority[AccommodationDataTypes.Photos],
                 supplierAccommodationDetails.ToDictionary(s => s.Key, s => s.Value.Photos),
@@ -96,7 +95,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
 
             return new MultilingualAccommodation
             (
-                String.Empty,
+                string.Empty,
                 name: name,
                 category: category,
                 location: locationInfo,
@@ -116,26 +115,15 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
 
         private MultilingualLocationInfo MergeLocationInfo(List<Suppliers> suppliersPriority,
             Dictionary<Suppliers, MultilingualAccommodation> supplierAccommodationDetails,
-            MultilingualAccommodation accommodationWithManualCorrection)
+            MultilingualAccommodation accommodationWithManualCorrection, 
+            MultiLanguage<string>? country, 
+            MultiLanguage<string>? locality, 
+            MultiLanguage<string>? localityZone)
         {
             var address = MergeMultilingualData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
                     d => d.Value.Location.Address)!,
                 accommodationWithManualCorrection.Location.Address, string.IsNullOrEmpty);
-
-            // TODO: Get country, locality, localityZone from db 
-            var country = MergeMultilingualData(suppliersPriority,
-                supplierAccommodationDetails.ToDictionary(d => d.Key,
-                    d => d.Value.Location.Country)!,
-                accommodationWithManualCorrection.Location.Country, string.IsNullOrEmpty);
-            var locality = MergeMultilingualData(suppliersPriority,
-                supplierAccommodationDetails.ToDictionary(d => d.Key,
-                    d => d.Value.Location.Locality),
-                accommodationWithManualCorrection.Location.Locality, string.IsNullOrEmpty);
-            var localityZone = MergeMultilingualData(suppliersPriority,
-                supplierAccommodationDetails.ToDictionary(d => d.Key,
-                    d => d.Value.Location.LocalityZone),
-                accommodationWithManualCorrection.Location.LocalityZone, string.IsNullOrEmpty);
 
             var coordinates = MergeData(suppliersPriority,
                 supplierAccommodationDetails.ToDictionary(d => d.Key,
@@ -160,7 +148,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
 
             return new MultilingualLocationInfo(
                 address: address,
-                country: country,
+                country: country!,
                 locality: locality,
                 localityZone: localityZone,
                 coordinates: coordinates,
@@ -168,7 +156,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 pointsOfInterests: pointOfInterests,
                 countryCode: countryCode,
                 supplierLocalityCode: string.Empty,
-                supplierLocalityZoneCode: String.Empty);
+                supplierLocalityZoneCode: string.Empty);
         }
 
 
@@ -305,7 +293,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 var manualCorrectedValue = manualCorrectedData != null
                     ? manualCorrectedData.GetValueOrDefault(languageCode)
                     : default(T);
-                var mergedData = MergeData<T>(suppliersPriority, selectedLanguageData, manualCorrectedValue!,
+                var mergedData = MergeData(suppliersPriority, selectedLanguageData, manualCorrectedValue!,
                     defaultChecker);
 
                 result.TrySetValue(languageCode, mergedData);
