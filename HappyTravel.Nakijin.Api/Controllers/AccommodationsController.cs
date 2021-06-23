@@ -68,9 +68,9 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// </summary>
         /// <param name="accommodationHtIds">Accommodation HtIds</param>
         /// <returns>List of accommodation details</returns>
-        [HttpGet("accommodations-list")]
+        [HttpPost("accommodations-list")]
         [ProducesResponseType(typeof(List<SlimAccommodation>), (int) HttpStatusCode.OK)]
-        public async Task<IActionResult> Get([FromQuery] List<string> accommodationHtIds)
+        public async Task<IActionResult> Get([FromBody] List<string> accommodationHtIds)
         {
             return Ok(await _accommodationService.Get(accommodationHtIds, LanguageCode));
         }
