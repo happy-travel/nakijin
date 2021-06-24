@@ -77,6 +77,8 @@ steps:
       from_secret: GITHUB_TOKEN
     VAULT_TOKEN:
       from_secret: VAULT_DEV_TOKEN
+    CONSUL_HTTP_TOKEN:
+      from_secret: CONSUL_DEV_HTTP_TOKEN      
     BUILD_VERSION: ${DRONE_COMMIT_SHA:0:7}
   settings:
     registry: registry.happytravel.com
