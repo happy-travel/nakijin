@@ -7,6 +7,7 @@ using HappyTravel.LocationNameNormalizer.Extensions;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Api.Infrastructure.Environments;
 using HappyTravel.Nakijin.Api.Services;
+using HappyTravel.Nakijin.Api.Services.Validators;
 using HappyTravel.Nakijin.Api.Services.Workers;
 using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
 using HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping;
@@ -52,6 +53,9 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             services.AddTransient<IAccommodationService, AccommodationService>();
             services.AddTransient<ILocationService, LocationService>();
 
+            services.AddTransient<ILocalityValidator, LocalityValidator>();
+            services.AddSingleton<LocationNameRetriever>();
+                        
             services.AddNameNormalizationServices();
             services.AddSingleton<MultilingualDataHelper>();
             services.AddTransient<AccommodationMappingsCache>();
