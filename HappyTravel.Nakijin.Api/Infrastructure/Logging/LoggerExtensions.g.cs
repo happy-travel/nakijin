@@ -87,6 +87,10 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
                 new EventId(90112, "MappingLocalityZonesOfSpecifiedCountryFinish"),
                 $"INFORMATION | LocalityZonesMapper: {{message}}");
             
+            MappingInvalidLocalityOccured = LoggerMessage.Define<string>(LogLevel.Warning,
+                new EventId(90113, "MappingInvalidLocality"),
+                $"WARNING | LocalityMapper: {{message}}");
+            
             MergingAccommodationsDataStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90200, "MergingAccommodationsDataStart"),
                 $"INFORMATION | AccommodationDataMerger: {{message}}");
@@ -221,7 +225,10 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
                 
          public static void LogMappingLocalityZonesOfSpecifiedCountryFinish(this ILogger logger, string message)
             => MappingLocalityZonesOfSpecifiedCountryFinishOccured(logger, message, null);
-                
+             
+         public static void LogMappingInvalidLocality(this ILogger logger, string message)
+             => MappingInvalidLocalityOccured(logger, message, null);
+         
          public static void LogMergingAccommodationsDataStart(this ILogger logger, string message)
             => MergingAccommodationsDataStartOccured(logger, message, null);
                 
@@ -317,6 +324,8 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
         private static readonly Action<ILogger, string, Exception> MappingLocalityZonesOfSpecifiedCountryStartOccured;
         
         private static readonly Action<ILogger, string, Exception> MappingLocalityZonesOfSpecifiedCountryFinishOccured;
+        
+        private static readonly Action<ILogger, string, Exception> MappingInvalidLocalityOccured;
         
         private static readonly Action<ILogger, string, Exception> MergingAccommodationsDataStartOccured;
         
