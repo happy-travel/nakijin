@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.MapperContracts.Internal.Mappings;
 using HappyTravel.MapperContracts.Internal.Mappings.Enums;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Api.Services.LocationMappingInfo;
 using Microsoft.AspNetCore.Authorization;
@@ -38,7 +39,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
             var (_, isFailure, locationMappings, error) = await _locationMappingInfoService.Get(htIds, LanguageCode);
 
             if (isFailure)
-                return BadRequest(error);
+                return BadRequest(ProblemDetailsBuilder.Build(error));
 
             return Ok(locationMappings);
         }

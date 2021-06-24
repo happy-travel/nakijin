@@ -20,6 +20,7 @@
   {"id": 90110, "name": "MappingLocalityZonesFinish", "level": "Information", "source": "LocalityZoneMapper", "isException": false},
   {"id": 90111, "name": "MappingLocalityZonesOfSpecifiedCountryStart", "level": "Information", "source": "LocalityZoneMapper", "isException": false},
   {"id": 90112, "name": "MappingLocalityZonesOfSpecifiedCountryFinish", "level": "Information", "source": "LocalityZoneMapper", "isException": false},
+  {"id": 90113, "name": "MappingInvalidLocality", "level": "Warning", "source": "LocalityMapper", "isException": false},
 
   {"id": 90200, "name": "MergingAccommodationsDataStart", "level": "Information", "source": "AccommodationDataMerger", "isException": false},
   {"id": 90201, "name": "MergingAccommodationsDataFinish", "level": "Information", "source": "AccommodationDataMerger", "isException": false},

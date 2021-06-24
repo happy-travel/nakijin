@@ -85,6 +85,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                                    in ({string.Join(',', changedSupplierHotelCodes.Select((_, index) => $"{{{index}}}"))})",
                                 parameters.Select(p => (object) p).ToArray())
                             .Where(a => a.IsActive)
+                            .Include(a => a.Country)
+                            .Include(a => a.Locality)
+                            .Include(a => a.LocalityZone)
                             .ToListAsync(cancellationToken);
 
                         skip += changedSupplierHotelCodes.Count;
@@ -154,6 +157,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                         .Where(ac => !ac.IsCalculated)
                         .OrderBy(ac => ac.Id)
                         .Take(_options.MergingBatchSize)
+                        .Include(a => a.Country)
+                        .Include(a => a.Locality)
+                        .Include(a => a.LocalityZone)
                         .ToListAsync(cancellationToken);
 
                     await CalculateBatch(notCalculatedAccommodations, cancellationToken);
@@ -210,7 +216,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                     join sa in ac.SupplierAccommodationCodes on ra.SupplierAccommodationId equals sa.Value
                     where ra.Supplier == sa.Key
                     select ra).ToList();
-
+                
                 var calculatedData = await _mergerHelper.Merge(ac, supplierAccommodations);
 
                 var dbAccommodation = new RichAccommodationDetails();
