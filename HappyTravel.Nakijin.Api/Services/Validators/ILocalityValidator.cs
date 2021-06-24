@@ -2,6 +2,6 @@
 {
     public interface ILocalityValidator
     {
-        public bool IsValid(string countryName, string localityName, bool normalizeNames = false);
+        public bool IsNormalizedValid(string normalizedCountryName, string normalizedLocalityName);
     }
 }

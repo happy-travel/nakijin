@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.Accommodations.Internals;
+using HappyTravel.LocationNameNormalizer;
 using Contracts = HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
@@ -45,7 +46,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
         public AccommodationMapper(NakijinContext context, ILoggerFactory loggerFactory, IOptions<StaticDataLoadingOptions> options,
             MultilingualDataHelper multilingualDataHelper, AccommodationMappingsCache mappingsCache, TracerProvider tracerProvider,
             AccommodationChangePublisher accommodationChangePublisher, AccommodationMapperHelper mapperHelper,
-            IAccommodationMapperDataRetrieveService accommodationMapperDataRetrieveService, ILocalityValidator localityValidator)
+            IAccommodationMapperDataRetrieveService accommodationMapperDataRetrieveService, ILocalityValidator localityValidator, 
+            ILocationNameNormalizer locationNameNormalizer)
         {
             _context = context;
             _logger = loggerFactory.CreateLogger<AccommodationMapper>();
@@ -57,6 +59,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
             _mapperHelper = mapperHelper;
             _accommodationMapperDataRetrieveService = accommodationMapperDataRetrieveService;
             _localityValidator = localityValidator;
+            _locationNameNormalizer = locationNameNormalizer;
         }
 
 
@@ -552,10 +555,12 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 int? localityZoneId = null;
                 if (location.Locality != null!)
                 {
-                    var defaultLocalityName = location.Locality.GetValueOrDefault(Constants.DefaultLanguageCode);
                     var defaultCountryName = location.Country.GetValueOrDefault(Constants.DefaultLanguageCode);
+                    var defaultLocalityName = location.Locality.GetValueOrDefault(Constants.DefaultLanguageCode);
+                    var normalizedCountryName = _locationNameNormalizer.GetNormalizedCountryName(defaultCountryName);
+                    var normalizedLocalityName = _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
                     
-                    if (!_localityValidator.IsValid(defaultCountryName, defaultLocalityName, true))
+                    if (!_localityValidator.IsNormalizedValid(normalizedCountryName, normalizedLocalityName))
                         return (country.Id, localityId, localityZoneId);
 
                     localityId = countryLocalities[defaultLocalityName];
@@ -585,5 +590,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
         private readonly AccommodationMappingsCache _mappingsCache;
         private readonly AccommodationMapperHelper _mapperHelper;
         private readonly ILocalityValidator _localityValidator;
+        private readonly ILocationNameNormalizer _locationNameNormalizer;
     }
 }

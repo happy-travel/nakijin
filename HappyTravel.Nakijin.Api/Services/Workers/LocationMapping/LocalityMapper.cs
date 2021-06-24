@@ -87,7 +87,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
                     var normalizedLocalityName = _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
                     var normalizedCountryName = _locationNameNormalizer.GetNormalizedCountryName(defaultCountryName);
                     
-                    if (!_localityValidator.IsValid(normalizedCountryName, normalizedLocalityName))
+                    if (!_localityValidator.IsNormalizedValid(normalizedCountryName, normalizedLocalityName))
                     {
                         _logger.LogMappingInvalidLocality($"Locality '{defaultLocalityName}' of the country '{defaultCountryName}' is invalid and has been skipped. " +
                             $"Supplier '{supplier}', Country '{JsonSerializer.Serialize(new {country.Code, country.Id, country.Name})}', Locality '{JsonSerializer.Serialize(locality)}'");
