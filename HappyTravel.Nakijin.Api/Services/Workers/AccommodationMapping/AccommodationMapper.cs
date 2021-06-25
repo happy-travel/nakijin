@@ -345,29 +345,29 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 if (!activeCountryAccommodationsOfSupplier.TryGetValue(accommodation.SupplierCode, out var existingAccommodation))
                     return;
 
-                if (existingAccommodation.SupplierAccommodationCodes.Count > 1)
+                if (existingAccommodation.SupplierAccommodationCodes.Count == 1)
                 {
-                    var dbAccommodation = new RichAccommodationDetails
-                    {
-                        Id = existingAccommodation.HtId,
-                        Modified = utcDate,
-                        IsCalculated = false
-                    };
-
-                    foreach (var supplierCode in existingAccommodation.SupplierAccommodationCodes)
-                        dbAccommodation.SupplierAccommodationCodes.TryAdd(supplierCode.Key, supplierCode.Value);
-
-                    dbAccommodation.SupplierAccommodationCodes.Remove(supplier);
-
-                    _context.Attach(dbAccommodation);
-                    var entry = _context.Entry(dbAccommodation);
-                    entry.Property(ac => ac.Modified).IsModified = true;
-                    entry.Property(ac => ac.IsCalculated).IsModified = true;
-                    entry.Property(ac => ac.SupplierAccommodationCodes).IsModified = true;
+                    DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.DeactivatedOnSupplier, accommodation);
                     return;
                 }
 
-                DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.DeactivatedOnSupplier, accommodation);
+                var dbAccommodation = new RichAccommodationDetails
+                {
+                    Id = existingAccommodation.HtId,
+                    Modified = utcDate,
+                    IsCalculated = false
+                };
+
+                foreach (var supplierCode in existingAccommodation.SupplierAccommodationCodes)
+                    dbAccommodation.SupplierAccommodationCodes.TryAdd(supplierCode.Key, supplierCode.Value);
+
+                dbAccommodation.SupplierAccommodationCodes.Remove(supplier);
+
+                _context.Attach(dbAccommodation);
+                var entry = _context.Entry(dbAccommodation);
+                entry.Property(ac => ac.Modified).IsModified = true;
+                entry.Property(ac => ac.IsCalculated).IsModified = true;
+                entry.Property(ac => ac.SupplierAccommodationCodes).IsModified = true;
             }
 
 
