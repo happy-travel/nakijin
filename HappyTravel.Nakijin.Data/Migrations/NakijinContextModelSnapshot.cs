@@ -36,7 +36,7 @@ namespace HappyTravel.Nakijin.Data.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("now() at time zone 'utc'");
 
-                    b.Property<int>("FirstHtId")
+                    b.Property<int>("HtIdToMatch")
                         .HasColumnType("integer");
 
                     b.Property<bool>("IsActive")
@@ -52,14 +52,14 @@ namespace HappyTravel.Nakijin.Data.Migrations
                     b.Property<float>("Score")
                         .HasColumnType("real");
 
-                    b.Property<int>("SecondHtId")
+                    b.Property<int>("SourceHtId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FirstHtId");
+                    b.HasIndex("HtIdToMatch");
 
-                    b.HasIndex("SecondHtId");
+                    b.HasIndex("SourceHtId");
 
                     b.ToTable("AccommodationUncertainMatches");
                 });
@@ -90,6 +90,9 @@ namespace HappyTravel.Nakijin.Data.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("now() at time zone 'utc'");
 
+                    b.Property<int>("DeactivationReason")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("HasDirectContract")
                         .HasColumnType("boolean");
 
@@ -101,15 +104,15 @@ namespace HappyTravel.Nakijin.Data.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
 
+                    b.Property<string>("KeyData")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
                     b.Property<int?>("LocalityId")
                         .HasColumnType("integer");
 
                     b.Property<int?>("LocalityZoneId")
                         .HasColumnType("integer");
-
-                    b.Property<string>("MappingData")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
 
                     b.Property<DateTime>("Modified")
                         .ValueGeneratedOnAdd()
@@ -125,6 +128,12 @@ namespace HappyTravel.Nakijin.Data.Migrations
                         .HasColumnType("jsonb");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CountryId");
+
+                    b.HasIndex("LocalityId");
+
+                    b.HasIndex("LocalityZoneId");
 
                     b.ToTable("Accommodations");
                 });
@@ -168,6 +177,27 @@ namespace HappyTravel.Nakijin.Data.Migrations
                     b.ToTable("Countries");
                 });
 
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.DataUpdateHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .UseIdentityByDefaultColumn();
+
+                    b.Property<int>("Supplier")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdateTime")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DataUpdateHistories");
+                });
+
             modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.HtAccommodationMapping", b =>
                 {
                     b.Property<int>("Id")
@@ -192,6 +222,8 @@ namespace HappyTravel.Nakijin.Data.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("HtId");
 
                     b.ToTable("HtAccommodationMappings");
                 });
@@ -230,6 +262,8 @@ namespace HappyTravel.Nakijin.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CountryId");
+
                     b.ToTable("Localities");
                 });
 
@@ -264,6 +298,8 @@ namespace HappyTravel.Nakijin.Data.Migrations
                         .HasColumnType("jsonb");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("LocalityId");
 
                     b.ToTable("LocalityZones");
                 });
@@ -336,33 +372,112 @@ namespace HappyTravel.Nakijin.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("StaticDatas");
+                    b.ToTable("StaticData");
                 });
 
             modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.AccommodationUncertainMatches", b =>
                 {
-                    b.HasOne("HappyTravel.Nakijin.Data.Models.Accommodations.RichAccommodationDetails", "FirstAccommodation")
-                        .WithMany("FirstUncertainMatches")
-                        .HasForeignKey("FirstHtId")
+                    b.HasOne("HappyTravel.Nakijin.Data.Models.Accommodations.RichAccommodationDetails", "AccommodationToMatch")
+                        .WithMany("AccommodationToMatchUncertainMatches")
+                        .HasForeignKey("HtIdToMatch")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HappyTravel.Nakijin.Data.Models.Accommodations.RichAccommodationDetails", "SecondAccommodation")
-                        .WithMany("SecondUncertainMatches")
-                        .HasForeignKey("SecondHtId")
+                    b.HasOne("HappyTravel.Nakijin.Data.Models.Accommodations.RichAccommodationDetails", "SourceAccommodation")
+                        .WithMany("SourceAccommodationUncertainMatches")
+                        .HasForeignKey("SourceHtId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("FirstAccommodation");
+                    b.Navigation("AccommodationToMatch");
 
-                    b.Navigation("SecondAccommodation");
+                    b.Navigation("SourceAccommodation");
                 });
 
             modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.Accommodations.RichAccommodationDetails", b =>
                 {
-                    b.Navigation("FirstUncertainMatches");
+                    b.HasOne("HappyTravel.Nakijin.Data.Models.Country", "Country")
+                        .WithMany("Accommodations")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("SecondUncertainMatches");
+                    b.HasOne("HappyTravel.Nakijin.Data.Models.Locality", "Locality")
+                        .WithMany("Accommodations")
+                        .HasForeignKey("LocalityId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HappyTravel.Nakijin.Data.Models.LocalityZone", "LocalityZone")
+                        .WithMany("Accommodations")
+                        .HasForeignKey("LocalityZoneId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Country");
+
+                    b.Navigation("Locality");
+
+                    b.Navigation("LocalityZone");
+                });
+
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.HtAccommodationMapping", b =>
+                {
+                    b.HasOne("HappyTravel.Nakijin.Data.Models.Accommodations.RichAccommodationDetails", "Accommodation")
+                        .WithMany("HtAccommodationMappings")
+                        .HasForeignKey("HtId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Accommodation");
+                });
+
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.Locality", b =>
+                {
+                    b.HasOne("HappyTravel.Nakijin.Data.Models.Country", "Country")
+                        .WithMany("Localities")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Country");
+                });
+
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.LocalityZone", b =>
+                {
+                    b.HasOne("HappyTravel.Nakijin.Data.Models.Locality", "Locality")
+                        .WithMany("LocalityZones")
+                        .HasForeignKey("LocalityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Locality");
+                });
+
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.Accommodations.RichAccommodationDetails", b =>
+                {
+                    b.Navigation("AccommodationToMatchUncertainMatches");
+
+                    b.Navigation("HtAccommodationMappings");
+
+                    b.Navigation("SourceAccommodationUncertainMatches");
+                });
+
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.Country", b =>
+                {
+                    b.Navigation("Accommodations");
+
+                    b.Navigation("Localities");
+                });
+
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.Locality", b =>
+                {
+                    b.Navigation("Accommodations");
+
+                    b.Navigation("LocalityZones");
+                });
+
+            modelBuilder.Entity("HappyTravel.Nakijin.Data.Models.LocalityZone", b =>
+                {
+                    b.Navigation("Accommodations");
                 });
 #pragma warning restore 612, 618
         }

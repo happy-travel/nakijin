@@ -4,6 +4,7 @@ using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Data.Models.Mappers;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
@@ -61,10 +62,10 @@ namespace HappyTravel.Nakijin.Data
                 a.Property(p => p.CountryId).IsRequired();
                 a.Property(p => p.LocalityId);
                 a.Property(p => p.LocalityZoneId);
-                a.Property(p => p.MappingData)
+                a.Property(p => p.KeyData)
                     .HasColumnType("jsonb")
                     .HasConversion(c => JsonConvert.SerializeObject(c),
-                        c => JsonConvert.DeserializeObject<AccommodationMappingData>(c))
+                        c => JsonConvert.DeserializeObject<AccommodationKeyData>(c))
                     .IsRequired();
                 a.Property(p => p.CalculatedAccommodation).IsRequired()
                     .HasColumnType("jsonb")
@@ -88,6 +89,7 @@ namespace HappyTravel.Nakijin.Data
                     .IsRequired();
                 a.Property(p => p.IsCalculated).IsRequired().HasDefaultValue(true);
                 a.Property(p => p.IsActive).IsRequired();
+                a.Property(p => p.DeactivationReason).IsRequired();
                 a.Property(p => p.Created)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
@@ -95,13 +97,20 @@ namespace HappyTravel.Nakijin.Data
                 a.Property(p => p.Modified)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
+                
+                a.HasOne(rad => rad.Country).WithMany(c => c.Accommodations)
+                    .HasForeignKey(rad => rad.CountryId).OnDelete(DeleteBehavior.Restrict);
+                a.HasOne(rad => rad.Locality).WithMany(l => l.Accommodations)
+                    .HasForeignKey(rad => rad.LocalityId).OnDelete(DeleteBehavior.Restrict);
+                a.HasOne(rad => rad.LocalityZone).WithMany(lz => lz.Accommodations)
+                    .HasForeignKey(rad => rad.LocalityZoneId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<AccommodationUncertainMatches>(m =>
             {
                 m.HasKey(p => p.Id);
-                m.Property(p => p.FirstHtId).IsRequired();
-                m.Property(p => p.SecondHtId).IsRequired();
+                m.Property(p => p.SourceHtId).IsRequired();
+                m.Property(p => p.HtIdToMatch).IsRequired();
                 m.Property(p => p.IsActive).HasDefaultValue(true).IsRequired();
                 m.Property(p => p.Created)
                     .IsRequired()
@@ -111,10 +120,10 @@ namespace HappyTravel.Nakijin.Data
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
 
-                m.HasOne(p => p.FirstAccommodation).WithMany(ac => ac.FirstUncertainMatches)
-                    .HasForeignKey(um => um.FirstHtId).OnDelete(DeleteBehavior.Restrict);
-                m.HasOne(p => p.SecondAccommodation).WithMany(ac => ac.SecondUncertainMatches)
-                    .HasForeignKey(um => um.SecondHtId).OnDelete(DeleteBehavior.Restrict);
+                m.HasOne(p => p.SourceAccommodation).WithMany(ac => ac.SourceAccommodationUncertainMatches)
+                    .HasForeignKey(um => um.SourceHtId).OnDelete(DeleteBehavior.Restrict);
+                m.HasOne(p => p.AccommodationToMatch).WithMany(ac => ac.AccommodationToMatchUncertainMatches)
+                    .HasForeignKey(um => um.HtIdToMatch).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<StaticData>(m =>
@@ -160,6 +169,9 @@ namespace HappyTravel.Nakijin.Data
                 l.Property(p => p.Modified)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
+                
+                l.HasOne(loc => loc.Country).WithMany(c => c.Localities)
+                    .HasForeignKey(loc => loc.CountryId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<LocalityZone>(lz =>
@@ -178,6 +190,9 @@ namespace HappyTravel.Nakijin.Data
                 lz.Property(p => p.Modified)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
+                
+                lz.HasOne(z => z.Locality).WithMany(l => l.LocalityZones)
+                    .HasForeignKey(z => z.LocalityId).OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<HtAccommodationMapping>(ha =>
@@ -187,6 +202,17 @@ namespace HappyTravel.Nakijin.Data
                 ha.Property(p => p.Modified).IsRequired();
                 ha.Property(p => p.Created).IsRequired();
                 ha.Property(p => p.MappedHtIds).HasColumnType("jsonb").IsRequired();
+                
+                ha.HasOne(p => p.Accommodation).WithMany(ac => ac.HtAccommodationMappings)
+                    .HasForeignKey(um => um.HtId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<DataUpdateHistory>(uh =>
+            {
+                uh.HasKey(p => p.Id);
+                uh.Property(p => p.Type).IsRequired();
+                uh.Property(p => p.Supplier).IsRequired();
+                uh.Property(p => p.UpdateTime).IsRequired();
             });
         }
 
@@ -197,7 +223,8 @@ namespace HappyTravel.Nakijin.Data
         public virtual DbSet<RichAccommodationDetails> Accommodations { get; set; }
         public virtual DbSet<RawAccommodation> RawAccommodations { get; set; }
         public virtual DbSet<AccommodationUncertainMatches> AccommodationUncertainMatches { get; set; }
-        public virtual DbSet<StaticData> StaticDatas { get; set; }
+        public virtual DbSet<StaticData> StaticData { get; set; }
         public virtual DbSet<HtAccommodationMapping> HtAccommodationMappings { get; set; }
+        public virtual DbSet<DataUpdateHistory> DataUpdateHistories { get; set; }
     }
 }

@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
+using HappyTravel.MapperContracts.Internal.Mappings.Enums;
+using HappyTravel.MapperContracts.Public.Locations;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Data;
-using HappyTravel.Nakijin.Data.Models;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore;
-using Contracts = HappyTravel.EdoContracts.StaticData;
 
 namespace HappyTravel.Nakijin.Api.Services
 {
@@ -32,9 +33,9 @@ namespace HappyTravel.Nakijin.Api.Services
         }
 
 
-        public async Task<List<Contracts.Country>> GetCountries(IEnumerable<Suppliers> suppliersFilter, string languageCode)
+        public async Task<List<Country>> GetCountries(IEnumerable<Suppliers> suppliersFilter, string languageCode)
         {
-            var suppliersKeys = suppliersFilter.Select(s => s.ToString().ToLower()).ToArray();
+            var suppliersKeys = suppliersFilter.Select(s => s.ToString().FirstCharToLower()).ToArray();
             var countriesQuery = _context.Countries.Where(c => c.IsActive);
             var localitiesQuery = _context.Localities.Where(l => l.IsActive);
 
@@ -52,17 +53,17 @@ namespace HappyTravel.Nakijin.Api.Services
                     CountryCode = c.Code,
                     CountryNames = c.Names,
                     LocalityId = l.Id,
-                    LocalityNams = l.Names
+                    LocalityNamеs = l.Names
                 }).ToListAsync();
 
             return (from c in countries
                 group c by new {c.CountryId, c.CountryCode, c.CountryNames}
                 into gr
                 select new
-                    Contracts.Country(gr.Key.CountryCode, HtId.Create(AccommodationMapperLocationTypes.Country, gr.Key.CountryId),
+                    Country(gr.Key.CountryCode, HtId.Create(MapperLocationTypes.Country, gr.Key.CountryId),
                         gr.Key.CountryNames.GetValueOrDefault(languageCode),
-                        gr.Select(l => new Contracts.Locality(HtId.Create(AccommodationMapperLocationTypes.Locality, l.LocalityId),
-                            l.LocalityNams.GetValueOrDefault(languageCode))).ToList())).ToList();
+                        gr.Select(l => new Locality(HtId.Create(MapperLocationTypes.Locality, l.LocalityId),
+                            l.LocalityNamеs.GetValueOrDefault(languageCode))).ToList())).ToList();
         }
 
 

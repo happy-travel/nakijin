@@ -1,10 +1,8 @@
-using System.Collections.Generic;
-using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.EdoContracts.Accommodations.Enums;
-using HappyTravel.EdoContracts.Accommodations.Internals;
-using HappyTravel.Geography;
 using Xunit;
 using HappyTravel.Nakijin.Api.Services.Workers;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping;
+using HappyTravel.Nakijin.Data.Models.Accommodations;
+using Newtonsoft.Json;
 
 namespace HappyTravel.Nakijin.Tests
 {
@@ -14,77 +12,46 @@ namespace HappyTravel.Nakijin.Tests
         [Fact]
         public void CalculatedScoreMustBeLarger()
         {
-            var accommodation = new Accommodation
-            (id: "hotel_toscana_laticastelli",
-                name: "Hotel Melia Milano",
-                rating: AccommodationRatings.FourStars,
-                contacts: new ContactInfo(
-                    faxes: new List<string>(),
-                    emails: new List<string>() {"melia.milano@melia.com"},
-                    phones: new List<string> {"39-02-44406"},
-                    webSites: new List<string>()
-                ),
-                location: new LocationInfo(
-                    address: "Via Masaccio 19, Milan",
-                    country: "Italy",
-                    localityHtId:null,
-                    locality: "Rapolano Terme",
-                    coordinates: new GeoPoint(45.478919982910156, 9.145230293273926),
-                    countryCode: "IT",
-                    countryHtId:"",
-                    localityZoneHtId:"",
-                    localityZone: "San Marco",
-                    pointsOfInterests: new List<PoiInfo>(),
-                    isHistoricalBuilding: false,
-                    locationDescriptionCode: LocationDescriptionCodes.Unspecified
-                ),
-                accommodationAmenities: null,
-                additionalInfo: null,
-                type: PropertyTypes.Hotels,
-                photos: null,
-                category: null,
-                schedule: new ScheduleInfo(),
-                hotelChain: null,
-                uniqueCodes: null,
-                textualDescriptions: null
-            );
+            var accommodation = JsonConvert.DeserializeObject<AccommodationKeyData>(@"{
+            ""rating"": 0,
+            ""address"": ""Jumeirah Beach Roads, Madinat Jumeirah Resort, Al Sufouh, Dubai, United Arab Emirates"",
+            ""contactInfo"": {
+                ""faxes"": [],
+                ""emails"": [],
+                ""phones"": [],
+                ""webSites"": []
+            },
+            ""coordinates"": {
+                ""latitude"": 25.131753,
+                ""longitude"": 55.18431
+            },
+            ""defaultName"": ""Jumeirah Dar Al Masyaf Madinats Jumeirah hotel"",
+            ""defaultCountryName"": ""The United Arab Emirates"",
+            ""defaultLocalityName"": ""Dubai"",
+            ""defaultLocalityZoneName"": ""Jumeirah Umm Suqueim""
+        }");
+            var nearestAccommodation = JsonConvert.DeserializeObject<AccommodationKeyData>(@"{
+    ""rating"": ""FiveStars"",
+            ""address"": ""Jumeirah Beach Road, Madinat Jumeirah Resorts, Al Sufouh - PO Box 75157"",
+            ""contactInfo"": {
+                ""faxes"": [],
+                ""emails"": [],
+                ""phones"": [
+                ""+971 43668888""
+                    ],
+                ""webSites"": []
+            },
+            ""coordinates"": {
+                ""latitude"": 25.131752316817668,
+                ""longitude"": 55.18441200256348
+            },
+            ""defaultName"": ""Jumeirah Dar Al Masyaf At Madinat Jumeirah"",
+            ""defaultCountryName"": ""The United Arab Emirates"",
+            ""defaultLocalityName"": ""Dubai"",
+            ""defaultLocalityZoneName"": ""Jumeirah Umm Suqueim""
+        }");
 
-            var nearestAccommodation = new Accommodation
-            (id: "225344",
-                name: "Melia",
-                rating: AccommodationRatings.FourStars,
-                contacts: new ContactInfo(
-                    faxes: new List<string>(),
-                    emails: new List<string> {""},
-                    phones: new List<string> {"+39 02444061"},
-                    webSites: new List<string>()
-                ),
-                location: new LocationInfo(
-                    address: "Via Masaccio, 19 20149",
-                    country: "",
-                    locality: "Venice",
-                    coordinates: new GeoPoint(45.4789183436, 9.14515969029),
-                    countryCode: "IT",
-                    countryHtId:"",
-                    localityHtId:"",
-                    localityZoneHtId:"",
-                    localityZone: "",
-                    pointsOfInterests: new List<PoiInfo>(),
-                    isHistoricalBuilding: false,
-                    locationDescriptionCode: LocationDescriptionCodes.Unspecified
-                ),
-                accommodationAmenities: null,
-                additionalInfo: null,
-                type: PropertyTypes.Hotels,
-                photos: null,
-                category: null,
-                schedule: new ScheduleInfo(),
-                hotelChain: null,
-                uniqueCodes: null,
-                textualDescriptions: null
-            );
-
-           // var score = ComparisonScoreCalculator.Calculate(nearestAccommodation, accommodation);
+           var score = ComparisonScoreCalculator.Calculate(nearestAccommodation, accommodation);
 
             Assert.True(true);
         }

@@ -49,43 +49,47 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
             
             MappingCountriesStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90104, "MappingCountriesStart"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | CountriesMapper: {{message}}");
             
             MappingCountriesFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90105, "MappingCountriesFinish"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | CountriesMapper: {{message}}");
             
             MappingLocalitiesStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90106, "MappingLocalitiesStart"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalitiesMapper: {{message}}");
             
             MappingLocalitiesFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90107, "MappingLocalitiesFinish"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalitiesMapper: {{message}}");
             
             MappingLocalitiesOfSpecifiedCountryStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90108, "MappingLocalitiesOfSpecifiedCountryStart"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalitiesMapper: {{message}}");
             
             MappingLocalitiesOfSpecifiedCountryFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90109, "MappingLocalitiesOfSpecifiedCountryFinish"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalitiesMapper: {{message}}");
             
             MappingLocalityZonesStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90110, "MappingLocalityZonesStart"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalityZonesMapper: {{message}}");
             
             MappingLocalityZonesFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90110, "MappingLocalityZonesFinish"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalityZonesMapper: {{message}}");
             
             MappingLocalityZonesOfSpecifiedCountryStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90111, "MappingLocalityZonesOfSpecifiedCountryStart"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalityZonesMapper: {{message}}");
             
             MappingLocalityZonesOfSpecifiedCountryFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90112, "MappingLocalityZonesOfSpecifiedCountryFinish"),
-                $"INFORMATION | LocationMapper: {{message}}");
+                $"INFORMATION | LocalityZonesMapper: {{message}}");
+            
+            MappingInvalidLocalityOccured = LoggerMessage.Define<string>(LogLevel.Warning,
+                new EventId(90113, "MappingInvalidLocality"),
+                $"WARNING | LocalityMapper: {{message}}");
             
             MergingAccommodationsDataStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90200, "MergingAccommodationsDataStart"),
@@ -102,6 +106,26 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
             MergingAccommodationsDataErrorOccured = LoggerMessage.Define(LogLevel.Error,
                 new EventId(90203, "MergingAccommodationsDataError"),
                 $"ERROR | AccommodationDataMerger: ");
+            
+            CalculatingAccommodationsDataStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
+                new EventId(90204, "CalculatingAccommodationsDataStart"),
+                $"INFORMATION | AccommodationDataMerger: {{message}}");
+            
+            CalculatingAccommodationsDataFinishOccured = LoggerMessage.Define<string>(LogLevel.Information,
+                new EventId(90205, "CalculatingAccommodationsDataFinish"),
+                $"INFORMATION | AccommodationDataMerger: {{message}}");
+            
+            CalculatingAccommodationsDataCancelOccured = LoggerMessage.Define<string>(LogLevel.Information,
+                new EventId(90206, "CalculatingAccommodationsDataCancel"),
+                $"INFORMATION | AccommodationDataMerger: {{message}}");
+            
+            CalculatingAccommodationsDataErrorOccured = LoggerMessage.Define(LogLevel.Error,
+                new EventId(90207, "CalculatingAccommodationsDataError"),
+                $"ERROR | AccommodationDataMerger: ");
+            
+            CalculatingAccommodationsBatchOccured = LoggerMessage.Define<string>(LogLevel.Information,
+                new EventId(90208, "CalculatingAccommodationsBatch"),
+                $"INFORMATION | AccommodationDataMerger: {{message}}");
             
             PreloadingAccommodationsStartOccured = LoggerMessage.Define<string>(LogLevel.Information,
                 new EventId(90300, "PreloadingAccommodationsStart"),
@@ -127,9 +151,17 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
                 new EventId(90500, "SameAccommodationInOneSupplierError"),
                 $"ERROR | AccommodationMapper: {{message}}");
             
-            EmptyCoordinatesInAccommodationOccured = LoggerMessage.Define<string>(LogLevel.Error,
-                new EventId(90501, "EmptyCoordinatesInAccommodation"),
+            NotValidCoordinatesInAccommodationOccured = LoggerMessage.Define<string>(LogLevel.Error,
+                new EventId(90501, "NotValidCoordinatesInAccommodation"),
                 $"ERROR | AccommodationMapper: {{message}}");
+            
+            NotValidDefaultNameOfAccommodationOccured = LoggerMessage.Define<string>(LogLevel.Error,
+                new EventId(90502, "NotValidDefaultNameOfAccommodation"),
+                $"ERROR | AccommodationMapper: {{message}}");
+            
+            LocationsPublishedOccured = LoggerMessage.Define<string>(LogLevel.Information,
+                new EventId(90502, "LocationsPublished"),
+                $"INFORMATION | PredictionsUpdateService: {{message}}");
             
         }
     
@@ -193,7 +225,10 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
                 
          public static void LogMappingLocalityZonesOfSpecifiedCountryFinish(this ILogger logger, string message)
             => MappingLocalityZonesOfSpecifiedCountryFinishOccured(logger, message, null);
-                
+             
+         public static void LogMappingInvalidLocality(this ILogger logger, string message)
+             => MappingInvalidLocalityOccured(logger, message, null);
+         
          public static void LogMergingAccommodationsDataStart(this ILogger logger, string message)
             => MergingAccommodationsDataStartOccured(logger, message, null);
                 
@@ -206,6 +241,21 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
          public static void LogMergingAccommodationsDataError(this ILogger logger, Exception exception)
             => MergingAccommodationsDataErrorOccured(logger, exception);
                 
+         public static void LogCalculatingAccommodationsDataStart(this ILogger logger, string message)
+            => CalculatingAccommodationsDataStartOccured(logger, message, null);
+                
+         public static void LogCalculatingAccommodationsDataFinish(this ILogger logger, string message)
+            => CalculatingAccommodationsDataFinishOccured(logger, message, null);
+                
+         public static void LogCalculatingAccommodationsDataCancel(this ILogger logger, string message)
+            => CalculatingAccommodationsDataCancelOccured(logger, message, null);
+                
+         public static void LogCalculatingAccommodationsDataError(this ILogger logger, Exception exception)
+            => CalculatingAccommodationsDataErrorOccured(logger, exception);
+
+         public static void LogCalculatingAccommodationsBatch(this ILogger logger, string message)
+             => CalculatingAccommodationsBatchOccured(logger, message, null);
+             
          public static void LogPreloadingAccommodationsStart(this ILogger logger, string message)
             => PreloadingAccommodationsStartOccured(logger, message, null);
                 
@@ -224,8 +274,14 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
          public static void LogSameAccommodationInOneSupplierError(this ILogger logger, string message)
             => SameAccommodationInOneSupplierErrorOccured(logger, message, null);
                 
-         public static void LogEmptyCoordinatesInAccommodation(this ILogger logger, string message)
-            => EmptyCoordinatesInAccommodationOccured(logger, message, null);
+         public static void LogNotValidCoordinatesInAccommodation(this ILogger logger, string message)
+            => NotValidCoordinatesInAccommodationOccured(logger, message, null);
+                
+         public static void LogNotValidDefaultNameOfAccommodation(this ILogger logger, string message)
+            => NotValidDefaultNameOfAccommodationOccured(logger, message, null);
+                
+         public static void LogLocationsPublished(this ILogger logger, string message)
+            => LocationsPublishedOccured(logger, message, null);
     
     
         
@@ -269,6 +325,8 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
         
         private static readonly Action<ILogger, string, Exception> MappingLocalityZonesOfSpecifiedCountryFinishOccured;
         
+        private static readonly Action<ILogger, string, Exception> MappingInvalidLocalityOccured;
+        
         private static readonly Action<ILogger, string, Exception> MergingAccommodationsDataStartOccured;
         
         private static readonly Action<ILogger, string, Exception> MergingAccommodationsDataFinishOccured;
@@ -276,6 +334,16 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
         private static readonly Action<ILogger, string, Exception> MergingAccommodationsDataCancelOccured;
         
         private static readonly Action<ILogger, Exception> MergingAccommodationsDataErrorOccured;
+        
+        private static readonly Action<ILogger, string, Exception> CalculatingAccommodationsDataStartOccured;
+        
+        private static readonly Action<ILogger, string, Exception> CalculatingAccommodationsDataFinishOccured;
+        
+        private static readonly Action<ILogger, string, Exception> CalculatingAccommodationsDataCancelOccured;
+        
+        private static readonly Action<ILogger, Exception> CalculatingAccommodationsDataErrorOccured;
+        
+        private static readonly Action<ILogger, string, Exception> CalculatingAccommodationsBatchOccured;
         
         private static readonly Action<ILogger, string, Exception> PreloadingAccommodationsStartOccured;
         
@@ -289,6 +357,10 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Logging
         
         private static readonly Action<ILogger, string, Exception> SameAccommodationInOneSupplierErrorOccured;
         
-        private static readonly Action<ILogger, string, Exception> EmptyCoordinatesInAccommodationOccured;
+        private static readonly Action<ILogger, string, Exception> NotValidCoordinatesInAccommodationOccured;
+        
+        private static readonly Action<ILogger, string, Exception> NotValidDefaultNameOfAccommodationOccured;
+        
+        private static readonly Action<ILogger, string, Exception> LocationsPublishedOccured;
     }
 }

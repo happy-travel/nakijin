@@ -8,6 +8,7 @@ The project contains API methods to get and manage locations to be used by other
 * Access to Vault
 * Jaeger instance _(optional)_
 
+
 ### Project Dependencies
 Libraries that project relies on:
 * [Edo.Contracts](https://github.com/happy-travel/edo-contracts)
@@ -27,3 +28,4 @@ Also you might need NetTopologySuite and enabled GIS services on the DB side.
 *Important*: Not mix the order of steps.
 
 To see situation and timing for each process, there are logs and Tracing logs in [Jeager](https://jaeger.happytravel.com/).
+

@@ -13,7 +13,7 @@ namespace HappyTravel.Nakijin.Api.Infrastructure.Environments
             if (environmentVariable is null)
                 throw new Exception($"Couldn't obtain the value for '{key}' configuration key.");
 
-            return Environment.GetEnvironmentVariable(environmentVariable);
+            return Environment.GetEnvironmentVariable(environmentVariable)!;
         }
 
 

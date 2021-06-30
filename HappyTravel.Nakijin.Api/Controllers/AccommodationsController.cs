@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
-using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.MapperContracts.Public.Accommodations;
 using HappyTravel.Nakijin.Api.Infrastructure;
-using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Api.Services;
+using HappyTravel.SuppliersCatalog;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,7 +39,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
             var (_, isFailure, result, error) =
                 await _accommodationService.Get(supplier, supplierAccommodationCode, LanguageCode);
             if (isFailure)
-                return BadRequest(error);
+                return BadRequest(ProblemDetailsBuilder.Build(error));
 
             return Ok(result);
         }
@@ -57,9 +57,22 @@ namespace HappyTravel.Nakijin.Api.Controllers
         {
             var (_, isFailure, result, error) = await _accommodationService.Get(accommodationHtId, LanguageCode);
             if (isFailure)
-                return BadRequest(error);
+                return BadRequest(ProblemDetailsBuilder.Build(error));
 
             return Ok(result);
+        }
+        
+        
+        /// <summary>
+        /// Gets accommodations
+        /// </summary>
+        /// <param name="accommodationHtIds">Accommodation HtIds</param>
+        /// <returns>List of accommodation details</returns>
+        [HttpPost("accommodations-list")]
+        [ProducesResponseType(typeof(List<SlimAccommodation>), (int) HttpStatusCode.OK)]
+        public async Task<IActionResult> Get([FromBody] List<string> accommodationHtIds)
+        {
+            return Ok(await _accommodationService.Get(accommodationHtIds, LanguageCode));
         }
 
 
@@ -81,6 +94,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 hasDirectContractFilter, LanguageCode);
             return Ok(accommodations);
         }
+
 
         /// <summary>
         ///   Gets date of last modified accommodation.

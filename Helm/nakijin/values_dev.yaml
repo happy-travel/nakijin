@@ -56,10 +56,10 @@ ingress:
 resources:
   limits:
     cpu: 1
-    memory: 1Gi
+    memory: 3Gi
   requests:
-    cpu: 1
-    memory: 1Gi
+    cpu: 100m
+    memory: 2Gi
 
 nodeSelector: {}
 
@@ -75,3 +75,4 @@ env:
   HTDC_REDIS_HOST: "redis-nakijin"
   JAEGER_AGENT_HOST: "localhost"
   JAEGER_AGENT_PORT: "6831"
+  CONSUL_HTTP_ADDR: "https://consul-dev.happytravel.com/"

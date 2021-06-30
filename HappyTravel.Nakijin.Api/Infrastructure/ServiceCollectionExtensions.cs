@@ -4,11 +4,16 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using HappyTravel.LocationNameNormalizer.Extensions;
-using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Api.Infrastructure.Environments;
 using HappyTravel.Nakijin.Api.Services;
+using HappyTravel.Nakijin.Api.Services.Validators;
 using HappyTravel.Nakijin.Api.Services.Workers;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping;
+using HappyTravel.Nakijin.Api.Services.Workers.LocationMapping;
+using HappyTravel.SuppliersCatalog;
+using HappyTravel.Nakijin.Api.Services.Workers.Preloading;
 using IdentityModel.Client;
 using IdentityServer4.AccessTokenValidation;
 using Microsoft.AspNetCore.Builder;
@@ -32,8 +37,15 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
         {
             services.AddTransient<IAccommodationPreloader, AccommodationPreloader>();
             services.AddTransient<IAccommodationMapper, AccommodationMapper>();
-            services.AddTransient<IAccommodationsDataMerger, AccommodationDataMerger>();
+            services.AddTransient<IAccommodationMapperDataRetrieveService, AccommodationMapperDataRetrieveService>();
+            services.AddTransient<AccommodationMapperHelper>();
+            services.AddTransient<IAccommodationDataMerger, AccommodationDataMerger>();
+            services.AddTransient<AccommodationMergerHelper>();
             services.AddTransient<ILocationMapper, LocationMapper>();
+            services.AddTransient<ICountryMapper, CountryMapper>();
+            services.AddTransient<ILocalityMapper, LocalityMapper>();
+            services.AddTransient<ILocalityZoneMapper, LocalityZoneMapper>();
+            services.AddTransient<ILocationMapperDataRetrieveService, LocationsMapperDataRetrieveService>();
             services.AddTransient<IAccommodationManagementService, AccommodationManagementService>();
             services.AddTransient<ISuppliersPriorityService, SuppliersPriorityService>();
             services.AddTransient<IConnectorClient, ConnectorClient>();
@@ -41,9 +53,14 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             services.AddTransient<IAccommodationService, AccommodationService>();
             services.AddTransient<ILocationService, LocationService>();
 
+            services.AddTransient<ILocalityValidator, LocalityValidator>();
+            services.AddSingleton<LocationNameRetriever>();
+                        
             services.AddNameNormalizationServices();
             services.AddSingleton<MultilingualDataHelper>();
             services.AddTransient<AccommodationMappingsCache>();
+            
+            services.AddTransient<ILocationManagementService, LocationManagementService>();
 
             return services;
         }
@@ -87,7 +104,6 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
                 if (environment.IsLocal())
                     builder.AddConsoleExporter();
             });
-
 
             return services;
         }
@@ -165,21 +181,20 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
             var clientOptions = vaultClient.Get(configuration["Nakijin:Client:Options"]).GetAwaiter().GetResult();
             var authorityOptions = vaultClient.Get(configuration["Nakijin:Authority:Options"]).GetAwaiter().GetResult();
             var authorityUrl = authorityOptions["authorityUrl"];
-            
+
             services.AddAccessTokenManagement(options =>
             {
                 options.Client.Clients.Add(HttpClientNames.Identity, new ClientCredentialsTokenRequest
                 {
-                  
-                    Address =   new Uri(new Uri(authorityUrl), "/connect/token").ToString(),
+                    Address = new Uri(new Uri(authorityUrl), "/connect/token").ToString(),
                     ClientId = clientOptions["clientId"],
                     ClientSecret = clientOptions["clientSecret"],
                     Scope = clientOptions["scope"]
                 });
             });
-            
+
             services.AddClientAccessTokenClient(HttpClientNames.Connectors, HttpClientNames.Identity);
-            
+
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(options =>
                 {
@@ -188,7 +203,6 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
                     options.RequireHttpsMetadata = true;
                     options.SupportedTokens = SupportedTokens.Jwt;
                 });
-
 
             return services;
         }

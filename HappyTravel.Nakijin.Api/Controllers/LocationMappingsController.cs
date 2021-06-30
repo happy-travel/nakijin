@@ -5,12 +5,13 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
-using HappyTravel.Nakijin.Api.Models.LocationInfo;
+using HappyTravel.MapperContracts.Internal.Mappings;
+using HappyTravel.MapperContracts.Internal.Mappings.Enums;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.LocationServiceInfo;
 using HappyTravel.Nakijin.Api.Services.LocationMappingInfo;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Location = HappyTravel.Nakijin.Api.Models.LocationInfo.Location;
 
 namespace HappyTravel.Nakijin.Api.Controllers
 {
@@ -38,7 +39,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
             var (_, isFailure, locationMappings, error) = await _locationMappingInfoService.Get(htIds, LanguageCode);
 
             if (isFailure)
-                return BadRequest(error);
+                return BadRequest(ProblemDetailsBuilder.Build(error));
 
             return Ok(locationMappings);
         }
@@ -55,7 +56,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         /// <returns>List of locations</returns>
         [HttpGet("locations")]
         [ProducesResponseType(typeof(List<Location>), (int) HttpStatusCode.OK)]
-        public async Task<IActionResult> GetLocations([FromQuery] AccommodationMapperLocationTypes locationType, [FromQuery] DateTime modified = default, [FromQuery] int skip = 0, [Range(0, 50000)][FromQuery] int top = 50000, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetLocations([FromQuery] MapperLocationTypes locationType, [FromQuery] DateTime modified = default, [FromQuery] int skip = 0, [Range(0, 50000)][FromQuery] int top = 50000, CancellationToken cancellationToken = default)
             => Ok(await _locationMappingInfoService.Get(locationType, LanguageCode, modified, skip, top, cancellationToken));
         
         

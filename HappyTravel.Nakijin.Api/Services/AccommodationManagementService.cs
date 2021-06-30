@@ -7,20 +7,23 @@ using HappyTravel.Nakijin.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
-using HappyTravel.EdoContracts.Accommodations.Internals;
+using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
-using HappyTravel.Nakijin.Api.Services.Workers;
+using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
+using HappyTravel.SuppliersCatalog;
 
 namespace HappyTravel.Nakijin.Api.Services
 {
     public class AccommodationManagementService : IAccommodationManagementService
     {
         public AccommodationManagementService(NakijinContext context,
-            IAccommodationsDataMerger accommodationsDataMerger, AccommodationMappingsCache mappingsCache)
+            IAccommodationDataMerger accommodationDataMerger, AccommodationMappingsCache mappingsCache,
+            AccommodationChangePublisher accommodationChangePublisher)
         {
             _context = context;
-            _accommodationsDataMerger = accommodationsDataMerger;
+            _accommodationDataMerger = accommodationDataMerger;
             _mappingsCache = mappingsCache;
+            _accommodationChangePublisher = accommodationChangePublisher;
         }
 
 
@@ -32,22 +35,22 @@ namespace HappyTravel.Nakijin.Api.Services
             if (uncertainMatch == default)
                 return Result.Success();
 
-            var (_, isFailure, error) = await Match(uncertainMatch.FirstHtId, uncertainMatch.SecondHtId);
+            var (_, isFailure, error) = await Match(uncertainMatch.SourceHtId, uncertainMatch.HtIdToMatch);
             if (isFailure)
                 return Result.Failure(error);
 
-            await AddOrUpdateMappings(uncertainMatch.FirstHtId, uncertainMatch.SecondHtId);
-
+            await AddOrUpdateMappings(uncertainMatch.SourceHtId, uncertainMatch.HtIdToMatch);
+            
             uncertainMatch.IsActive = false;
             uncertainMatch.Modified = DateTime.UtcNow;
 
             _context.Update(uncertainMatch);
             await _context.SaveChangesAsync();
 
-            // No need to check for failure, because always needed calculation here
-            await RecalculateData(uncertainMatch.FirstHtId);
-
             await _mappingsCache.Fill();
+            
+            await _accommodationChangePublisher.PublishRemoved(uncertainMatch.HtIdToMatch);
+
             return Result.Success();
         }
 
@@ -60,10 +63,11 @@ namespace HappyTravel.Nakijin.Api.Services
 
             await AddOrUpdateMappings(sourceHtId, htIdToMatch);
             await _context.SaveChangesAsync();
-            // No need to check for failure, because always needed calculation here
-            await RecalculateData(sourceHtId);
 
             await _mappingsCache.Fill();
+
+            await _accommodationChangePublisher.PublishRemoved(htIdToMatch);
+            
             return Result.Success();
         }
 
@@ -109,7 +113,7 @@ namespace HappyTravel.Nakijin.Api.Services
             if (accommodation.IsCalculated)
                 return Result.Failure($"Accommodation data with {nameof(id)} {id} already calculated");
 
-            var calculatedData = await _accommodationsDataMerger.Merge(accommodation);
+            var calculatedData = await _accommodationDataMerger.Merge(accommodation);
 
             accommodation.CalculatedAccommodation = calculatedData;
             accommodation.Modified = DateTime.UtcNow;
@@ -146,6 +150,7 @@ namespace HappyTravel.Nakijin.Api.Services
             sourceAccommodation.Modified = utcDate;
 
             accommodationToMatch.IsActive = false;
+            accommodationToMatch.DeactivationReason = DeactivationReasons.MatchingWithOther;
             accommodationToMatch.Modified = utcDate;
 
             _context.Update(sourceAccommodation);
@@ -196,9 +201,10 @@ namespace HappyTravel.Nakijin.Api.Services
             dbSourceAccommodationMapping.Created = utcDate;
             _context.Add(dbSourceAccommodationMapping);
         }
+        
 
-
-        private readonly IAccommodationsDataMerger _accommodationsDataMerger;
+        private readonly AccommodationChangePublisher _accommodationChangePublisher;
+        private readonly IAccommodationDataMerger _accommodationDataMerger;
         private readonly NakijinContext _context;
         private readonly AccommodationMappingsCache _mappingsCache;
     }
