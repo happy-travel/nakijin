@@ -72,7 +72,7 @@ env:
   ASPNETCORE_URLS: http://*:80
   ASPNETCORE_ENVIRONMENT: "Production"
   HTDC_VAULT_ENDPOINT: "https://vault.happytravel.com/v1/"
-  HTDC_NAKIJIN_SENTRY_ENDPOINT: "https://206df52af48642e4bfafd092418a3db7@sentry.happytravel.com/29"
+  HTDC_NAKIJIN_SENTRY_ENDPOINT: "https://206df52af48642e4bfafd092418a3db7@sentry1.happytravel.com/29"
   HTDC_REDIS_HOST: "redis-nakijin"
   JAEGER_AGENT_HOST: "localhost"
   JAEGER_AGENT_PORT: "6831"
