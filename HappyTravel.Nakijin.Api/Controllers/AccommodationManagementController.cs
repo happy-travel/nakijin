@@ -352,6 +352,24 @@ namespace HappyTravel.Nakijin.Api.Controllers
         }
 
 
+        /// <summary>
+        /// Removes duplicate accommodations, which formed by supplier changed country codes.
+        /// </summary>
+        /// <param name="suppliers"></param>
+        /// <returns></returns>
+        [HttpPost("accommodations/duplicates/formed-by-supplier-country-change/remove")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> RemoveDuplicatesFormedBySupplierChangedCountries(List<Suppliers> suppliers)
+        {
+            var (_, isFailure, error) = await _accommodationManagementService.RemoveDuplicatesFormedBySuppliersChangedCountry(suppliers);
+            if (isFailure)
+                return BadRequest(error);
+
+            return Ok();
+        }
+
+
         private static CancellationTokenSource _accommodationDataMergeTokenSource =
             new CancellationTokenSource(TimeSpan.FromDays(1));
 

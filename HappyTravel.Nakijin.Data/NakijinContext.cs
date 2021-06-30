@@ -97,7 +97,7 @@ namespace HappyTravel.Nakijin.Data
                 a.Property(p => p.Modified)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
-                
+
                 a.HasOne(rad => rad.Country).WithMany(c => c.Accommodations)
                     .HasForeignKey(rad => rad.CountryId).OnDelete(DeleteBehavior.Restrict);
                 a.HasOne(rad => rad.Locality).WithMany(l => l.Accommodations)
@@ -169,7 +169,7 @@ namespace HappyTravel.Nakijin.Data
                 l.Property(p => p.Modified)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
-                
+
                 l.HasOne(loc => loc.Country).WithMany(c => c.Localities)
                     .HasForeignKey(loc => loc.CountryId).OnDelete(DeleteBehavior.Restrict);
             });
@@ -190,7 +190,7 @@ namespace HappyTravel.Nakijin.Data
                 lz.Property(p => p.Modified)
                     .IsRequired()
                     .HasDefaultValueSql("now() at time zone 'utc'");
-                
+
                 lz.HasOne(z => z.Locality).WithMany(l => l.LocalityZones)
                     .HasForeignKey(z => z.LocalityId).OnDelete(DeleteBehavior.Restrict);
             });
@@ -202,7 +202,7 @@ namespace HappyTravel.Nakijin.Data
                 ha.Property(p => p.Modified).IsRequired();
                 ha.Property(p => p.Created).IsRequired();
                 ha.Property(p => p.MappedHtIds).HasColumnType("jsonb").IsRequired();
-                
+
                 ha.HasOne(p => p.Accommodation).WithMany(ac => ac.HtAccommodationMappings)
                     .HasForeignKey(um => um.HtId).OnDelete(DeleteBehavior.Restrict);
             });
@@ -214,6 +214,11 @@ namespace HappyTravel.Nakijin.Data
                 uh.Property(p => p.Supplier).IsRequired();
                 uh.Property(p => p.UpdateTime).IsRequired();
             });
+
+            //TODO: Remove (AA-372)
+            builder.Entity<ProjectionForGroupedAccommodations>()
+                .HasNoKey()
+                .ToView(null);
         }
 
 
@@ -226,5 +231,8 @@ namespace HappyTravel.Nakijin.Data
         public virtual DbSet<StaticData> StaticData { get; set; }
         public virtual DbSet<HtAccommodationMapping> HtAccommodationMappings { get; set; }
         public virtual DbSet<DataUpdateHistory> DataUpdateHistories { get; set; }
+
+        //TODO: Remove (AA-372)
+        public DbSet<ProjectionForGroupedAccommodations> ProjectionsForGroupedAccommodations { get; set; }
     }
 }

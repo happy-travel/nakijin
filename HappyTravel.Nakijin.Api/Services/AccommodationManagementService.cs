@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
 using HappyTravel.SuppliersCatalog;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace HappyTravel.Nakijin.Api.Services
 {
@@ -27,6 +30,88 @@ namespace HappyTravel.Nakijin.Api.Services
         }
 
 
+        public async Task<Result> RemoveDuplicatesFormedBySuppliersChangedCountry(List<Suppliers> suppliers)
+        {
+            foreach (var supplier in suppliers)
+            {
+                try
+                {
+                    // Get supplier active duplicate accommodations, grouped by supplier code
+                    var entityType = _context.Model.FindEntityType(typeof(RichAccommodationDetails))!;
+                    var tableName = entityType.GetTableName()!;
+                    var columnName = entityType.GetProperty(nameof(RichAccommodationDetails.SupplierAccommodationCodes))
+                        .GetColumnName(StoreObjectIdentifier.Table(tableName, null))!;
+                    var supplierNameParameter = supplier.ToString().FirstCharToLower();
+
+                    // TODO Change (AA-372)
+                    var duplicateSupplierAccommodations = await _context.ProjectionsForGroupedAccommodations
+                        .FromSqlRaw(
+                            @$"SELECT a.""{columnName}""->> {{{0}}} as SupplierCode FROM ""{tableName}"" a 
+                                   WHERE a.""{columnName}""->> {{{0}}} IS NOT NULL AND a.""IsActive""
+                                   GROUP BY a.""{columnName}""->> {{{0}}}
+                                   HAVING count(a.""{columnName}""->> {{{0}}}) > 1",
+                            new object[] {supplierNameParameter})
+                        .ToListAsync();
+
+                    var supplierCodes = duplicateSupplierAccommodations.Select(ac => ac.SupplierCode).ToList();
+
+                    var countryCodesFromRawAccommodations = await _context.RawAccommodations
+                        .Where(ac => ac.Supplier == supplier
+                            && supplierCodes.Contains(ac.SupplierAccommodationId))
+                        .Select(ac => new
+                        {
+                            CountryCode = ac.CountryCode,
+                            SupplierCode = ac.SupplierAccommodationId
+                        }).ToListAsync();
+
+                    var parameters = new List<string>(supplierCodes) {supplierNameParameter};
+
+                    // TODO: Change (AA-372)
+                    var accommodationsWithCountryCodes = await _context.Accommodations
+                        .FromSqlRaw(
+                            @$"SELECT * FROM ""{tableName}"" a 
+                                   WHERE a.""{columnName}""->> {{{supplierCodes.Count}}} 
+                                   in ({string.Join(',', supplierCodes.Select((_, index) => $"{{{index}}}"))})",
+                            parameters.Select(p => (object) p).ToArray())
+                        .Where(a => a.IsActive)
+                        .ToListAsync();
+
+                    var accommodationsToRemove = (from ra in countryCodesFromRawAccommodations
+                        join ac in accommodationsWithCountryCodes on ra.SupplierCode equals ac.SupplierAccommodationCodes[supplier]
+                        where ra.CountryCode != ac.CountryCode
+                        select ac).ToList();
+
+                    var removedHtIds = new List<int>();
+
+                    // TODO: Add about changes to accommodation history (AA-374)
+                    foreach (var accommodation in accommodationsToRemove)
+                    {
+                        if (accommodation.SupplierAccommodationCodes.Count == 1)
+                        {
+                            _context.Remove(accommodation);
+                            removedHtIds.Add(accommodation.Id);
+                        }
+                        else
+                        {
+                            accommodation.SupplierAccommodationCodes.Remove(supplier);
+                          
+                            _context.Update(accommodation);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await _accommodationChangePublisher.PublishRemoved(removedHtIds);
+                }
+                catch (Exception ex)
+                {
+                    return Result.Failure(ex.Message);
+                }
+            }
+
+            return Result.Success();
+        }
+
+
         public async Task<Result> MatchUncertain(int uncertainMatchId)
         {
             var uncertainMatch = await _context.AccommodationUncertainMatches
@@ -40,7 +125,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 return Result.Failure(error);
 
             await AddOrUpdateMappings(uncertainMatch.SourceHtId, uncertainMatch.HtIdToMatch);
-            
+
             uncertainMatch.IsActive = false;
             uncertainMatch.Modified = DateTime.UtcNow;
 
@@ -48,7 +133,7 @@ namespace HappyTravel.Nakijin.Api.Services
             await _context.SaveChangesAsync();
 
             await _mappingsCache.Fill();
-            
+
             await _accommodationChangePublisher.PublishRemoved(uncertainMatch.HtIdToMatch);
 
             return Result.Success();
@@ -67,7 +152,7 @@ namespace HappyTravel.Nakijin.Api.Services
             await _mappingsCache.Fill();
 
             await _accommodationChangePublisher.PublishRemoved(htIdToMatch);
-            
+
             return Result.Success();
         }
 
@@ -159,6 +244,7 @@ namespace HappyTravel.Nakijin.Api.Services
             return Result.Success();
         }
 
+
         // This method only make changes on db context - not on db.
         // If ht mappings will be not large, may be this method will be used from mapping worker
         private async Task AddOrUpdateMappings(int sourceHtId, int htIdToMap)
@@ -201,7 +287,7 @@ namespace HappyTravel.Nakijin.Api.Services
             dbSourceAccommodationMapping.Created = utcDate;
             _context.Add(dbSourceAccommodationMapping);
         }
-        
+
 
         private readonly AccommodationChangePublisher _accommodationChangePublisher;
         private readonly IAccommodationDataMerger _accommodationDataMerger;

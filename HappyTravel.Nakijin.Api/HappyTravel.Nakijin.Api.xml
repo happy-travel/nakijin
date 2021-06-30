@@ -99,6 +99,13 @@
             <param name="htIdToMatch"></param>
             <returns></returns>
         </member>
+        <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsManagementController.RemoveDuplicatesFormedBySupplierChangedCountries(System.Collections.Generic.List{HappyTravel.SuppliersCatalog.Suppliers})">
+            <summary>
+            Removes duplicate accommodations, which formed by supplier changed country codes.
+            </summary>
+            <param name="suppliers"></param>
+            <returns></returns>
+        </member>
         <member name="M:HappyTravel.Nakijin.Api.Controllers.AccommodationsController.Get(HappyTravel.SuppliersCatalog.Suppliers,System.String)">
             <summary>
             Gets accommodation
