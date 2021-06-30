@@ -36,7 +36,6 @@ namespace HappyTravel.Nakijin.Api.Services
             {
                 try
                 {
-                    // Get supplier active duplicate accommodations, grouped by supplier code
                     var entityType = _context.Model.FindEntityType(typeof(RichAccommodationDetails))!;
                     var tableName = entityType.GetTableName()!;
                     var columnName = entityType.GetProperty(nameof(RichAccommodationDetails.SupplierAccommodationCodes))

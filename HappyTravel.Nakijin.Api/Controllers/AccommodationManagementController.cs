@@ -360,7 +360,7 @@ namespace HappyTravel.Nakijin.Api.Controllers
         [HttpPost("accommodations/duplicates/formed-by-supplier-country-change/remove")]
         [ProducesResponseType((int) HttpStatusCode.OK)]
         [ProducesResponseType((int) HttpStatusCode.BadRequest)]
-        public async Task<IActionResult> RemoveDuplicatesFormedBySupplierChangedCountries(List<Suppliers> suppliers)
+        public async Task<IActionResult> RemoveDuplicatesFormedBySupplierChangedCountry(List<Suppliers> suppliers)
         {
             var (_, isFailure, error) = await _accommodationManagementService.RemoveDuplicatesFormedBySuppliersChangedCountry(suppliers);
             if (isFailure)
