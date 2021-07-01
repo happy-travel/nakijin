@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.Mappers.Enums;
 using HappyTravel.Nakijin.Api.Services;
 using HappyTravel.Nakijin.Data.Models;
@@ -364,7 +365,8 @@ namespace HappyTravel.Nakijin.Api.Controllers
         {
             var (_, isFailure, error) = await _accommodationManagementService.RemoveDuplicatesFormedBySuppliersChangedCountry(suppliers);
             if (isFailure)
-                return BadRequest(error);
+                return BadRequest(ProblemDetailsBuilder.Build(error));
+
 
             return Ok();
         }

@@ -93,7 +93,6 @@ namespace HappyTravel.Nakijin.Api.Services
                         else
                         {
                             accommodation.SupplierAccommodationCodes.Remove(supplier);
-                          
                             _context.Update(accommodation);
                         }
                     }
