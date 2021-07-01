@@ -14,6 +14,7 @@ using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
 using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Npgsql;
 
 namespace HappyTravel.Nakijin.Api.Services
 {
@@ -40,16 +41,16 @@ namespace HappyTravel.Nakijin.Api.Services
                     var tableName = entityType.GetTableName()!;
                     var columnName = entityType.GetProperty(nameof(RichAccommodationDetails.SupplierAccommodationCodes))
                         .GetColumnName(StoreObjectIdentifier.Table(tableName, null))!;
-                    var supplierNameParameter = supplier.ToString().FirstCharToLower();
+                    var supplierNameParameter = new NpgsqlParameter("supplier", supplier.ToString().FirstCharToLower());
 
                     // TODO Change (AA-372)
                     var duplicateSupplierAccommodations = await _context.ProjectionsForGroupedAccommodations
                         .FromSqlRaw(
-                            @$"SELECT a.""{columnName}""->> {{{0}}} as SupplierCode FROM ""{tableName}"" a 
-                                   WHERE a.""{columnName}""->> {{{0}}} IS NOT NULL AND a.""IsActive""
-                                   GROUP BY a.""{columnName}""->> {{{0}}}
-                                   HAVING count(a.""{columnName}""->> {{{0}}}) > 1",
-                            new object[] {supplierNameParameter})
+                            @$"SELECT a.""{columnName}""->> @supplier as SupplierCode FROM ""{tableName}"" a 
+                                   WHERE a.""{columnName}""->> @supplier IS NOT NULL AND a.""IsActive""
+                                   GROUP BY a.""{columnName}""->>  @supplier
+                                   HAVING count(a.""{columnName}""->>  @supplier) > 1",
+                            supplierNameParameter)
                         .ToListAsync();
 
                     var supplierCodes = duplicateSupplierAccommodations.Select(ac => ac.SupplierCode).ToList();
@@ -63,15 +64,15 @@ namespace HappyTravel.Nakijin.Api.Services
                             SupplierCode = ac.SupplierAccommodationId
                         }).ToListAsync();
 
-                    var parameters = new List<string>(supplierCodes) {supplierNameParameter};
-
+                    var sqlParameters = supplierCodes.Select((code, index) => new NpgsqlParameter($"p{index}", code)).ToList<object>();
+                    sqlParameters.Add(supplierNameParameter);
                     // TODO: Change (AA-372)
                     var accommodationsWithCountryCodes = await _context.Accommodations
                         .FromSqlRaw(
                             @$"SELECT * FROM ""{tableName}"" a 
-                                   WHERE a.""{columnName}""->> {{{supplierCodes.Count}}} 
-                                   in ({string.Join(',', supplierCodes.Select((_, index) => $"{{{index}}}"))})",
-                            parameters.Select(p => (object) p).ToArray())
+                                   WHERE a.""{columnName}""->> @supplier
+                                   in ({string.Join(',', supplierCodes.Select((_, index) => $"@p{index}"))})",
+                            sqlParameters.ToArray())
                         .Where(a => a.IsActive)
                         .ToListAsync();
 
