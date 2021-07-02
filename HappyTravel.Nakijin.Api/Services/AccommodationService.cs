@@ -56,12 +56,11 @@ namespace HappyTravel.Nakijin.Api.Services
             if (isFailure)
                 return Result.Failure<Accommodation>(error);
 
-            var accommodations = await GetRichDetails(new List<int>{actualHtId});
+            var accommodations = await GetRichDetails(new List<int> {actualHtId});
             var accommodation = accommodations.SingleOrDefault(a => a.Id == actualHtId);
 
             if (accommodation == default)
                 return Result.Failure<Accommodation>("Accommodation does not exists");
-
 
             return AccommodationConverter.Convert(accommodation.Id, accommodation.CountryId,
                 accommodation.LocalityId, accommodation.LocalityZoneId, accommodation.CalculatedAccommodation,
@@ -82,10 +81,10 @@ namespace HappyTravel.Nakijin.Api.Services
             }
 
             return (await GetRichDetails(ids))
-                .Select(a => AccommodationConverter.ConvertToSlim(htId: a.Id, 
+                .Select(a => AccommodationConverter.ConvertToSlim(htId: a.Id,
                     htCountryId: a.CountryId,
-                    htLocalityId: a.LocalityId, 
-                    htLocalityZoneId: a.LocalityZoneId, 
+                    htLocalityId: a.LocalityId,
+                    htLocalityZoneId: a.LocalityZoneId,
                     accommodation: a.CalculatedAccommodation,
                     language: languageCode))
                 .ToList();
@@ -137,7 +136,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 .ToList();
         }
 
-        
+
         private Task<List<RichAccommodationDetails>> GetRichDetails(ICollection<int> ids)
         {
             return _context.Accommodations
@@ -166,7 +165,7 @@ namespace HappyTravel.Nakijin.Api.Services
 
             return await _mappingsCache.GetActualHtId(id);
         }
-        
+
 
         private readonly AccommodationMappingsCache _mappingsCache;
         private readonly NakijinContext _context;

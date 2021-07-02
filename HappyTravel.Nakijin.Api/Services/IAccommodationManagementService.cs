@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
@@ -19,5 +20,7 @@ namespace HappyTravel.Nakijin.Api.Services
         Task<Result> MatchUncertain(int uncertainMatchId);
 
         Task<Result> MatchAccommodations(int sourceHtId, int htIdToMatch);
+
+        Task<Result> RemoveDuplicatesFormedBySuppliersChangedCountry(List<Suppliers> suppliers);
     }
 }

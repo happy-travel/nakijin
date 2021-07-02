@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Models.Mappers.Enums;
 using HappyTravel.Nakijin.Api.Services;
 using HappyTravel.Nakijin.Data.Models;
@@ -347,6 +348,25 @@ namespace HappyTravel.Nakijin.Api.Controllers
                 await _accommodationManagementService.MatchAccommodations(sourceHtId, htIdToMatch);
             if (isFailure)
                 return BadRequest(error);
+
+            return Ok();
+        }
+
+
+        /// <summary>
+        /// Removes duplicate accommodations, which formed by supplier changed country codes.
+        /// </summary>
+        /// <param name="suppliers"></param>
+        /// <returns></returns>
+        [HttpPost("accommodations/duplicates/formed-by-supplier-country-change/remove")]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> RemoveDuplicatesFormedBySupplierChangedCountry(List<Suppliers> suppliers)
+        {
+            var (_, isFailure, error) = await _accommodationManagementService.RemoveDuplicatesFormedBySuppliersChangedCountry(suppliers);
+            if (isFailure)
+                return BadRequest(ProblemDetailsBuilder.Build(error));
+
 
             return Ok();
         }
