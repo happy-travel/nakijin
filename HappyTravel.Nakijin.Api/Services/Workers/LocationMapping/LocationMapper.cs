@@ -46,21 +46,18 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
                         $"{nameof(MapLocations)} of {supplier.ToString()}",
                         SpanKind.Internal, currentSpan);
 
-                    _logger.LogMappingLocationsStart(
-                        $"Started Mapping locations of {supplier.ToString()}.");
+                    _logger.LogMappingLocationsStart(supplier.ToString());
 
                     cancellationToken.ThrowIfCancellationRequested();
                     await _countryMapper.Map(supplier, tracer, supplierLocationsMappingSpan, cancellationToken);
                     await _localityMapper.Map(supplier, tracer, supplierLocationsMappingSpan, cancellationToken);
                     await _localityZoneMapper.Map(supplier, tracer, supplierLocationsMappingSpan, cancellationToken);
 
-                    _logger.LogMappingLocationsFinish(
-                        $"Finished Mapping locations of {supplier.ToString()}.");
+                    _logger.LogMappingLocationsFinish(supplier.ToString());
                 }
                 catch (TaskCanceledException)
                 {
-                    _logger.LogMappingLocationsCancel(
-                        $"Mapping locations of {supplier.ToString()} was canceled by client request.");
+                    _logger.LogMappingLocationsCancel(supplier.ToString());
                 }
                 catch (Exception ex)
                 {

@@ -38,8 +38,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
         public async Task Map(Suppliers supplier, Tracer tracer, TelemetrySpan parentSpan, CancellationToken cancellationToken)
         {
             using var countryMappingSpan = tracer.StartActiveSpan("Map Countries", SpanKind.Internal, parentSpan);
-            _logger.LogMappingCountriesStart(
-                $"Started Mapping countries of {supplier.ToString()}.");
+            _logger.LogMappingCountriesStart(supplier.ToString());
 
             var countries = await _locationMapperDataRetrieveService.GetNormalizedCountries();
 
@@ -122,8 +121,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
 
             await _locationChangePublisher.PublishRemovedCountries(countryPairsChanged.Keys.ToList());
 
-            _logger.LogMappingCountriesFinish(
-                $"Finished Mapping countries of {supplier.ToString()}.");
+            _logger.LogMappingCountriesFinish(supplier.ToString());
         }
 
 

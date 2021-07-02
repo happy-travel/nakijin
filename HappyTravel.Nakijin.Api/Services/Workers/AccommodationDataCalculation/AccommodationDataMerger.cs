@@ -48,8 +48,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                         $"{nameof(Calculate)} accommodations of supplier {supplier.ToString()}",
                         SpanKind.Internal, currentSpan);
 
-                    _logger.LogCalculatingAccommodationsDataStart(
-                        $"Started calculation accommodations data of supplier {supplier.ToString()}");
+                    _logger.LogCalculatingAccommodationsDataStart(supplier.ToString());
 
                     var lastUpdatedDate = await GetLastUpdateDate(supplier);
                     var updateDate = DateTime.UtcNow;
@@ -94,18 +93,16 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
 
                         await CalculateBatch(notCalculatedAccommodations, cancellationToken);
                         
-                        _logger.LogCalculatingAccommodationsBatch($"{skip} '{supplier.ToString()}' accommodations have been calculated");
+                        _logger.LogCalculatingAccommodationsBatch(skip, supplier.ToString());
                     } while (changedSupplierHotelCodes.Count > 0);
 
                     await AddUpdateDateToHistory(supplier, updateDate);
-                    
-                    _logger.LogCalculatingAccommodationsDataFinish(
-                        $"Finished calculation of supplier {supplier.ToString()} data.");
+
+                    _logger.LogCalculatingAccommodationsDataFinish(supplier.ToString());
                 }
                 catch (TaskCanceledException)
                 {
-                    _logger.LogCalculatingAccommodationsDataCancel(
-                        $"Calculating data of supplier {supplier.ToString()} was cancelled by client request");
+                    _logger.LogCalculatingAccommodationsDataCancel(supplier.ToString());
                 }
                 catch (Exception ex)
                 {
@@ -147,7 +144,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 using var accommodationsDataMergingSpan = tracer.StartActiveSpan($"{nameof(MergeAll)} accommodations",
                     SpanKind.Internal, currentSpan);
 
-                _logger.LogMergingAccommodationsDataStart($"Started merging accommodations data");
+                _logger.LogMergingAccommodationsDataStart();
 
                 var notCalculatedAccommodations = new List<RichAccommodationDetails>();
                 do
@@ -165,11 +162,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                     await CalculateBatch(notCalculatedAccommodations, cancellationToken);
                 } while (notCalculatedAccommodations.Count > 0);
 
-                _logger.LogMergingAccommodationsDataFinish($"Finished merging accommodations data");
+                _logger.LogMergingAccommodationsDataFinish();
             }
             catch (TaskCanceledException)
             {
-                _logger.LogMergingAccommodationsDataCancel($"Merging accommodations was canceled by client request.");
+                _logger.LogMergingAccommodationsDataCancel();
             }
             catch (Exception ex)
             {

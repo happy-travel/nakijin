@@ -9,11 +9,13 @@ using Microsoft.EntityFrameworkCore;
 using CSharpFunctionalExtensions;
 using HappyTravel.EdoContracts.Accommodations;
 using HappyTravel.Nakijin.Api.Infrastructure;
+using HappyTravel.Nakijin.Api.Infrastructure.Logging;
 using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
 using HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation;
 using HappyTravel.SuppliersCatalog;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace HappyTravel.Nakijin.Api.Services
@@ -22,12 +24,13 @@ namespace HappyTravel.Nakijin.Api.Services
     {
         public AccommodationManagementService(NakijinContext context,
             IAccommodationDataMerger accommodationDataMerger, AccommodationMappingsCache mappingsCache,
-            AccommodationChangePublisher accommodationChangePublisher)
+            AccommodationChangePublisher accommodationChangePublisher, LoggerFactory loggerFactory)
         {
             _context = context;
             _accommodationDataMerger = accommodationDataMerger;
             _mappingsCache = mappingsCache;
             _accommodationChangePublisher = accommodationChangePublisher;
+            _logger = loggerFactory.CreateLogger<AccommodationManagementService>();
         }
 
 
@@ -103,6 +106,7 @@ namespace HappyTravel.Nakijin.Api.Services
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogAccommodationsDuplicatesRemoveError(ex);
                     return Result.Failure(ex.Message);
                 }
             }
@@ -292,5 +296,6 @@ namespace HappyTravel.Nakijin.Api.Services
         private readonly IAccommodationDataMerger _accommodationDataMerger;
         private readonly NakijinContext _context;
         private readonly AccommodationMappingsCache _mappingsCache;
+        private readonly ILogger<AccommodationManagementService> _logger;
     }
 }

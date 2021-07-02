@@ -40,15 +40,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
             using var localityZoneMappingSpan =
                 tracer.StartActiveSpan("Map Locality zones", SpanKind.Internal, parentSpan);
 
-            _logger.LogMappingLocalityZonesStart(
-                $"Started Mapping locality zones of {supplier.ToString()}.");
+            _logger.LogMappingLocalityZonesStart(supplier.ToString());
 
             var countries = await _locationMapperDataRetrieveService.GetCountries();
 
             foreach (var country in countries)
             {
-                _logger.LogMappingLocalityZonesOfSpecifiedCountryStart(
-                    $"Started Mapping locality zones of {supplier.ToString()} of country with code {country.Code}.");
+                _logger.LogMappingLocalityZonesOfSpecifiedCountryStart(supplier.ToString(), country.Code);
 
                 var changedLocalityZonesPairs = new Dictionary<int, int>();
                 var countryLocalities = await _locationMapperDataRetrieveService.GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
@@ -166,12 +164,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
 
                 localityZoneMappingSpan.AddEvent($"Done mapping locality zones of country with code {country.Code}");
 
-                _logger.LogMappingLocalityZonesOfSpecifiedCountryFinish(
-                    $"Finished Mapping locality zones of {supplier.ToString()} of country with code {country.Code}.");
+                _logger.LogMappingLocalityZonesOfSpecifiedCountryFinish(supplier.ToString(), country.Code);
             }
 
-            _logger.LogMappingLocalityZonesFinish(
-                $"Finished Mapping locality zones of {supplier.ToString()}.");
+            _logger.LogMappingLocalityZonesFinish(supplier.ToString());
         }
 
 

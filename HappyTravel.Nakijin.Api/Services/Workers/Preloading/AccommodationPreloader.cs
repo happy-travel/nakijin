@@ -64,8 +64,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.Preloading
                 }
                 catch (TaskCanceledException)
                 {
-                    _logger.LogPreloadingAccommodationsCancel(
-                        $"Preloading accommodations of {supplier.ToString()} was canceled by client request.");
+                    _logger.LogPreloadingAccommodationsCancel(supplier.ToString());
                 }
                 catch (Exception ex)
                 {
@@ -99,7 +98,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.Preloading
         private async Task Preload(Suppliers supplier, DateTime modificationDate,
             CancellationToken cancellationToken = default)
         {
-            _logger.LogPreloadingAccommodationsStart($"Started Preloading accommodations of {supplier.ToString()}.");
+            _logger.LogPreloadingAccommodationsStart(supplier.ToString());
 
             var skip = 0;
             do
@@ -174,7 +173,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.Preloading
                 skip += _options.PreloadingBatchSize;
             } while (true);
 
-            _logger.LogPreloadingAccommodationsFinish($"Finished Preloading accommodations of {supplier.ToString()} .");
+            _logger.LogPreloadingAccommodationsFinish(supplier.ToString());
 
 
             async Task<List<MultilingualAccommodation>> GetAccommodations(Suppliers supplier, DateTime modDate,

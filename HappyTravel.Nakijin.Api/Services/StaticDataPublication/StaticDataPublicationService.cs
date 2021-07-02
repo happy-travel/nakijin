@@ -16,9 +16,10 @@ using StackExchange.Redis.Extensions.Core.Abstractions;
 
 namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
 {
-    public class StaticDataPublicationService: IStaticDataPublicationService
+    public class StaticDataPublicationService : IStaticDataPublicationService
     {
-        public StaticDataPublicationService(IRedisCacheClient redisCacheClient, ILogger<StaticDataPublicationService> logger,IOptions<StaticDataPublicationOptions> updateOptions)
+        public StaticDataPublicationService(IRedisCacheClient redisCacheClient, ILogger<StaticDataPublicationService> logger,
+            IOptions<StaticDataPublicationOptions> updateOptions)
         {
             _streamName = updateOptions.Value.StreamName;
             _logger = logger;
@@ -26,15 +27,15 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
             if (!InitStreamIfNeeded())
                 ClearStream();
         }
-        
-        
+
+
         public async Task Publish(Location location, UpdateEventTypes type)
         {
-            await _database.StreamAddAsync(_streamName, new []{Build(location, type)});
-            _logger.LogLocationsPublished( $"Location '{location.HtId}' has been published");
+            await _database.StreamAddAsync(_streamName, new[] {Build(location, type)});
+            _logger.LogSingleLocationPublished(location.HtId);
         }
 
-        
+
         public async Task Publish(List<Location> locations, UpdateEventTypes type, CancellationToken cancellationToken = default)
         {
             const int batchSize = 1000;
@@ -43,12 +44,12 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
                 foreach (var batchOfLocations in Split(locations, batchSize))
                 {
                     await _database.StreamAddAsync(_streamName, Build(batchOfLocations, type));
-                    _logger.LogLocationsPublished( $"{batchOfLocations.Count} locations have been published");
+                    _logger.LogLocationsPublished(batchOfLocations.Count);
                 }
             }
         }
 
-        
+
         private bool InitStreamIfNeeded()
         {
             try
@@ -79,19 +80,19 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
             }
         }
 
-        
+
         private NameValueEntry Build(Location location, UpdateEventTypes type)
         {
             var entry = new LocationPublicationEntry(type, location);
             return new(location.HtId, JsonSerializer.Serialize(entry));
         }
-        
-        
-        private NameValueEntry[] Build(List<Location> batchOfLocations, UpdateEventTypes type) 
+
+
+        private NameValueEntry[] Build(List<Location> batchOfLocations, UpdateEventTypes type)
             => batchOfLocations.Select(l => Build(l, type))
                 .ToArray();
 
-        
+
         private static IEnumerable<List<T>> Split<T>(List<T> items, int batchSize)
         {
             for (var i = 0; i < items.Count; i += batchSize)
@@ -99,7 +100,7 @@ namespace HappyTravel.Nakijin.Api.Services.StaticDataPublication
         }
 
 
-        private readonly AsyncLock _mutex = new ();
+        private readonly AsyncLock _mutex = new();
         private readonly string _streamName;
         private readonly IDatabase _database;
         private readonly ILogger<StaticDataPublicationService> _logger;
