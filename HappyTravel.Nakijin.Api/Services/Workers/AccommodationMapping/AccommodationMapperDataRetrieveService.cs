@@ -132,7 +132,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
         }
 
 
-        public Task<List<Tuple<int, int>>> GetActiveCountryUncertainMatchesBySupplier(string countryCode,
+        public Task<Dictionary<int, (int SourceHtId, int HtIdToMatch)>> GetActiveCountryUncertainMatchesBySupplier(string countryCode,
             Suppliers supplier, CancellationToken cancellationToken)
             => (from um in _context.AccommodationUncertainMatches
                 join sourceAc in _context.Accommodations on um.SourceHtId equals sourceAc.Id
@@ -141,7 +141,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     (EF.Functions.JsonExists(sourceAc.SupplierAccommodationCodes,
                         supplier.ToString().FirstCharToLower()) || EF.Functions.JsonExists(acToMatch.SupplierAccommodationCodes,
                         supplier.ToString().FirstCharToLower()))
-                select new Tuple<int, int>(um.SourceHtId, um.HtIdToMatch)).ToListAsync(cancellationToken);
+                select um).ToDictionaryAsync(um => um.Id, um => (um.SourceHtId, um.HtIdToMatch), cancellationToken);
 
 
         public Task<Dictionary<string, int>> GetLocalitiesByCountry(int countryId)
