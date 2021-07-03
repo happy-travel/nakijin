@@ -4,8 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using HappyTravel.EdoContracts.Accommodations;
+using HappyTravel.Nakijin.Api.Converters.StaticDataPublication;
 using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Infrastructure.Logging;
+using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
+using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data;
 using HappyTravel.Nakijin.Data.Models;
 using HappyTravel.Nakijin.Data.Models.Accommodations;
@@ -23,7 +26,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
     {
         public AccommodationDataMerger(NakijinContext context, AccommodationMergerHelper mergerHelper,
             IOptions<StaticDataLoadingOptions> options, MultilingualDataHelper multilingualDataHelper,
-            ILoggerFactory loggerFactory, TracerProvider tracerProvider)
+            ILoggerFactory loggerFactory, TracerProvider tracerProvider, AccommodationChangePublisher accommodationChangePublisher)
         {
             _context = context;
             _options = options.Value;
@@ -31,6 +34,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
             _multilingualDataHelper = multilingualDataHelper;
             _tracerProvider = tracerProvider;
             _mergerHelper = mergerHelper;
+            _accommodationChangePublisher = accommodationChangePublisher;
         }
 
 
@@ -52,7 +56,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
 
                     var lastUpdatedDate = await GetLastUpdateDate(supplier);
                     var updateDate = DateTime.UtcNow;
-                    
+
                     var changedSupplierHotelCodes = new List<string>();
                     var skip = 0;
                     do
@@ -92,7 +96,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                         skip += changedSupplierHotelCodes.Count;
 
                         await CalculateBatch(notCalculatedAccommodations, cancellationToken);
-                        
+
                         _logger.LogCalculatingAccommodationsBatch(skip, supplier.ToString());
                     } while (changedSupplierHotelCodes.Count > 0);
 
@@ -112,13 +116,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
 
 
             Task<DateTime> GetLastUpdateDate(Suppliers supplier)
-                => _context.DataUpdateHistories.Where(dh => dh.Supplier == supplier && 
+                => _context.DataUpdateHistories.Where(dh => dh.Supplier == supplier &&
                         dh.Type == DataUpdateTypes.DataCalculation)
                     .OrderByDescending(dh => dh.UpdateTime)
                     .Select(dh => dh.UpdateTime)
                     .FirstOrDefaultAsync(cancellationToken);
-            
-            
+
+
             Task AddUpdateDateToHistory(Suppliers supplier, DateTime date)
             {
                 _context.DataUpdateHistories.Add(new DataUpdateHistory
@@ -127,7 +131,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                     Type = DataUpdateTypes.DataCalculation,
                     UpdateTime = date
                 });
-                
+
                 return _context.SaveChangesAsync(cancellationToken);
             }
         }
@@ -207,13 +211,15 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 })
                 .ToListAsync(cancellationToken);
 
+            var accommodationsToPublish = new List<AccommodationData>();
+
             foreach (var ac in notCalculatedAccommodations)
             {
                 var supplierAccommodations = (from ra in rawAccommodations
                     join sa in ac.SupplierAccommodationCodes on ra.SupplierAccommodationId equals sa.Value
                     where ra.Supplier == sa.Key
                     select ra).ToList();
-                
+
                 var calculatedData = await _mergerHelper.Merge(ac, supplierAccommodations);
 
                 var dbAccommodation = new RichAccommodationDetails();
@@ -232,9 +238,14 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
                 dbEntry.Property(p => p.IsCalculated).IsModified = true;
                 dbEntry.Property(p => p.Modified).IsModified = true;
                 dbEntry.Property(p => p.KeyData).IsModified = true;
+
+                var dataToPublish = AccommodationDataConverter.Convert(dbAccommodation);
+                if (!dataToPublish.Equals(AccommodationDataConverter.Convert(ac)))
+                    accommodationsToPublish.Add(dataToPublish);
             }
 
             await _context.SaveChangesAsync(cancellationToken);
+            await _accommodationChangePublisher.PublishUpdated(accommodationsToPublish);
 
             _context.ChangeTracker.Entries()
                 .Where(e => e.Entity != null)
@@ -250,5 +261,6 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationDataCalculation
         private readonly MultilingualDataHelper _multilingualDataHelper;
         private readonly NakijinContext _context;
         private readonly ILogger<AccommodationDataMerger> _logger;
+        private readonly AccommodationChangePublisher _accommodationChangePublisher;
     }
 }

@@ -194,8 +194,9 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
             foreach (var accommodation in accommodations)
             {
                 _context.Attach(accommodation);
-                _context.Entry(accommodation).Property(l => l.LocalityZoneId).IsModified = true;
-                _context.Entry(accommodation).Property(l => l.Modified).IsModified = true;
+                var entity = _context.Entry(accommodation);
+                entity.Property(l => l.LocalityZoneId).IsModified = true;
+                entity.Property(l => l.Modified).IsModified = true;
             }
         }
 
