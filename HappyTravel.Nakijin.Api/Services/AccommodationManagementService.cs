@@ -158,9 +158,11 @@ namespace HappyTravel.Nakijin.Api.Services
                 .FirstOrDefaultAsync();
 
             if (uncertainMatch != default)
+            {
                 uncertainMatch.IsActive = false;
-                
-            _context.Update(uncertainMatch);
+                _context.Update(uncertainMatch);
+            }
+
             await _context.SaveChangesAsync();
 
             await _mappingsCache.Fill();
