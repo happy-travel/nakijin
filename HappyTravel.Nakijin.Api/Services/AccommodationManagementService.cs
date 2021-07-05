@@ -24,7 +24,7 @@ namespace HappyTravel.Nakijin.Api.Services
     {
         public AccommodationManagementService(NakijinContext context,
             IAccommodationDataMerger accommodationDataMerger, AccommodationMappingsCache mappingsCache,
-            AccommodationChangePublisher accommodationChangePublisher, LoggerFactory loggerFactory)
+            AccommodationChangePublisher accommodationChangePublisher, ILoggerFactory loggerFactory)
         {
             _context = context;
             _accommodationDataMerger = accommodationDataMerger;
