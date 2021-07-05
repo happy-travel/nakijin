@@ -78,15 +78,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     using var supplierAccommodationsMappingSpan = tracer.StartActiveSpan(
                         $"{nameof(MapAccommodations)} of {supplier.ToString()}", SpanKind.Internal, currentSpan);
 
-                    _logger.LogMappingAccommodationsStart(
-                        $"Started mapping of {supplier.ToString()} accommodations");
+                    _logger.LogMappingAccommodationsStart(supplier.ToString());
 
                     cancellationToken.ThrowIfCancellationRequested();
                     await MapAccommodations(supplier, mappingType, supplierAccommodationsMappingSpan, tracer,
                         cancellationToken);
 
-                    _logger.LogMappingAccommodationsFinish(
-                        $"Finished mapping of {supplier.ToString()} accommodations");
+                    _logger.LogMappingAccommodationsFinish(supplier.ToString());
 
                     await _mappingsCache.Fill();
                     supplierAccommodationsMappingSpan.AddEvent("Reset accommodation mappings cache");
@@ -95,8 +93,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 }
                 catch (TaskCanceledException)
                 {
-                    _logger.LogMappingAccommodationsCancel(
-                        $"Mapping accommodations of {supplier.ToString()} was canceled by client request.");
+                    _logger.LogMappingAccommodationsCancel(supplier.ToString());
                 }
                 catch (Exception ex)
                 {
@@ -138,8 +135,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     tracer.StartActiveSpan($"{nameof(MapAccommodations)} of country with code {country.Code}",
                         SpanKind.Internal, mappingSpan);
 
-                _logger.LogMappingAccommodationsOfSpecifiedCountryStart(
-                    $"Started mapping of {supplier.ToString()} accommodations of country with code {country.Code}");
+                _logger.LogMappingAccommodationsOfSpecifiedCountryStart(supplier.ToString(), country.Code);
 
                 var countryAccommodationsTree = await _accommodationMapperDataRetrieveService.GetCountryAccommodationsTree(country.Code, supplier);
                 countryAccommodationsMappingSpan.AddEvent("Constructed country accommodations tree");
@@ -185,8 +181,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                         cancellationToken);
                 } while (accommodationDetails.Count > 0);
 
-                _logger.LogMappingAccommodationsOfSpecifiedCountryFinish(
-                    $"Finished mapping of {supplier.ToString()} accommodations of country with code {country.Code}");
+                _logger.LogMappingAccommodationsOfSpecifiedCountryFinish(supplier.ToString(), country.Code);
             }
         }
 
@@ -221,16 +216,14 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
                 if (normalized.Location.Coordinates.IsEmpty() || !normalized.Location.Coordinates.IsValid())
                 {
-                    _logger.LogNotValidCoordinatesInAccommodation(
-                        $"{supplier.ToString()} have the accommodation with not valid coordinates, which code is {accommodation.SupplierCode}");
+                    _logger.LogNotValidCoordinatesInAccommodation(supplier.ToString(), accommodation.SupplierCode);
                     DeactivateOrAddNotActive(normalized.SupplierCode, DeactivationReasons.InvalidCoordinates, normalized);
                     continue;
                 }
 
                 if (!normalized.Name.En.IsValid())
                 {
-                    _logger.LogNotValidDefaultNameOfAccommodation(
-                        $"{supplier.ToString()} have the accommodation with not valid default name, which code is {accommodation.SupplierCode}");
+                    _logger.LogNotValidDefaultNameOfAccommodation(supplier.ToString(), accommodation.SupplierCode);
                     DeactivateOrAddNotActive(normalized.SupplierCode, DeactivationReasons.InvalidName, normalized);
                     continue;
                 }
@@ -453,8 +446,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
                 if (!accommodationToUpdate.SupplierAccommodationCodes.TryAdd(supplier, accommodation.SupplierCode))
                 {
-                    _logger.LogSameAccommodationInOneSupplierError(
-                        $"{supplier.ToString()} have the same accommodations with codes {matchedAccommodation.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}");
+                    _logger.LogSameAccommodationInOneSupplierError(supplier.ToString(), matchedAccommodation.SupplierAccommodationCodes[supplier],
+                        accommodation.SupplierCode);
                     DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.DuplicateInOneSupplier, accommodation);
                     return;
                 }
@@ -465,8 +458,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     var entry = _context.ChangeTracker.Entries<RichAccommodationDetails>()
                         .Single(ac => ac.Entity.Id == matchedAccommodation.HtId);
 
-                    _logger.LogSameAccommodationInOneSupplierError(
-                        $"{supplier.ToString()} have the same accommodations with codes {entry.Entity.SupplierAccommodationCodes[supplier]} and {accommodation.SupplierCode}");
+                    _logger.LogSameAccommodationInOneSupplierError(supplier.ToString(), entry.Entity.SupplierAccommodationCodes[supplier],
+                        accommodation.SupplierCode);
                     DeactivateOrAddNotActive(accommodation.SupplierCode, DeactivationReasons.DuplicateInOneSupplier, accommodation);
                     return;
                 }

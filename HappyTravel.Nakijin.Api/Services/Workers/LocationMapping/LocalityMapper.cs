@@ -26,7 +26,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
     public class LocalityMapper : ILocalityMapper
     {
         public LocalityMapper(NakijinContext context, ILocationMapperDataRetrieveService locationMapperDataRetrieveService,
-            ILocationNameNormalizer locationNameNormalizer, MultilingualDataHelper multilingualDataHelper, LocationChangePublisher locationChangePublisher, ILocalityValidator localityValidator,
+            ILocationNameNormalizer locationNameNormalizer, MultilingualDataHelper multilingualDataHelper, LocationChangePublisher locationChangePublisher,
+            ILocalityValidator localityValidator,
             ILoggerFactory loggerFactory)
         {
             _context = context;
@@ -43,15 +44,13 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
         {
             using var localityMappingSpan =
                 tracer.StartActiveSpan("Map Localities", SpanKind.Internal, parentSpan);
-            _logger.LogMappingLocalitiesStart(
-                $"Started Mapping localities of {supplier.ToString()}.");
+            _logger.LogMappingLocalitiesStart(supplier.ToString());
 
             var countries = await _locationMapperDataRetrieveService.GetCountries();
 
             foreach (var country in countries)
             {
-                _logger.LogMappingLocalitiesOfSpecifiedCountryStart(
-                    $"Started Mapping localities of {supplier.ToString()} of country with code {country.Code}.");
+                _logger.LogMappingLocalitiesOfSpecifiedCountryStart(supplier.ToString(), country.Code);
 
                 var changedLocalityPairs = new Dictionary<int, int>();
                 var dbNormalizedLocalities = await _locationMapperDataRetrieveService.GetNormalizedLocalitiesByCountry(country.Code, cancellationToken);
@@ -86,11 +85,11 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
                     var defaultLocalityName = locality.LocalityNames.GetValueOrDefault(Constants.DefaultLanguageCode);
                     var normalizedLocalityName = _locationNameNormalizer.GetNormalizedLocalityName(defaultCountryName, defaultLocalityName);
                     var normalizedCountryName = _locationNameNormalizer.GetNormalizedCountryName(defaultCountryName);
-                    
+
                     if (!_localityValidator.IsNormalizedValid(normalizedCountryName, normalizedLocalityName))
                     {
-                        _logger.LogMappingInvalidLocality($"Locality '{defaultLocalityName}' of the country '{defaultCountryName}' is invalid and has been skipped. " +
-                            $"Supplier '{supplier}', Country '{JsonSerializer.Serialize(new {country.Code, country.Id, country.Name})}', Locality '{JsonSerializer.Serialize(locality)}'");
+                        _logger.LogMappingInvalidLocality(defaultLocalityName, defaultCountryName, supplier.ToString(),
+                            JsonSerializer.Serialize(new {country.Code, country.Id, country.Name}), JsonSerializer.Serialize(locality));
                         continue;
                     }
 
@@ -157,12 +156,10 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
 
                 localityMappingSpan.AddEvent($"Done mapping localities of country with code {country.Code}");
 
-                _logger.LogMappingLocalitiesOfSpecifiedCountryFinish(
-                    $"Finished Mapping localities of {supplier.ToString()} of country {country.Code}");
+                _logger.LogMappingLocalitiesOfSpecifiedCountryFinish(supplier.ToString(), country.Code);
             }
 
-            _logger.LogMappingLocalitiesFinish(
-                $"Finished Mapping localities of {supplier.ToString()}.");
+            _logger.LogMappingLocalitiesFinish(supplier.ToString());
         }
 
 
