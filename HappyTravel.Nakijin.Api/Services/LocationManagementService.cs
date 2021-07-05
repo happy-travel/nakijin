@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using HappyTravel.MapperContracts.Internal.Mappings.Enums;
+using HappyTravel.Nakijin.Api.Converters.StaticDataPublication;
 using HappyTravel.Nakijin.Api.Models.StaticDataPublications;
 using HappyTravel.Nakijin.Api.Services.StaticDataPublication;
 using HappyTravel.Nakijin.Data;
@@ -136,7 +137,9 @@ namespace HappyTravel.Nakijin.Api.Services
             var accommodationIds = accommodations.Select(a => a.Id).ToList();
             
             var publishLocalitiesTask =_locationChangePublisher.PublishRemovedLocalities(localitiesIds).AsTask();
-            var publicAccommodationsTask = _accommodationChangePublisher.PublishUpdated(accommodations.Select(Convert).ToList());
+            
+            // TODO: When will be updater, better to not publish accommodations here, as now we publish changes on data calculation
+            var publicAccommodationsTask = _accommodationChangePublisher.PublishUpdated(accommodations.Select(AccommodationDataConverter.Convert).ToList());
             
             await Task.WhenAll(publishLocalitiesTask, publicAccommodationsTask);
             
@@ -149,14 +152,6 @@ namespace HappyTravel.Nakijin.Api.Services
             return Result.Success();
         }
 
-
-        private AccommodationData Convert(RichAccommodationDetails accommodationDetails)
-            => new(id: accommodationDetails.Id,
-                name: accommodationDetails.KeyData.DefaultName,
-                localityName: string.Empty, 
-                countryName: accommodationDetails.KeyData.DefaultCountryName,
-                countryCode: accommodationDetails.CountryCode,
-                coordinates: accommodationDetails.KeyData.Coordinates);
         
         
         private readonly LocationChangePublisher _locationChangePublisher;

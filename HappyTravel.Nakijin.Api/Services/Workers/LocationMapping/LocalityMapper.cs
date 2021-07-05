@@ -199,14 +199,17 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.LocationMapping
             {
                 Id = ac.AccommodationId,
                 LocalityId = localityChangedPairs[ac.LocalityId!.Value],
+                IsCalculated = false,
                 Modified = utcDate
             }).ToList();
 
             foreach (var accommodation in accommodations)
             {
                 _context.Attach(accommodation);
-                _context.Entry(accommodation).Property(l => l.LocalityId).IsModified = true;
-                _context.Entry(accommodation).Property(l => l.Modified).IsModified = true;
+                var entry = _context.Entry(accommodation);
+                entry.Property(l => l.LocalityId).IsModified = true;
+                entry.Property(l => l.Modified).IsModified = true;
+                entry.Property(l => l.IsCalculated).IsModified = true;
             }
         }
 
