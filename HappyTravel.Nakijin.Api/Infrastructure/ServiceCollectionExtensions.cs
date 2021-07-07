@@ -66,49 +66,6 @@ namespace HappyTravel.Nakijin.Api.Infrastructure
         }
 
 
-        public static IServiceCollection AddTracing(this IServiceCollection services, IWebHostEnvironment environment,
-            IConfiguration configuration)
-        {
-            string agentHost;
-            int agentPort;
-            if (environment.IsLocal())
-            {
-                agentHost = configuration["Jaeger:AgentHost"];
-                agentPort = int.Parse(configuration["Jaeger:AgentPort"]);
-            }
-            else
-            {
-                agentHost = EnvironmentVariableHelper.Get("Jaeger:AgentHost", configuration);
-                agentPort = int.Parse(EnvironmentVariableHelper.Get("Jaeger:AgentPort", configuration));
-            }
-
-            var connection = ConnectionMultiplexer.Connect(EnvironmentVariableHelper.Get("Redis:Endpoint", configuration));
-            var serviceName = $"{nameof(Nakijin)}-{environment.EnvironmentName}";
-
-            services.AddOpenTelemetryTracing(builder =>
-            {
-                builder
-                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(serviceName))
-                    .AddSource(nameof(AccommodationMapper), nameof(LocationMapper), nameof(AccommodationPreloader),
-                        nameof(AccommodationDataMerger))
-                    .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddRedisInstrumentation(connection)
-                    .AddJaegerExporter(options =>
-                    {
-                        options.AgentHost = agentHost;
-                        options.AgentPort = agentPort;
-                    })
-                    .SetSampler(new AlwaysOnSampler());
-
-                if (environment.IsLocal())
-                    builder.AddConsoleExporter();
-            });
-
-            return services;
-        }
-
-
         public static IServiceCollection ConfigureServiceOptions(this IServiceCollection services,
             IConfiguration configuration, VaultClient.VaultClient vaultClient)
         {

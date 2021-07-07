@@ -8,6 +8,7 @@ using HappyTravel.Nakijin.Api.Infrastructure;
 using HappyTravel.Nakijin.Api.Infrastructure.Environments;
 using HappyTravel.Nakijin.Api.Services.LocationMappingInfo;
 using HappyTravel.StdOutLogger.Extensions;
+using HappyTravel.Telemetry.Extensions;
 using HappyTravel.VaultClient;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -70,7 +71,17 @@ namespace HappyTravel.Nakijin.Api
                 .AddCors()
                 .AddLocalization()
                 .AddMemoryCache()
-                .AddTracing(_environment, Configuration);
+                .AddTracing(Configuration, options =>
+                {
+                    options.ServiceName = $"{_environment.ApplicationName}-{_environment.EnvironmentName}";
+                    options.JaegerHost = _environment.IsLocal()
+                        ? Configuration.GetValue<string>("Jaeger:AgentHost")
+                        : Configuration.GetValue<string>(Configuration.GetValue<string>("Jaeger:AgentHost"));
+                    options.JaegerPort = _environment.IsLocal()
+                        ? Configuration.GetValue<int>("Jaeger:AgentPort")
+                        : Configuration.GetValue<int>(Configuration.GetValue<string>("Jaeger:AgentPort"));
+                    options.RedisEndpoint = Configuration.GetValue<string>(Configuration.GetValue<string>("Redis:Endpoint"));
+                });
 
             services.AddApiVersioning(options =>
             {
