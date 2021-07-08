@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="HappyTravel.EdoContracts" Version="2.0.1" />
-    <PackageReference Include="HappyTravel.MapperContracts" Version="0.8.6" />
+    <PackageReference Include="HappyTravel.MapperContracts" Version="0.9.0" />
     <PackageReference Include="HappyTravel.MultiLanguage" Version="1.0.2" />
     <PackageReference Include="HappyTravel.VaultClient" Version="1.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.2">
