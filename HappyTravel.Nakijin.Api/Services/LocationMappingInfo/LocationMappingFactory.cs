@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using HappyTravel.MapperContracts.Internal.Mappings;
 using HappyTravel.MapperContracts.Internal.Mappings.Enums;
 using HappyTravel.MapperContracts.Internal.Mappings.Internals;
+using HappyTravel.MapperContracts.Public.Accommodations.Internals;
 using HappyTravel.Nakijin.Data;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
@@ -179,7 +180,7 @@ namespace HappyTravel.Nakijin.Api.Services.LocationMappingInfo
                             country: a.CountryNames.GetValueOrDefault(languageCode),
                             locality: a.LocalityNames?.GetValueOrDefault(languageCode),
                             name: a.CalculatedAccommodation.Name.GetValueOrDefault(languageCode),
-                            coordinates: a.CalculatedAccommodation.Location.Coordinates,
+                            coordinates: new GeoPoint(a.CalculatedAccommodation.Location.Coordinates.Longitude, a.CalculatedAccommodation.Location.Coordinates.Latitude),
                             type: MapperLocationTypes.Accommodation
                         ),
                         accommodationMappings: new List<AccommodationMapping>

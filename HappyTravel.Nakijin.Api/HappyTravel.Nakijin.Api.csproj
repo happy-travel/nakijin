@@ -18,7 +18,7 @@
     <PackageReference Include="HappyTravel.ConsulKeyValueClient.ConfigurationProvider" Version="1.5.0" />
     <PackageReference Include="HappyTravel.EdoContracts" Version="2.0.1" />
     <PackageReference Include="HappyTravel.LocationNameNormalizer" Version="1.6.10" />
-    <PackageReference Include="HappyTravel.MapperContracts" Version="0.8.6" />
+    <PackageReference Include="HappyTravel.MapperContracts" Version="0.9.0" />
     <PackageReference Include="IdentityModel" Version="5.0.1" />
     <PackageReference Include="IdentityModel.AspNetCore" Version="3.0.0" />
     <PackageReference Include="IdentityServer4.AccessTokenValidation" Version="3.0.1" />

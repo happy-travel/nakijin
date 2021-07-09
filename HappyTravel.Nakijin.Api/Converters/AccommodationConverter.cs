@@ -58,7 +58,7 @@ namespace HappyTravel.Nakijin.Api.Converters
                     locality: localityName,
                     localityZoneHtId: localityZoneHtId,
                     localityZone: localityZoneName,
-                    coordinates: accommodation.Location.Coordinates,
+                    coordinates: new GeoPoint(accommodation.Location.Coordinates.Longitude, accommodation.Location.Coordinates.Latitude),
                     address: address,
                     locationDescriptionCode: GetLocationDescriptionCode(accommodation.Location.LocationDescriptionCode),
                     pointsOfInterests: GetPoiInfos(accommodation.Location.PointsOfInterests),
@@ -98,7 +98,7 @@ namespace HappyTravel.Nakijin.Api.Converters
                     countryCode: accommodation.Location.CountryCode,
                     locality: localityName,
                     localityZone: localityZoneName,
-                    coordinates: accommodation.Location.Coordinates
+                    coordinates: new GeoPoint(accommodation.Location.Coordinates.Longitude, accommodation.Location.Coordinates.Latitude)
                 ),
                 name: name,
                 photo: GetPhotos(accommodation.Photos).FirstOrDefault(),
