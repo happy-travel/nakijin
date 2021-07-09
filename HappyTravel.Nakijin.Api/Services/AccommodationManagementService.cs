@@ -150,6 +150,19 @@ namespace HappyTravel.Nakijin.Api.Services
                 return Result.Failure(error);
 
             await AddOrUpdateMappings(sourceHtId, htIdToMatch);
+
+            var uncertainMatch = await _context.AccommodationUncertainMatches
+                .Where(um => um.IsActive &&
+                    ((um.SourceHtId == sourceHtId && um.HtIdToMatch == htIdToMatch
+                        || um.HtIdToMatch == sourceHtId && um.SourceHtId == htIdToMatch)))
+                .FirstOrDefaultAsync();
+
+            if (uncertainMatch != default)
+            {
+                uncertainMatch.IsActive = false;
+                _context.Update(uncertainMatch);
+            }
+
             await _context.SaveChangesAsync();
 
             await _mappingsCache.Fill();

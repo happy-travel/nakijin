@@ -19,7 +19,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
 
         Task<List<(string Code, int Id)>> GetCountries(Suppliers supplier);
 
-        Task<List<Tuple<int, int>>> GetActiveCountryUncertainMatchesBySupplier(string countryCode, Suppliers supplier, CancellationToken cancellationToken);
+        Task<Dictionary<int, (int SourceHtId, int HtIdToMatch)>> GetActiveCountryUncertainMatchesBySupplier(string countryCode, Suppliers supplier, CancellationToken cancellationToken);
 
         Task<Dictionary<string, int>> GetLocalitiesByCountry(int countryId);
 

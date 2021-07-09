@@ -191,7 +191,7 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
             Suppliers supplier, STRtree<SlimAccommodationData> countryAccommodationsTree,
             Dictionary<string, SlimAccommodationData> activeCountryAccommodationsOfSupplier,
             Dictionary<string, SlimAccommodationData> invalidNotActiveCountryAccommodationsOfSupplier,
-            List<Tuple<int, int>> activeCountryUncertainMatchesOfSupplier, Dictionary<string, int> countryLocalities,
+            Dictionary<int, (int SourceHtId, int HtIdToMatch)> activeCountryUncertainMatchesOfSupplier, Dictionary<string, int> countryLocalities,
             Dictionary<(int LocalityId, string LocalityZoneName), int> countryLocalityZones,
             Dictionary<int, (int Id, HashSet<int> MappedHtIds)> htAccommodationMappings,
             TelemetrySpan mappingSpan,
@@ -300,8 +300,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                 {
                     matchedHtId = existing.HtId;
                     if (activeCountryUncertainMatchesOfSupplier.Any(eum
-                        => eum.Equals(new Tuple<int, int>(matchedHtId, existingHtId))
-                        || eum.Equals(new Tuple<int, int>(existingHtId, matchedHtId))))
+                        => eum.Value.Equals(new (matchedHtId, existingHtId))
+                        || eum.Value.Equals(new (existingHtId, matchedHtId))))
                     {
                         return;
                     }
@@ -313,8 +313,8 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                     ActivateOrAddActive(accommodation);
 
                     if (activeCountryUncertainMatchesOfSupplier.Any(eum
-                        => eum.Equals(new Tuple<int, int>(matchedHtId, existingHtId))
-                        || eum.Equals(new Tuple<int, int>(existingHtId, matchedHtId))))
+                        => eum.Value.Equals(new (matchedHtId, existingHtId))
+                        || eum.Value.Equals(new (existingHtId, matchedHtId))))
                     {
                         return;
                     }
@@ -479,11 +479,28 @@ namespace HappyTravel.Nakijin.Api.Services.Workers.AccommodationMapping
                         accommodationToUpdate.SupplierAccommodationCodes.TryAdd(supplierCode.Key, supplierCode.Value);
 
                     AddOrUpdateHtAccommodationMappings(existingAccommodation.HtId, matchedAccommodation.HtId);
+                    
+                    var existingUncertainMatch = activeCountryUncertainMatchesOfSupplier
+                        .FirstOrDefault(eum => eum.Value.Equals(new(existingAccommodation.HtId, matchedAccommodation.HtId))
+                        || eum.Value.Equals(new(matchedAccommodation.HtId, existingAccommodation.HtId)));
+                        
+                    if(existingUncertainMatch.Key!= default)
+                    {
+                        var uncertainMatchToDeactivate = new AccommodationUncertainMatches
+                        {
+                            Id = existingUncertainMatch.Key,
+                            IsActive = false,
+                            Modified = utcDate
+                        };
+                        _context.Attach(uncertainMatchToDeactivate);
+                        var entry = _context.Entry(uncertainMatchToDeactivate);
+                        entry.Property(um => um.IsActive).IsModified = true;
+                        entry.Property(um => um.Modified).IsModified = true;
+                    }
+                    
                 }
 
                 _context.Entry(accommodationToUpdate).Property(p => p.SupplierAccommodationCodes).IsModified = true;
-
-                // TODO: Deactivate  uncertain matches if exist
             }
 
 
