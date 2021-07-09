@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using HappyTravel.ConsulKeyValueClient.ConfigurationProvider.Extensions;
 using HappyTravel.Nakijin.Api.Infrastructure.Environments;
 using HappyTravel.StdOutLogger.Extensions;
@@ -19,6 +20,22 @@ namespace HappyTravel.Nakijin.Api
             => WebHost.CreateDefaultBuilder(args)
                 .UseKestrel()
                 .UseStartup<Startup>()
+                .UseSentry(options =>
+                {
+                    options.Dsn = Environment.GetEnvironmentVariable("HTDC_NAKIJIN_SENTRY_ENDPOINT");
+                    options.Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+                    options.IncludeActivityData = true;
+                    options.BeforeSend = sentryEvent =>
+                    {
+                        foreach (var (key, value) in OpenTelemetry.Baggage.Current)
+                            sentryEvent.SetTag(key, value);
+                                    
+                        sentryEvent.SetTag("TraceId", Activity.Current?.TraceId.ToString() ?? string.Empty);
+                        sentryEvent.SetTag("SpanId", Activity.Current?.SpanId.ToString() ?? string.Empty);
+
+                        return sentryEvent;
+                    };
+                })
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
                     var environment = hostingContext.HostingEnvironment;
@@ -46,11 +63,7 @@ namespace HappyTravel.Nakijin.Api
                                 options.RequestIdHeader = Constants.DefaultRequestIdHeader;
                                 options.UseUtcTimestamp = true;
                             })
-                            .AddSentry(options =>
-                            {
-                                options.Dsn = EnvironmentVariableHelper.Get("Logging:Sentry:Endpoint", hostingContext.Configuration);
-                                options.Environment = env.EnvironmentName;
-                            });
+                            .AddSentry();
                 })
                 .UseSetting(WebHostDefaults.SuppressStatusMessagesKey, "true");
     }
